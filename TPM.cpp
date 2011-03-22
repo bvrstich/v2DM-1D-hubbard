@@ -23,6 +23,9 @@ int TPM::M;
 int TPM::N;
 int TPM::L;
 
+double TPM::Sa = 1;
+double TPM::Sc = 0;
+
 /**
  * static function that initializes the static variables and allocates and fill the static lists
  * @param L_in nr of sites
@@ -336,6 +339,18 @@ void TPM::init(int L_in,int N_in){
    _6j[0][1] = 0.5;
    _6j[1][0] = 0.5;
    _6j[1][1] = 1.0/6.0;
+
+   init_overlap();
+
+}
+
+/**
+ * initialize the overlapmatrix parameters
+ */
+void TPM::init_overlap(){
+
+   Sa += 1.0;
+   Sc += (2.0*N - M)/((N - 1.0)*(N - 1.0));
 
 }
 
@@ -714,37 +729,35 @@ void TPM::Q(int option,double A,double B,double C,const TPM &tpm_d){
 /**
  * initialize this onto the unitmatrix with trace N*(N - 1)/2
  */
-/*
-   void TPM::unit(){
+void TPM::unit(){
 
    double ward = N*(N - 1.0)/(M*(M - 1.0));
 
    for(int B = 0;B < gnr();++B){
 
-   for(int i = 0;i < gdim(B);++i){
+      for(int i = 0;i < gdim(B);++i){
 
-   (*this)(B,i,i) = ward;
+         (*this)(B,i,i) = ward;
 
-   for(int j = i + 1;j < gdim(B);++j)
-   (*this)(B,i,j) = (*this)(B,j,i) = 0.0;
+         for(int j = i + 1;j < gdim(B);++j)
+            (*this)(B,i,j) = (*this)(B,j,i) = 0.0;
 
+      }
    }
-   }
 
-   }
- */
+}
+
 /**
  * orthogonal projection onto the space of traceless matrices
  */
-/*
-   void TPM::proj_Tr(){
+void TPM::proj_Tr(){
 
    double ward = (2.0 * this->trace())/(M*(M - 1));
 
    this->min_unit(ward);
 
-   }
- */
+}
+
 /**
  * Primal hessian map:\n\n
  * Hb = D_1 b D_1 + D_2 Q(b) D_2 + D_3 G(b) D_3 + D_4 T1(b) D_4 + D_5 T2(b) D5 \n\n
@@ -752,27 +765,27 @@ void TPM::Q(int option,double A,double B,double C,const TPM &tpm_d){
  * @param b TPM domain matrix, hessian will act on it and the image will be put in this
  * @param D SUP matrix that defines the structure of the hessian map. (see primal-dual.pdf for more info)
  */
-/*
-   void TPM::H(const TPM &b,const SUP &D){
+
+void TPM::H(const TPM &b,const SUP &D){
 
    this->L_map(D.tpm(0),b);
 
-//maak Q(b)
-TPM Qb(M,N);
-Qb.Q(1,b);
+   //maak Q(b)
+   TPM Qb;
+   Qb.Q(1,b);
 
-TPM hulp(M,N);
+   TPM hulp;
 
-hulp.L_map(D.tpm(1),Qb);
+   hulp.L_map(D.tpm(1),Qb);
 
-Qb.Q(1,hulp);
+   Qb.Q(1,hulp);
 
- *this += Qb;
+   *this += Qb;
 
- this->proj_Tr();
+   this->proj_Tr();
 
- }
- */
+}
+
 /**
  * Implementation of a linear conjugate gradient algoritm for the solution of the primal Newton equations\n\n
  * H(*this) =  b\n\n 
@@ -781,52 +794,52 @@ Qb.Q(1,hulp);
  * @param D SUP matrix that defines the structure of the hessian
  * @return return number of iterations needed to converge to the desired accuracy
  */
-/*
-   int TPM::solve(TPM &b,const SUP &D){
 
- *this = 0;
+int TPM::solve(TPM &b,const SUP &D){
 
-//de r initialiseren op b
-TPM r(b);
+   *this = 0;
 
-double rr = r.ddot(r);
-double rr_old,ward;
+   //de r initialiseren op b
+   TPM r(b);
 
-//nog de Hb aanmaken ook, maar niet initialiseren:
-TPM Hb(M,N);
+   double rr = r.ddot(r);
+   double rr_old,ward;
 
-int cg_iter = 0;
+   //nog de Hb aanmaken ook, maar niet initialiseren:
+   TPM Hb;
 
-while(rr > 1.0e-15){
+   int cg_iter = 0;
 
-++cg_iter;
+   while(rr > 1.0e-15){
 
-Hb.H(b,D);
+      ++cg_iter;
 
-ward = rr/b.ddot(Hb);
+      Hb.H(b,D);
 
-//delta += ward*b
-this->daxpy(ward,b);
+      ward = rr/b.ddot(Hb);
 
-//r -= ward*Hb
-r.daxpy(-ward,Hb);
+      //delta += ward*b
+      this->daxpy(ward,b);
 
-//nieuwe r_norm maken
-rr_old = rr;
-rr = r.ddot(r);
+      //r -= ward*Hb
+      r.daxpy(-ward,Hb);
 
-//eerst herschalen van b
-b.dscal(rr/rr_old);
+      //nieuwe r_norm maken
+      rr_old = rr;
+      rr = r.ddot(r);
 
-//dan r er bijtellen
-b += r;
+      //eerst herschalen van b
+      b.dscal(rr/rr_old);
+
+      //dan r er bijtellen
+      b += r;
+
+   }
+
+   return cg_iter;
 
 }
 
-return cg_iter;
-
-}
- */
 /**
  * ( Overlapmatrix of the U-basis ) - map, maps a TPM onto a different TPM, this map is actually a Q-like map
  * for which the paramaters a,b and c are calculated in primal_dual.pdf. Since it is a Q-like map the inverse
@@ -834,63 +847,54 @@ return cg_iter;
  * @param option = 1 direct overlapmatrix-map is used , = -1 inverse overlapmatrix map is used
  * @param tpm_d the input TPM
  */
-/*
-   void TPM::S(int option,const TPM &tpm_d){
 
-   double a = 1.0;
-   double b = 0.0;
-   double c = 0.0;
+void TPM::S(int option,const TPM &tpm_d){
 
-   a += 1.0;
-   b += (4.0*N*N + 2.0*N - 4.0*N*M + M*M - M)/(N*N*(N - 1.0)*(N - 1.0));
-   c += (2.0*N - M)/((N - 1.0)*(N - 1.0));
+   this->Q(option,Sa,0.0,Sc,tpm_d);
 
-   this->Q(option,a,b,c,tpm_d);
+}
 
-   }
- */
 /**
  * Deduct the unitmatrix times a constant (scale) from this.\n\n
  * this -= scale* 1
  * @param scale the constant
  */
-/*
-   void TPM::min_unit(double scale){
+
+void TPM::min_unit(double scale){
 
    for(int B = 0;B < gnr();++B)
-   for(int i = 0;i < gdim(B);++i)
-   (*this)(B,i,i) -= scale;
+      for(int i = 0;i < gdim(B);++i)
+         (*this)(B,i,i) -= scale;
 
-   }
- */
+}
+
 /**
  * Collaps a SUP matrix S onto a TPM matrix like this:\n\n
  * sum_i Tr (S u^i)f^i = this
  * @param option = 0, project onto full symmetric matrix space, = 1 project onto traceless symmetric matrix space
  * @param S input SUP
  */
-/*
-   void TPM::collaps(int option,const SUP &S){
 
- *this = S.tpm(0);
+void TPM::collaps(int option,const SUP &S){
 
- TPM hulp(M,N);
+   *this = S.tpm(0);
 
- hulp.Q(1,S.tpm(1));
+   TPM hulp;
 
- *this += hulp;
+   hulp.Q(1,S.tpm(1));
 
- if(option == 1)
- this->proj_Tr();
+   *this += hulp;
 
- }
- */
+   if(option == 1)
+      this->proj_Tr();
+
+}
 
 /**
  * @return The expectation value of the total spin for the TPM.
  */
-/*
-   double TPM::spin() const{
+
+double TPM::spin() const{
 
    double ward = 0.0;
 
@@ -898,96 +902,45 @@ return cg_iter;
 
    for(int B = 0;B < gnr();++B){
 
-   S = block_char[B][0];
+      S = block_char[B][0];
 
-   if(S == 0){
+      if(S == 0){
 
-   for(int i = 0;i < gdim(B);++i)
-   ward += -1.5 * (N - 2.0)/(N - 1.0) * (*this)(B,i,i);
+         for(int i = 0;i < gdim(B);++i)
+            ward += -1.5 * (N - 2.0)/(N - 1.0) * (*this)(B,i,i);
 
-   }
-   else{
+      }
+      else{
 
-   for(int i = 0;i < this->gdim(B);++i)
-   ward += 3.0 * ( -1.5 * (N - 2.0)/(N - 1.0) + 2.0 ) * (*this)(B,i,i);
+         for(int i = 0;i < this->gdim(B);++i)
+            ward += 3.0 * ( -1.5 * (N - 2.0)/(N - 1.0) + 2.0 ) * (*this)(B,i,i);
 
-   }
+      }
 
    }
 
    return ward;
 
-   }
- */
+}
+
 /**
  * Fill a TPM object from a file.
  * @param input The ifstream object, corresponding to the file containing the TPM
  */
-/*
-   void TPM::in(ifstream &input){
+
+void TPM::in(ifstream &input){
 
    double block,dim,deg;
    int I,J;
 
    for(int B = 0;B < gnr();++B){
 
-   input >> block >> dim >> deg;
+      input >> block >> dim >> deg;
 
-   for(int i = 0;i < gdim(B);++i)
-   for(int j = 0;j < gdim(B);++j)
-   input >> I >> J >> (*this)(B,i,j);
-
-   }
+      for(int i = 0;i < gdim(B);++i)
+         for(int j = 0;j < gdim(B);++j)
+            input >> I >> J >> (*this)(B,i,j);
 
    }
- */
-/**
- * @return the (square root of the) trace over the "paired states"
- */
-/*
-   double TPM::trace_pair() const{
-
-   double trace_p = 0.0;
-
-//sum of all the elements in the S = 0 blocks:
-for(int k_a = 0;k_a < M/2;++k_a)
-for(int k_b = 0;k_b < M/2;++k_b)
-for(int k_c = 0;k_c < M/2;++k_c)
-for(int k_d = 0;k_d < M/2;++k_d){
-
-double ward = 1.0 / (double) M * (*this)(0,(k_a + k_b)%(M/2),k_a,k_b,k_c,k_d);
-
-if(k_a == k_b)
-ward *= std::sqrt(2.0);
-
-if(k_c == k_d)
-ward *= std::sqrt(2.0);
-
-trace_p += ward;
 
 }
-
-return std::sqrt(trace_p);
-
-}
- */
-/**
- * Fill (*this) with the S^2 operator
- */
-/*
-   void TPM::set_S_2(){
-
- *this = 0.0;
-
-//S = 0 blocks
-for(int B = 0;B < M/2;++B)
-for(int i = 0;i < gdim(B);++i)
-(*this)(B,i,i) = -1.5 * (N - 2.0)/(N - 1.0);
-
-//S = 1 blocks
-for(int B = M/2;B < M;++B)
-for(int i = 0;i < gdim(B);++i)
-(*this)(B,i,i) = -1.5 * (N - 2.0)/(N - 1.0) + 2.0;
-
-}
- */

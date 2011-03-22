@@ -13,7 +13,9 @@ CPPSRC	= 1D_hub.cpp\
             BlockMatrix.cpp\
             Vector.cpp\
             TPM.cpp\
-            SPM.cpp
+            SPM.cpp\
+            SUP.cpp\
+            EIG.cpp
 
 OBJ	= $(CPPSRC:.cpp=.o)
 

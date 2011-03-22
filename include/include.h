@@ -5,3 +5,6 @@
 #include "BlockVector.h"
 #include "TPM.h"
 #include "SPM.h"
+
+#include "SUP.h"
+#include "EIG.h"

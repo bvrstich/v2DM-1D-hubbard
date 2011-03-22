@@ -45,17 +45,16 @@ int main(int argc,char *argv[]){
 
    TPM::init(L,N);
    SPM::init(L,N);
+   SUP::init(L,N);
+   EIG::init(L,N);
 
-   int M = 2*L;
-
-/*
-   TPM ham(M,N);
+   TPM ham;
    ham.hubbard(U);
 
-   SUP S(M,N);
+   SUP S;
    S.init_S();
 
-   SUP Z(M,N);
+   SUP Z;
    Z.init_Z(10000.0,ham,S);
 
    int dim = Z.gdim();
@@ -84,7 +83,7 @@ int main(int argc,char *argv[]){
       cout << (S.tpm(0)).trace() << "\t" << pd_gap << "\t" << center_dev << "\t" << energy << "\t" << S.tpm(0).spin() << "\t";
 
       //matrix D aanmaken voor de hessiaan van het duale stelsel
-      SUP D(M,N);
+      SUP D;
       D.D(S,Z);
 
       //D inverteren voor de hessiaan van het primale stelsel
@@ -103,18 +102,18 @@ int main(int argc,char *argv[]){
       B -= Z;
 
       //collaps B onto b to construct the right hand side of the primal Newton equation
-      TPM b(M,N);
+      TPM b;
 
       b.collaps(1,B);
 
       //dit wordt de stap:
-      TPM delta(M,N);
+      TPM delta;
 
       //los het stelsel op, geeft aantal iteraties nodig terug:
       cout << delta.solve(b,D_inv) << "\t";
 
       //nog updaten van S en Z
-      SUP DS(M,N);
+      SUP DS;
 
       DS.fill(delta);
 
@@ -211,7 +210,7 @@ int main(int argc,char *argv[]){
    cout << "E_0 = " << energy << " with accuracy of " << pd_gap << " and a deviation from centrality of " << center_dev << endl;
    cout << endl;
    cout << "<S^2>\t=\t" << S.tpm(0).spin() << endl;
-*/
+
    //print density matrix to file
    //(S.tpm(0)).out("rdm.out");
 
