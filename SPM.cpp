@@ -218,7 +218,10 @@ void SPM::bar(double scale,const TPM &tpm){
  */
 double &SPM::operator[](int i){
 
-   return spm[i];
+   if(i > L/2)
+      return spm[L - i];
+   else
+      return spm[i];
 
 }
 
@@ -229,6 +232,9 @@ double &SPM::operator[](int i){
  */
 double SPM::operator[](int i) const {
 
-   return spm[i];
+   if(i > L/2)
+      return spm[L - i];
+   else
+      return spm[i];
 
 }

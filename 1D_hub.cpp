@@ -48,15 +48,6 @@ int main(int argc,char *argv[]){
 
    int M = 2*L;
 
-   TPM tpm;
-   tpm.fill_Random();
-
-   tpm.out_sp("../1D_hub-bright/tpm.in");
-
-   SPM spm(1.0,tpm);
-
-   cout << spm << endl;
-
 /*
    TPM ham(M,N);
    ham.hubbard(U);

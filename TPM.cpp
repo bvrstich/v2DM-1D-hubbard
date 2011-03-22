@@ -654,8 +654,7 @@ void TPM::hubbard(double U){
  * @param option = 1, regular Q map , = -1 inverse Q map
  * @param tpm_d the TPM of which the Q map is taken and saved in this.
  */
-/*
-   void TPM::Q(int option,const TPM &tpm_d){
+void TPM::Q(int option,const TPM &tpm_d){
 
    double a = 1;
    double b = 1.0/(N*(N - 1.0));
@@ -663,8 +662,8 @@ void TPM::hubbard(double U){
 
    this->Q(option,a,b,c,tpm_d);
 
-   }
- */
+}
+
 /**
  * The spincoupled Q-like map: see primal-dual.pdf for more info (form: Q^S(A,B,C)(TPM) )
  * @param option = 1, regular Q-like map , = -1 inverse Q-like map
@@ -673,46 +672,45 @@ void TPM::hubbard(double U){
  * @param C factor in front of the single particle piece of the map
  * @param tpm_d the TPM of which the Q-like map is taken and saved in this.
  */
-/*
-   void TPM::Q(int option,double A,double B,double C,const TPM &tpm_d){
+void TPM::Q(int option,double A,double B,double C,const TPM &tpm_d){
 
-//for inverse
-if(option == -1){
+   //for inverse
+   if(option == -1){
 
-B = (B*A + B*C*M - 2.0*C*C)/( A * (C*(M - 2.0) -  A) * ( A + B*M*(M - 1.0) - 2.0*C*(M - 1.0) ) );
-C = C/(A*(C*(M - 2.0) - A));
-A = 1.0/A;
+      B = (B*A + B*C*M - 2.0*C*C)/( A * (C*(M - 2.0) -  A) * ( A + B*M*(M - 1.0) - 2.0*C*(M - 1.0) ) );
+      C = C/(A*(C*(M - 2.0) - A));
+      A = 1.0/A;
+
+   }
+
+   SPM spm(C,tpm_d);
+
+   //de trace*2 omdat mijn definitie van trace in berekeningen over alle (alpha,beta) loopt
+   double ward = B*tpm_d.trace()*2.0;
+
+   int k_a,k_b;
+
+   for(int B = 0;B < gnr();++B){
+
+      for(int i = 0;i < gdim(B);++i){
+
+         k_a = t2s[B][i][0];
+         k_b = t2s[B][i][1];
+
+         //tp part is only nondiagonal part
+         for(int j = i;j < gdim(B);++j)
+            (*this)(B,i,j) = A * tpm_d(B,i,j);
+
+         (*this)(B,i,i) += ward - spm[k_a] - spm[k_b];
+
+      }
+
+   }
+
+   this->symmetrize();
 
 }
 
-SPM spm(C,tpm_d);
-
-//de trace*2 omdat mijn definitie van trace in berekeningen over alle (alpha,beta) loopt
-double ward = B*tpm_d.trace()*2.0;
-
-int k_a,k_b;
-
-for(int B = 0;B < gnr();++B){
-
-for(int i = 0;i < gdim(B);++i){
-
-k_a = t2s[B][i][0];
-k_b = t2s[B][i][1];
-
-//tp part is only nondiagonal part
-for(int j = i;j < gdim(B);++j)
-(*this)(B,i,j) = A * tpm_d(B,i,j);
-
-(*this)(B,i,i) += ward - spm[k_a] - spm[k_b];
-
-}
-
-}
-
-this->symmetrize();
-
-}
- */
 /**
  * initialize this onto the unitmatrix with trace N*(N - 1)/2
  */
