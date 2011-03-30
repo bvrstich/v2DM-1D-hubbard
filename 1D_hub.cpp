@@ -38,16 +38,29 @@ int main(int argc,char *argv[]){
 
    cout.precision(10);
 
-   int L = atoi(argv[1]);//dimension of the lattice, nr of sites
-   int N = atoi(argv[2]);//nr of particles
+   int L = 6;//atoi(argv[1]);//dimension of the lattice, nr of sites
+   int N = 6;//atoi(argv[2]);//nr of particles
 
-   double U = atof(argv[3]);//onsite repulsion
+   //double U = atof(argv[3]);//onsite repulsion
 
    TPM::init(L,N);
    SPM::init(L,N);
+   PHM::init(L,N);
    SUP::init(L,N);
    EIG::init(L,N);
 
+   TPM tpm;
+   tpm.fill_Random();
+
+   tpm.out_sp("../1D_hub-bright/tpm.in");
+
+   PHM phm;
+   phm.G(tpm);
+
+   BlockVector<PHM> v(phm);
+   cout << v;
+
+/*
    TPM ham;
    ham.hubbard(U);
 
@@ -213,7 +226,8 @@ int main(int argc,char *argv[]){
 
    //print density matrix to file
    //(S.tpm(0)).out("rdm.out");
-
+*/
+   PHM::clear();
    SPM::clear();
    TPM::clear();
 

@@ -55,6 +55,8 @@ class TPM : public BlockMatrix {
       //easy to access the numbers, in sp mode and with tp spin and momentum quantumnumber
       double operator()(int S,int K,int p,int a,int b,int c,int d) const;
 
+      static int get_phase_order(int S,int &K,int p,int &a,int &b);
+
       //geef N terug
       int gN() const;
 
@@ -102,6 +104,8 @@ class TPM : public BlockMatrix {
       static void clear();
 
       static void init_overlap();
+
+      static double norm(int,int,int);
 
    private:
 

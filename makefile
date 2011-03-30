@@ -14,6 +14,7 @@ CPPSRC	= 1D_hub.cpp\
             Vector.cpp\
             TPM.cpp\
             SPM.cpp\
+            PHM.cpp\
             SUP.cpp\
             EIG.cpp
 

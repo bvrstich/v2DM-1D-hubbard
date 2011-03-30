@@ -5,6 +5,7 @@
 using std::ostream;
 using std::ofstream;
 using std::ifstream;
+using std::cout;
 using std::endl;
 using std::ios;
 
@@ -468,50 +469,103 @@ double TPM::operator()(int B,int k_a,int k_b,int k_c,int k_d) const{
 double TPM::operator()(int S,int K,int p,int k_a,int k_b,int k_c,int k_d) const{
 
    //momentum checks out
-   if( (k_a + k_b)%(M/2) != K)
+   if( (k_a + k_b)%L != K)
       return 0;
 
-   if( (k_c + k_d)%(M/2) != K)
+   if( (k_c + k_d)%L != K)
       return 0;
 
-   //for the K = 0 , S = 0 blocks only one parity type is present
-   if(K == 0 && S == 0 && p == 1)
+   int copy_K = K;
+
+   int phase_i = get_phase_order(S,K,p,k_a,k_b);
+
+   if(phase_i == 0)
       return 0;
 
-   if(K == 0 && S == 1 && p == 0)
+   int phase_j = get_phase_order(S,copy_K,p,k_c,k_d);
+
+   if(phase_j == 0)
       return 0;
 
    int B = char_block[S][K][p];
 
-   if(S == 0){
+   int i = s2t[B][k_a][k_b];
+   int j = s2t[B][k_c][k_d];
 
-      int i = s2t[B][k_a][k_b];
-      int j = s2t[B][k_c][k_d];
+   return phase_i*phase_j*(*this)(B,i,j);
 
-      return (*this)(B,i,j);
+}
 
-   }
-   else{
+/**
+ * get the right phase and order of sp indices
+ * @param S tp spin
+ * @param K tp momentum
+ * @param p tp parity
+ * @param k_a first sp index
+ * @param k_b second sp index
+ * @return the phase
+ */
+int TPM::get_phase_order(int S,int &K,int p,int &k_a,int &k_b){
 
-      if( (k_a == k_b) || (k_c == k_d) )
-         return 0;
+   int phase = 1;
+
+   //for the K = 0 , S = 0 blocks only one parity type is present
+   if(K == 0){
+
+      if(S == 0){
+
+         if(p == 1)
+            return 0;
+
+      }
       else{
 
-         int i = s2t[B][k_a][k_b];
-         int j = s2t[B][k_c][k_d];
-
-         int phase = 1;
-
-         if(k_a > k_b)
-            phase *= -1;
-         if(k_c > k_d)
-            phase *= -1;
-
-         return phase*(*this)(B,i,j);
+         if(p == 0)
+            return 0;
 
       }
 
    }
+   else if(K == L/2){//for K = L/2 and k_ak_b = 0 L/2 , only positive parity is present
+
+      if(k_a == 0 || k_b == 0){
+
+         if(p == 1)
+            return 0;
+
+      }
+      else if(k_a > L/2){
+
+         k_a = (L - k_a)%L;
+         k_b = (L - k_b)%L;
+
+         if(p == 1)
+            phase *= -1;
+
+      }
+
+   }
+   else if(K > L/2){
+
+      K = (L - K)%L;
+      k_a = (L - k_a)%L;
+      k_b = (L - k_b)%L;
+
+      if(p == 1)
+         phase *= -1;
+
+   }
+
+   if(S == 1){
+
+      if(k_a > k_b)
+         phase *= -1;
+      else if(k_a == k_b)
+         return 0;
+
+   }
+
+   return phase;
 
 }
 
@@ -942,5 +996,30 @@ void TPM::in(ifstream &input){
             input >> I >> J >> (*this)(B,i,j);
 
    }
+
+}
+
+/**
+ * @param K the tp momentum
+ * @param k_a the first sp momentum index
+ * @param k_b the second sp momentum index
+ * @return the norm of the wavefunction.
+ */
+double TPM::norm(int K,int k_a,int k_b){
+
+   if(K == 0)
+      return 0.5;
+   else if(K < L/2)
+      return 1.0/std::sqrt(2.0);
+   else if(K == L/2){
+
+      if(k_a == 0 || k_b == 0)
+         return 0.5;
+      else
+         return 1.0/std::sqrt(2.0);
+
+   }
+   else
+      return 1.0/std::sqrt(2.0);
 
 }
