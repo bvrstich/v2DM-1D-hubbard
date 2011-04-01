@@ -45,6 +45,8 @@ class PHM : public BlockMatrix {
 
       double operator()(int S,int K,int p,int k_a,int k_b,int k_c,int k_d) const;
 
+      static int get_phase_order(int S,int &K,int p,int &a,int &b);
+
       int gN() const;
 
       int gM() const;

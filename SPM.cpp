@@ -138,80 +138,6 @@ ostream &operator<<(ostream &output,const SPM &spm_p){
 }
 
 /**
- * Trace out a set of indices to create the "bar" matrix of a TPM
- * @param scale the factor u want the SPM to be scaled with (1/N-1 for normal sp density matrix)
- * @param tpm the TPM out of which the SPM will be filled
- */
-void SPM::bar(double scale,const TPM &tpm){
-
-   for(int k = 0;k <= L/2;++k){
-
-      spm[k] = 0.0;
-
-      //first K = 0
-      int k_ = (L - k)%L;
-
-      if(k == k_)
-         spm[k] += 2.0*tpm(0,0,0,k,k_,k,k_);
-      else
-         spm[k] += tpm(0,0,0,k,k_,k,k_) + 3.0 * tpm(1,0,1,k,k_,k,k_);
-
-      //then 0 < K < L/2: 
-      for(int K = 1;K < L/2;++K){
-
-         k_ = (K - k + L)%L;
-
-         if(k == k_)
-            spm[k] += 2.0*tpm(0,K,0,k,k_,k,k_);
-         else
-            spm[k] += tpm(0,K,0,k,k_,k,k_) + 3.0 * tpm(1,K,0,k,k_,k,k_);
-
-         //conjugate term
-         k_ = ( (L - K) - k + L)%L;
-
-         if(k == k_)
-            spm[k] += 2.0*tpm(0,K,0,(L - k)%L,(L - k_)%L,(L - k)%L,(L - k_)%L);
-         else
-            spm[k] += tpm(0,K,0,(L - k)%L,(L - k_)%L,(L - k)%L,(L - k_)%L) + 3.0 * tpm(1,K,0,(L - k)%L,(L - k_)%L,(L - k)%L,(L - k_)%L);
-
-      }
-
-      //for K == L/2, both positive and negative parity should be added
-      k_ = L/2 - k;
-
-      if(k == k_){
-
-         //|0 L/2> is not here, so positive and negative parity should be avaraged.
-         if(k != 0 && k_ != 0)
-            spm[k] += tpm(0,L/2,0,k,k_,k,k_) + tpm(0,L/2,1,k,k_,k,k_);
-         else//only positive parity
-            spm[k] += 2.0 * tpm(0,L/2,0,k,k_,k,k_);
-
-      }
-      else{
-
-         //|0 L/2> is not here, so positive and negative parity should be avaraged.
-         if(k != 0 && k_ != 0){
-
-            //S = 0
-            spm[k] += 0.5 * (tpm(0,L/2,0,k,k_,k,k_) + tpm(0,L/2,1,k,k_,k,k_));
-
-            //S = 1
-            spm[k] += 1.5 * (tpm(1,L/2,0,k,k_,k,k_) + tpm(1,L/2,1,k,k_,k,k_));
-
-         }
-         else//only positive parity
-            spm[k] += tpm(0,L/2,0,k,k_,k,k_) + 3.0 * tpm(1,L/2,0,k,k_,k,k_);
-
-      }
-
-      spm[k] *= 0.5 * scale;
-
-   }
-
-}
-
-/**
  * write access to the SPM, change the number on index i
  * @param i row number
  * @return the entry on place i
@@ -236,5 +162,80 @@ double SPM::operator[](int i) const {
       return spm[L - i];
    else
       return spm[i];
+
+}
+
+/**
+ * Trace out a set of indices to create the "bar" matrix of a TPM
+ * @param scale the factor u want the SPM to be scaled with (1/N-1 for normal sp density matrix)
+ * @param tpm the TPM out of which the SPM will be filled
+ */
+void SPM::bar(double scale,const TPM &tpm){
+
+   double ward;
+   int K;
+
+   for(int k = 0;k <= L/2;++k){
+
+      spm[k] = 0.0;
+
+      for(int k_ = 0;k_ < L;++k_){
+
+         K = (k + k_)%L;
+
+         ward = 0.0;
+
+         for(int Z = 0;Z < 2;++Z)
+            for(int p = 0;p < 2;++p)
+               ward += (2.0*Z + 1)*tpm(Z,K,p,k,k_,k,k_);
+
+         if(k != k_)
+            ward /= 4.0*TPM::norm(K,k,k_)*TPM::norm(K,k,k_);
+         else
+            ward /= 2.0*TPM::norm(K,k,k_)*TPM::norm(K,k,k_);
+
+         spm[k] += ward;
+
+      }
+
+      spm[k] *= 0.5*scale;
+
+   }
+
+}
+
+/**
+ * Trace out a set of indices to create the "bar" matrix of a PHM
+ * @param scale the factor u want the SPM to be scaled with
+ * @param phm the PHM out of which the SPM will be filled
+ */
+void SPM::bar(double scale,const PHM &phm){
+
+   double ward;
+   int K;
+
+   for(int k = 0;k <= L/2;++k){
+
+      spm[k] = 0.0;
+
+      for(int k_ = 0;k_ < L;++k_){
+
+         K = (k + k_)%L;
+
+         ward = 0.0;
+
+         for(int Z = 0;Z < 2;++Z)
+            for(int p = 0;p < 2;++p)
+               ward += (2.0*Z + 1)*phm(Z,K,p,k,k_,k,k_);
+
+         ward /= 4.0*PHM::norm(K,k,k_)*PHM::norm(K,k,k_);
+
+         spm[k] += ward;
+
+      }
+
+      spm[k] *= 0.5*scale;
+
+   }
 
 }

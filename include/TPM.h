@@ -12,6 +12,7 @@ using std::vector;
 #include "BlockMatrix.h"
 
 class SUP;
+class PHM;
 
 /**
  * @author Brecht Verstichel
@@ -106,6 +107,8 @@ class TPM : public BlockMatrix {
       static void init_overlap();
 
       static double norm(int,int,int);
+
+      void G(const PHM &);
 
    private:
 

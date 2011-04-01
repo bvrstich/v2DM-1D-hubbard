@@ -928,7 +928,6 @@ void TPM::min_unit(double scale){
  * @param option = 0, project onto full symmetric matrix space, = 1 project onto traceless symmetric matrix space
  * @param S input SUP
  */
-
 void TPM::collaps(int option,const SUP &S){
 
    *this = S.tpm(0);
@@ -947,7 +946,6 @@ void TPM::collaps(int option,const SUP &S){
 /**
  * @return The expectation value of the total spin for the TPM.
  */
-
 double TPM::spin() const{
 
    double ward = 0.0;
@@ -981,7 +979,6 @@ double TPM::spin() const{
  * Fill a TPM object from a file.
  * @param input The ifstream object, corresponding to the file containing the TPM
  */
-
 void TPM::in(ifstream &input){
 
    double block,dim,deg;
@@ -1021,5 +1018,89 @@ double TPM::norm(int K,int k_a,int k_b){
    }
    else
       return 1.0/std::sqrt(2.0);
+
+}
+
+/**
+ * The G down map, maps a PHM object onto a TPM object using the G map.
+ * @param phm input PHM
+ */
+void TPM::G(const PHM &phm){
+
+   //SPM spm(1.0/(N - 1.0),phm);
+
+   int k_a,k_b,k_c,k_d;
+   int k_a_,k_b_,k_c_,k_d_;
+
+   int S,K_;
+
+   int sign;
+
+   for(int B = 0;B < gnr();++B){
+
+      S = block_char[B][0];
+
+      sign = 1 - 2*S;
+
+      for(int i = 0;i < gdim(B);++i){
+
+         k_a = t2s[B][i][0];
+         k_b = t2s[B][i][1];
+
+         k_a_ = (L - k_a)%L;
+         k_b_ = (L - k_b)%L;
+
+         //tp part is only nondiagonal part
+         for(int j = i;j < gdim(B);++j){
+
+            k_c = t2s[B][j][0];
+            k_d = t2s[B][j][1];
+
+            k_c_ = (L - k_c)%L;
+            k_d_ = (L - k_d)%L;
+
+            (*this)(B,i,j) = 0.0;
+/*
+            //four ph terms:
+            //1)
+            K_ = (k_a - k_d + M/2)%(M/2);
+
+            for(int Z = 0;Z < 2;++Z)
+               (*this)(B,i,j) -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,k_a, (-k_d + M/2)%(M/2) ,k_c, (-k_b + M/2)%(M/2) );
+
+            //2)
+            K_ = (k_b - k_c + M/2)%(M/2);
+
+            for(int Z = 0;Z < 2;++Z)
+               (*this)(B,i,j) -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,k_b, (-k_c + M/2)%(M/2) ,k_d, (-k_a + M/2)%(M/2) );
+
+            //3)
+            K_ = (k_b - k_d + M/2)%(M/2);
+
+            for(int Z = 0;Z < 2;++Z)
+               (*this)(B,i,j) -= sign * (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,k_b, (-k_d + M/2)%(M/2) ,k_c, (-k_a + M/2)%(M/2) );
+
+            //4)
+            K_ = (k_a - k_c + M/2)%(M/2);
+
+            for(int Z = 0;Z < 2;++Z)
+               (*this)(B,i,j) -= sign * (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,k_a, (-k_c + M/2)%(M/2) ,k_d, (-k_b + M/2)%(M/2) );
+
+            //norm:
+            if(k_a == k_b)
+               (*this)(B,i,j) /= std::sqrt(2.0);
+
+            if(k_c == k_d)
+               (*this)(B,i,j) /= std::sqrt(2.0);
+*/
+         }
+
+         //(*this)(B,i,i) += spm[k_a] + spm[k_b];
+
+      }
+
+   }
+
+   this->symmetrize();
 
 }

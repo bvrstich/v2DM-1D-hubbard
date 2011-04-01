@@ -41,7 +41,7 @@ int main(int argc,char *argv[]){
    int L = 6;//atoi(argv[1]);//dimension of the lattice, nr of sites
    int N = 6;//atoi(argv[2]);//nr of particles
 
-   //double U = atof(argv[3]);//onsite repulsion
+   double U = 1;//atof(argv[3]);//onsite repulsion
 
    TPM::init(L,N);
    SPM::init(L,N);
@@ -57,8 +57,10 @@ int main(int argc,char *argv[]){
    PHM phm;
    phm.G(tpm);
 
-   BlockVector<PHM> v(phm);
-   cout << v;
+   SPM spm;
+   spm.bar(1.0,phm);
+
+   cout << spm;
 
 /*
    TPM ham;

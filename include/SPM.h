@@ -8,6 +8,7 @@ using std::ostream;
 
 #include "Matrix.h"
 #include "TPM.h"
+#include "PHM.h"
 
 /**
  * @author Brecht Verstichel
@@ -50,6 +51,8 @@ class SPM {
       const double *gspm() const;
 
       void bar(double,const TPM &);
+
+      void bar(double,const PHM &);
 
       static void init(int,int);
 

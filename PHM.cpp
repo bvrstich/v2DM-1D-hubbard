@@ -157,12 +157,14 @@ void PHM::init(int L_in,int N_in){
       block_char[block][2] = 0;//p
 
       char_block[0][K][0] = block;
+      char_block[0][K][1] = block;
 
       block_char[block + L/2 + 3][0] = 1;//S
       block_char[block + L/2 + 3][1] = K;//K
       block_char[block + L/2 + 3][2] = 0;//p
 
       char_block[1][K][0] = block + L/2 + 3;
+      char_block[1][K][1] = block + L/2 + 3;
 
       vector<int> v(2);
 
@@ -399,12 +401,93 @@ double PHM::operator()(int S,int K,int p,int k_a,int k_b,int k_c,int k_d) const{
    if( (k_c + k_d)%L != K)
       return 0;
 
+   int K_copy = K;
+
+   int phase_i = get_phase_order(S,K_copy,p,k_a,k_b);
+
+   if(phase_i == 0)
+      return 0;
+
+   int phase_j = get_phase_order(S,K,p,k_c,k_d);
+
+   if(phase_j == 0)
+      return 0;
+
    int B = char_block[S][K][p];
 
    int i = s2ph[B][k_a][k_b];
    int j = s2ph[B][k_c][k_d];
 
-   return (*this)(B,i,j);
+   return phase_i*phase_j*(*this)(B,i,j);
+
+}
+
+/**
+ * get the right phase and order of sp indices
+ * @param S tp spin
+ * @param K tp momentum
+ * @param p tp parity
+ * @param k_a first sp index
+ * @param k_b second sp index
+ * @return the phase
+ */
+int PHM::get_phase_order(int S,int &K,int p,int &k_a,int &k_b){
+
+   int phase = 1;
+
+   if(K == 0){
+
+      //if k_a == 0 or L/2, only positive parity is present.
+      if(k_a == 0 || k_a == L/2){
+
+         if(p == 1)
+            return 0;
+
+      }
+      else if(k_a > k_b){
+
+         int hulp = k_a;
+         k_a = k_b;
+         k_b = hulp;
+
+         if(p == 1)
+            phase *= -1;
+
+      }
+
+   }
+   else if(K == L/2){
+
+      //again, if k_a == 0 or L/2, only positive parity is present.
+      if(k_a == 0 || k_a == L/2){
+
+         if(p == 1)
+            return 0;
+
+      }
+      else if(k_a > L/2){//switch
+
+         k_a = -k_a;
+         k_b = -k_b;
+
+         if(p == 1)
+            phase *= -1;
+
+      }
+
+   }
+   else if(K > L/2){
+
+      K = (L - K)%L;
+      k_a = (L - k_a)%L;
+      k_b = (L - k_b)%L;
+
+      if(p == 1)
+         phase *= -1;
+
+   }
+
+   return phase;
 
 }
 
