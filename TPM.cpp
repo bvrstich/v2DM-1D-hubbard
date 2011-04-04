@@ -982,7 +982,7 @@ double TPM::spin() const{
 
    double ward = 0.0;
 
-   int S;
+   int S,K;
 
    for(int B = 0;B < gnr();++B){
 
@@ -991,13 +991,13 @@ double TPM::spin() const{
       if(S == 0){
 
          for(int i = 0;i < gdim(B);++i)
-            ward += -1.5 * (N - 2.0)/(N - 1.0) * (*this)(B,i,i);
+            ward += -1.5 * (N - 2.0)/(N - 1.0) * gdeg(B) * (*this)(B,i,i);
 
       }
       else{
 
          for(int i = 0;i < this->gdim(B);++i)
-            ward += 3.0 * ( -1.5 * (N - 2.0)/(N - 1.0) + 2.0 ) * (*this)(B,i,i);
+            ward += gdeg(B) * ( -1.5 * (N - 2.0)/(N - 1.0) + 2.0 ) * (*this)(B,i,i);
 
       }
 
