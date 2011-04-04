@@ -84,6 +84,19 @@ SPM::SPM(double scale,const TPM &tpm) {
 }
 
 /**
+ * PHM constructor: Creates a SPM initialized on the "bar" of the PHM.
+ * @param scale the factor u want the SPM to be scaled with 
+ * @param tpm the TPM out of which the SPM will be initiated.
+ */
+SPM::SPM(double scale,const PHM &phm) {
+
+   spm = new double [dim];
+
+   this->bar(scale,phm);
+
+}
+
+/**
  * destructor
  */
 SPM::~SPM(){

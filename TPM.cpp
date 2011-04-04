@@ -1027,75 +1027,255 @@ double TPM::norm(int K,int k_a,int k_b){
  */
 void TPM::G(const PHM &phm){
 
-   //SPM spm(1.0/(N - 1.0),phm);
+   double ward;
+
+   SPM spm(1.0/(N - 1.0),phm);
 
    int k_a,k_b,k_c,k_d;
    int k_a_,k_b_,k_c_,k_d_;
 
-   int S,K_;
+   int S,K,K_,pi;
 
    int sign;
 
    for(int B = 0;B < gnr();++B){
 
       S = block_char[B][0];
+      K = block_char[B][1];
+      pi = block_char[B][2];
 
       sign = 1 - 2*S;
 
-      for(int i = 0;i < gdim(B);++i){
+      if(K == L/2 || K == 0){
 
-         k_a = t2s[B][i][0];
-         k_b = t2s[B][i][1];
+         for(int i = 0;i < gdim(B);++i){
 
-         k_a_ = (L - k_a)%L;
-         k_b_ = (L - k_b)%L;
+            k_a = t2s[B][i][0];
+            k_b = t2s[B][i][1];
 
-         //tp part is only nondiagonal part
-         for(int j = i;j < gdim(B);++j){
+            k_a_ = (L - k_a)%L;
+            k_b_ = (L - k_b)%L;
 
-            k_c = t2s[B][j][0];
-            k_d = t2s[B][j][1];
+            //tp part is only nondiagonal part
+            for(int j = i;j < gdim(B);++j){
 
-            k_c_ = (L - k_c)%L;
-            k_d_ = (L - k_d)%L;
+               k_c = t2s[B][j][0];
+               k_d = t2s[B][j][1];
 
-            (*this)(B,i,j) = 0.0;
-/*
-            //four ph terms:
-            //1)
-            K_ = (k_a - k_d + M/2)%(M/2);
+               k_c_ = (L - k_c)%L;
+               k_d_ = (L - k_d)%L;
 
-            for(int Z = 0;Z < 2;++Z)
-               (*this)(B,i,j) -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,k_a, (-k_d + M/2)%(M/2) ,k_c, (-k_b + M/2)%(M/2) );
+               (*this)(B,i,j) = 0.0;
 
-            //2)
-            K_ = (k_b - k_c + M/2)%(M/2);
+               int psign = 1 - 2*pi;
 
-            for(int Z = 0;Z < 2;++Z)
-               (*this)(B,i,j) -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,k_b, (-k_c + M/2)%(M/2) ,k_d, (-k_a + M/2)%(M/2) );
+               //four ph terms:
+               //1)
+               //first part:
+               K_ = (k_a + k_d_)%L;
 
-            //3)
-            K_ = (k_b - k_d + M/2)%(M/2);
+               ward = 0.0;
 
-            for(int Z = 0;Z < 2;++Z)
-               (*this)(B,i,j) -= sign * (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,k_b, (-k_d + M/2)%(M/2) ,k_c, (-k_a + M/2)%(M/2) );
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_a,k_d_,k_c,k_b_);
 
-            //4)
-            K_ = (k_a - k_c + M/2)%(M/2);
+               ward /= 2.0 * PHM::norm(K_,k_a,k_d_) * PHM::norm(K_,k_c,k_b_);
 
-            for(int Z = 0;Z < 2;++Z)
-               (*this)(B,i,j) -= sign * (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,k_a, (-k_c + M/2)%(M/2) ,k_d, (-k_b + M/2)%(M/2) );
+               (*this)(B,i,j) += ward;
 
-            //norm:
-            if(k_a == k_b)
-               (*this)(B,i,j) /= std::sqrt(2.0);
+               //second part
+               K_ = (k_a_ + k_d_)%L;
 
-            if(k_c == k_d)
-               (*this)(B,i,j) /= std::sqrt(2.0);
-*/
+               ward = 0.0;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_a_,k_d_,k_c,k_b);
+
+               ward /= 2.0 * PHM::norm(K_,k_a_,k_d_) * PHM::norm(K_,k_c,k_b);
+
+               (*this)(B,i,j) += psign*ward;
+
+               //2)
+               //first part
+               K_ = (k_b + k_c_)%L;
+
+               ward = 0.0;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_b,k_c_,k_d,k_a_);
+
+               ward /= 2.0 * PHM::norm(K_,k_b,k_c_) * PHM::norm(K_,k_d,k_a_);
+
+               (*this)(B,i,j) += ward;
+
+               //second part
+               K_ = (k_b_ + k_c_)%L;
+
+               ward = 0.0;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_b_,k_c_,k_d,k_a);
+
+               ward /= 2.0 * PHM::norm(K_,k_b_,k_c_) * PHM::norm(K_,k_d,k_a);
+
+               (*this)(B,i,j) += psign*ward;
+
+               //3)
+               K_ = (k_b + k_d_)%L;
+
+               ward = 0.0;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_b,k_d_,k_c,k_a_);
+
+               ward /= 2.0 * PHM::norm(K_,k_b,k_d_) * PHM::norm(K_,k_c,k_a_);
+
+               (*this)(B,i,j) += sign*ward;
+
+               K_ = (k_b_ + k_d_)%L;
+
+               ward = 0.0;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_b_,k_d_,k_c,k_a);
+
+               ward /= 2.0 * PHM::norm(K_,k_b_,k_d_) * PHM::norm(K_,k_c,k_a);
+
+               (*this)(B,i,j) += psign*sign*ward;
+
+               //4)
+               K_ = (k_a + k_c_)%L;
+
+               ward = 0.0;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_a,k_c_,k_d,k_b_);
+
+               ward /= 2.0 * PHM::norm(K_,k_a,k_c_) * PHM::norm(K_,k_d,k_b_);
+
+               (*this)(B,i,j) += sign*ward;
+
+               K_ = (k_a_ + k_c_)%L;
+
+               ward = 0.0;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_a_,k_c_,k_d,k_b);
+
+               ward /= 2.0 * PHM::norm(K_,k_a_,k_c_) * PHM::norm(K_,k_d,k_b);
+
+               (*this)(B,i,j) += psign*sign*ward;
+
+               //tp-norm:
+               (*this)(B,i,j) *= TPM::norm(K,k_a,k_b) * TPM::norm(K,k_c,k_d);
+
+               if(k_a == k_b)
+                  (*this)(B,i,j) /= std::sqrt(2.0);
+
+               if(k_c == k_d)
+                  (*this)(B,i,j) /= std::sqrt(2.0);
+
+            }
+
+            (*this)(B,i,i) += spm[k_a] + spm[k_b];
+
          }
 
-         //(*this)(B,i,i) += spm[k_a] + spm[k_b];
+      }
+      else{
+
+         for(int i = 0;i < gdim(B);++i){
+
+            k_a = t2s[B][i][0];
+            k_b = t2s[B][i][1];
+
+            k_a_ = (L - k_a)%L;
+            k_b_ = (L - k_b)%L;
+
+            //tp part is only nondiagonal part
+            for(int j = i;j < gdim(B);++j){
+
+               k_c = t2s[B][j][0];
+               k_d = t2s[B][j][1];
+
+               k_c_ = (L - k_c)%L;
+               k_d_ = (L - k_d)%L;
+
+               (*this)(B,i,j) = 0.0;
+
+               //four ph terms:
+               //1)
+               K_ = (k_a + k_d_)%L;
+
+               ward = 0.0;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_a,k_d_,k_c,k_b_);
+
+               ward /= 4.0 * PHM::norm(K_,k_a,k_d_) * PHM::norm(K_,k_c,k_b_);
+
+               (*this)(B,i,j) += ward;
+
+               //2)
+               K_ = (k_b + k_c_)%L;
+
+               ward = 0.0;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_b,k_c_,k_d,k_a_);
+
+               ward /= 4.0 * PHM::norm(K_,k_b,k_c_) * PHM::norm(K_,k_d,k_a_);
+
+               (*this)(B,i,j) += ward;
+
+               //3)
+               K_ = (k_b + k_d_)%L;
+
+               ward = 0.0;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_b,k_d_,k_c,k_a_);
+
+               ward /= 4.0 * PHM::norm(K_,k_b,k_d_) * PHM::norm(K_,k_c,k_a_);
+
+               (*this)(B,i,j) += sign*ward;
+
+               //4)
+               K_ = (k_a + k_c_)%L;
+
+               ward = 0.0;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int p = 0;p < 2;++p)
+                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_,p,k_a,k_c_,k_d,k_b_);
+
+               ward /= 4.0 * PHM::norm(K_,k_a,k_c_) * PHM::norm(K_,k_d,k_b_);
+
+               (*this)(B,i,j) += sign*ward;
+
+               //norm:
+               if(k_a == k_b)
+                  (*this)(B,i,j) /= std::sqrt(2.0);
+
+               if(k_c == k_d)
+                  (*this)(B,i,j) /= std::sqrt(2.0);
+
+            }
+
+            (*this)(B,i,i) += spm[k_a] + spm[k_b];
+
+         }
 
       }
 

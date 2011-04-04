@@ -35,6 +35,9 @@ class SPM {
       //TPM constructor
       SPM(double ,const TPM &);
 
+      //PHM constructor
+      SPM(double ,const PHM &);
+
       //destructor
       virtual ~SPM();
 

@@ -467,8 +467,8 @@ int PHM::get_phase_order(int S,int &K,int p,int &k_a,int &k_b){
       }
       else if(k_a > L/2){//switch
 
-         k_a = -k_a;
-         k_b = -k_b;
+         k_a = (L - k_a)%L;
+         k_b = (L - k_b)%L;
 
          if(p == 1)
             phase *= -1;

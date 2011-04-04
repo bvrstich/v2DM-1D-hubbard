@@ -96,8 +96,6 @@ class BlockMatrix{
 
       void out(const char *) const;
 
-      static double norm(int,int,int);
-
    private:
 
       //!pointer to Matrix objects, will contain the different blocks
