@@ -19,19 +19,24 @@ int SUP::dim;
  * @param N_in nr of particles
  */
 void SUP::init(int L_in,int N_in){
-   
-   L = L_in;
+
    N = N_in;
+   L = L_in;
+
    M = 2*L;
    dim = M*(M - 1);
+
+#ifdef __G_CON
+   
+   dim += M*M;
+
+#endif
 
 }
 
 /**
  * standard constructor\n
  * Allocates two TPM matrices and optionally a PHM, DPM or PPHM matrix.
- * @param M number of sp orbitals
- * @param N number of particles
  */
 SUP::SUP(){
 
@@ -39,6 +44,12 @@ SUP::SUP(){
 
    for(int i = 0;i < 2;++i)
       SZ_tp[i] = new TPM();
+
+#ifdef __G_CON
+
+   SZ_ph = new PHM();
+
+#endif
 
 }
 
@@ -55,6 +66,12 @@ SUP::SUP(const SUP &SZ_c){
    for(int i = 0;i < 2;++i)
       SZ_tp[i] = new TPM(*SZ_c.SZ_tp[i]);
 
+#ifdef __G_CON
+
+   SZ_ph = new PHM(*SZ_c.SZ_ph);
+
+#endif
+
 }
 
 /**
@@ -67,6 +84,12 @@ SUP::~SUP(){
 
    delete [] SZ_tp;
 
+#ifdef __G_CON
+   
+   delete SZ_ph;
+
+#endif
+
 }
 
 /**
@@ -77,6 +100,12 @@ SUP &SUP::operator+=(const SUP &SZ_pl){
 
    for(int i = 0;i < 2;++i)
       (*SZ_tp[i]) += (*SZ_pl.SZ_tp[i]);
+
+#ifdef __G_CON
+   
+   (*SZ_ph) += (*SZ_pl.SZ_ph);
+
+#endif
 
    return *this;
 
@@ -91,6 +120,12 @@ SUP &SUP::operator-=(const SUP &SZ_pl){
    for(int i = 0;i < 2;++i)
       (*SZ_tp[i]) -= (*SZ_pl.SZ_tp[i]);
 
+#ifdef __G_CON
+   
+   (*SZ_ph) -= (*SZ_pl.SZ_ph);
+
+#endif
+
    return *this;
 
 }
@@ -103,6 +138,12 @@ SUP &SUP::operator=(const SUP &SZ_c){
 
    (*SZ_tp[0]) = (*SZ_c.SZ_tp[0]);
    (*SZ_tp[1]) = (*SZ_c.SZ_tp[1]);
+
+#ifdef __G_CON
+
+   (*SZ_ph) = (*SZ_c.SZ_ph);
+
+#endif
 
    return *this;
 
@@ -117,6 +158,12 @@ SUP &SUP::operator=(double &a){
 
    (*SZ_tp[0]) = a;
    (*SZ_tp[1]) = a;
+
+#ifdef __G_CON
+
+   (*SZ_ph) = a;
+
+#endif
 
    return *this;
 
@@ -143,6 +190,29 @@ const TPM &SUP::tpm(int i) const{
 
 }
 
+#ifdef __G_CON
+
+/**
+ * @return pointer to the PHM block: SZ_ph
+ */
+PHM &SUP::phm(){
+
+   return *SZ_ph;
+
+}
+
+/**
+ * const version
+ * @return pointer to the PHM block: SZ_ph
+ */
+const PHM &SUP::phm() const{
+
+   return *SZ_ph;
+
+}
+
+#endif
+
 /**
  * Initialization of the SUP matrix S, is just u^0: see primal_dual.pdf for more information
  */
@@ -159,6 +229,13 @@ ostream &operator<<(ostream &output,const SUP &SZ_p){
    output << (*SZ_p.SZ_tp[0]) << std::endl;
    output << (*SZ_p.SZ_tp[1]);
 
+#ifdef __G_CON
+
+   output << std::endl;
+   output << (*SZ_p.SZ_ph);
+
+#endif
+
    return output;
 
 }
@@ -170,6 +247,12 @@ void SUP::fill_Random(){
 
    SZ_tp[0]->fill_Random();
    SZ_tp[1]->fill_Random();
+
+#ifdef __G_CON
+
+   SZ_ph->fill_Random();
+
+#endif
 
 }
 
@@ -234,6 +317,12 @@ double SUP::ddot(const SUP &SZ_i) const{
    for(int i = 0;i < 2;++i)
       ward += SZ_tp[i]->ddot(*SZ_i.SZ_tp[i]);
 
+#ifdef __G_CON
+   
+   ward += SZ_ph->ddot(*SZ_i.SZ_ph);
+
+#endif
+
    return ward;
 
 }
@@ -247,6 +336,12 @@ void SUP::invert(){
    for(int i = 0;i < 2;++i)
       SZ_tp[i]->invert();
 
+#ifdef __G_CON
+   
+   SZ_ph->invert();
+
+#endif
+
 }
 
 /**
@@ -257,6 +352,12 @@ void SUP::dscal(double alpha){
 
    for(int i = 0;i < 2;++i)
       SZ_tp[i]->dscal(alpha);
+
+#ifdef __G_CON
+   
+   SZ_ph->dscal(alpha);
+
+#endif
 
 }
 
@@ -345,6 +446,12 @@ void SUP::sqrt(int option){
    for(int i = 0;i < 2;++i)
       SZ_tp[i]->sqrt(option);
 
+#ifdef __G_CON
+
+   SZ_ph->sqrt(option);
+
+#endif
+
 }
 
 /**
@@ -358,6 +465,12 @@ void SUP::L_map(const SUP &map,const SUP &object){
    for(int i = 0;i < 2;++i)
       SZ_tp[i]->L_map(map.tpm(i),object.tpm(i));
 
+#ifdef __G_CON
+
+   SZ_ph->L_map(map.phm(),object.phm());
+
+#endif
+
 }
 
 /**
@@ -369,6 +482,12 @@ void SUP::daxpy(double alpha,const SUP &SZ_p){
 
    for(int i = 0;i < 2;++i)
       SZ_tp[i]->daxpy(alpha,SZ_p.tpm(i));
+
+#ifdef __G_CON
+   
+   SZ_ph->daxpy(alpha,SZ_p.phm());
+
+#endif
 
 }
 
@@ -400,6 +519,12 @@ SUP &SUP::mprod(const SUP &A,const SUP &B){
    for(int i= 0;i < 2;++i)
       SZ_tp[i]->mprod(A.tpm(i),B.tpm(i));
 
+#ifdef __G_CON
+
+   SZ_ph->mprod(A.phm(),B.phm());
+
+#endif
+
    return *this;
 
 }
@@ -413,6 +538,12 @@ void SUP::fill(const TPM &tpm){
    *SZ_tp[0] = tpm;
    SZ_tp[1]->Q(1,tpm);
 
+#ifdef __G_CON
+   
+   SZ_ph->G(tpm);
+
+#endif
+
 }
 
 /**
@@ -422,6 +553,12 @@ void SUP::fill(const TPM &tpm){
 void SUP::fill(){
 
    SZ_tp[1]->Q(1,*SZ_tp[0]);
+
+#ifdef __G_CON
+
+   SZ_ph->G(*SZ_tp[0]);
+
+#endif 
 
 }
 
@@ -614,5 +751,59 @@ void SUP::out(ofstream &output) const{
             output << i << "\t" << j << "\t" << this->tpm(1)(B,i,j) << std::endl;
 
    }
+
+#ifdef __G_CON
+
+   //G
+   for(int B = 0;B < this->phm().gnr();++B){
+
+      for(int i = 0;i < this->phm().gdim(B);++i)
+         for(int j = 0;j < this->phm().gdim(B);++j)
+            output << i << "\t" << j << "\t" << this->phm()(B,i,j) << std::endl;
+
+   }
+
+#endif
+
+}
+
+/*
+ * Input a SUP matrix from a file
+ * @param input ifstream object association with input file.
+ */
+void SUP::in(ifstream &input){
+
+   int I,J;
+
+   //first P
+   for(int B = 0;B < (this->tpm(0)).gnr();++B){
+
+      for(int i = 0;i < (this->tpm(0)).gdim(B);++i)
+         for(int j = 0;j < (this->tpm(0)).gdim(B);++j)
+            input >> I >> J >> (this->tpm(0))(B,i,j);
+
+   }
+
+   //then Q
+   for(int B = 0;B < (this->tpm(1)).gnr();++B){
+
+      for(int i = 0;i < (this->tpm(1)).gdim(B);++i)
+         for(int j = 0;j < (this->tpm(1)).gdim(B);++j)
+            input >> I >> J >> (this->tpm(1))(B,i,j);
+
+   }
+
+#ifdef __G_CON
+
+   //then G
+   for(int B = 0;B < (this->phm()).gnr();++B){
+
+      for(int i = 0;i < (this->phm()).gdim(B);++i)
+         for(int j = 0;j < (this->phm()).gdim(B);++j)
+            input >> I >> J >> (this->phm())(B,i,j);
+
+   }
+
+#endif
 
 }

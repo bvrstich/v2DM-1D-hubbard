@@ -18,11 +18,18 @@ int EIG::dim;
  * @param N_in nr of particles
  */
 void EIG::init(int L_in,int N_in){
-   
-   L = L_in;
+
    N = N_in;
+   L = L_in;
+
    M = 2*L;
    dim = M*(M - 1);
+
+#ifdef __G_CON
+   
+   dim += M*M;
+
+#endif
 
 }
 
@@ -38,6 +45,12 @@ EIG::EIG(SUP &SZ){
    for(int i = 0;i < 2;++i)
       v_tp[i] = new BlockVector<TPM>(SZ.tpm(i));
 
+#ifdef __G_CON
+   
+   v_ph = new BlockVector<PHM>(SZ.phm());
+
+#endif
+
 }
 
 /**
@@ -52,6 +65,12 @@ EIG::EIG(const EIG &eig_c){
    for(int i = 0;i < 2;++i)
       v_tp[i] = new BlockVector<TPM>(eig_c.tpv(i));
 
+#ifdef __G_CON
+
+   v_ph = new BlockVector<PHM>(eig_c.phv());
+
+#endif
+
 }
 
 /**
@@ -62,6 +81,12 @@ EIG &EIG::operator=(const EIG &eig_c){
 
    for(int i = 0;i < 2;++i)
       *v_tp[i] = *eig_c.v_tp[i];
+
+#ifdef __G_CON
+
+   *v_ph = *eig_c.v_ph;
+
+#endif
 
    return *this;
 
@@ -77,6 +102,12 @@ EIG::~EIG(){
 
    delete [] v_tp;
 
+#ifdef __G_CON
+   
+   delete v_ph;
+
+#endif
+
 }
 
 /**
@@ -88,12 +119,24 @@ void EIG::diagonalize(SUP &sup){
    for(int i = 0;i < 2;++i)
       v_tp[i]->diagonalize(sup.tpm(i));
 
+#ifdef __G_CON
+   
+   v_ph->diagonalize(sup.phm());
+
+#endif
+
 }
 
 ostream &operator<<(ostream &output,const EIG &eig_p){
 
    for(int i = 0;i < 2;++i)
       std::cout << eig_p.tpv(i) << std::endl;
+
+#ifdef __G_CON
+   
+   std::cout << eig_p.phv() << std::endl;
+
+#endif
 
    return output;
 
@@ -149,6 +192,30 @@ const BlockVector<TPM> &EIG::tpv(int i) const{
 
 }
 
+#ifdef __G_CON
+
+/** 
+ * get the BlockVector<PHM> object containing the eigenvalues of the PHM block G
+ * @return a BlockVector<PHM> object containing the desired eigenvalues
+ */
+BlockVector<PHM> &EIG::phv(){
+
+   return *v_ph;
+
+}
+
+/** 
+ * get the BlockVector<PHM> object containing the eigenvalues of the PHM block G, const version
+ * @return a BlockVector<PHM> object containing the desired eigenvalues
+ */
+const BlockVector<PHM> &EIG::phv() const{
+
+   return *v_ph;
+
+}
+
+#endif
+
 /**
  * @return total dimension of the EIG object
  */
@@ -172,6 +239,14 @@ double EIG::min() const{
    if(ward > v_tp[1]->min())
       ward = v_tp[1]->min();
 
+#ifdef __G_CON
+
+   //lowest eigenvalue of G block
+   if(ward > v_ph->min())
+      ward = v_ph->min();
+
+#endif
+
    return ward;
 
 }
@@ -189,6 +264,14 @@ double EIG::max() const{
    if(ward < v_tp[1]->max())
       ward = v_tp[1]->max();
 
+#ifdef __G_CON
+
+   //highest eigenvalue of G block
+   if(ward < v_ph->max())
+      ward = v_ph->max();
+
+#endif
+
    return ward;
 
 }
@@ -202,6 +285,14 @@ double EIG::center_dev() const{
    double sum = v_tp[0]->sum() + v_tp[1]->sum();
 
    double log_product = v_tp[0]->log_product() + v_tp[1]->log_product();
+
+#ifdef __G_CON
+
+   sum += v_ph->sum();
+
+   log_product += v_ph->log_product();
+
+#endif
 
    return dim*log(sum/(double)dim) - log_product;
 
@@ -222,6 +313,12 @@ double EIG::centerpot(double alpha,const EIG &eigen_Z,double c_S,double c_Z) con
 
    for(int i = 0;i < 2;++i)
       ward -= v_tp[i]->centerpot(alpha) + (eigen_Z.tpv(i)).centerpot(alpha);
+
+#ifdef __G_CON
+
+   ward -= v_ph->centerpot(alpha) + (eigen_Z.phv()).centerpot(alpha);
+
+#endif
 
    return ward;
 

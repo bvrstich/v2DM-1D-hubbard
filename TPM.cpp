@@ -353,6 +353,14 @@ void TPM::init_overlap(){
    Sa += 1.0;
    Sc += (2.0*N - M)/((N - 1.0)*(N - 1.0));
 
+#ifdef __G_CON
+
+   Sa += 4.0;
+   Sc += (2.0*N - M - 2.0)/((N - 1.0)*(N - 1.0));
+
+#endif
+
+
 }
 
 /**
@@ -836,6 +844,22 @@ void TPM::H(const TPM &b,const SUP &D){
 
    *this += Qb;
 
+#ifdef __G_CON
+
+   //maak G(b)
+   PHM Gb;
+   Gb.G(b);
+
+   PHM hulpje;
+
+   hulpje.L_map(D.phm(),Gb);
+
+   hulp.G(hulpje);
+
+   *this += hulp;
+
+#endif
+
    this->proj_Tr();
 
 }
@@ -937,6 +961,14 @@ void TPM::collaps(int option,const SUP &S){
    hulp.Q(1,S.tpm(1));
 
    *this += hulp;
+
+#ifdef __G_CON
+
+   hulp.G(S.phm());
+
+   *this += hulp;
+
+#endif
 
    if(option == 1)
       this->proj_Tr();

@@ -1,3 +1,9 @@
+#ifdef PQG
+
+#define __G_CON
+
+#endif
+
 #include "lapack.h"
 #include "Matrix.h"
 #include "BlockMatrix.h"
