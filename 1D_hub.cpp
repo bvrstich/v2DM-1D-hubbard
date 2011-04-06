@@ -45,10 +45,17 @@ int main(int argc,char *argv[]){
 
    TPM::init(L,N);
    SPM::init(L,N);
+#ifdef __G_CON
    PHM::init(L,N);
+#endif
+
+#ifdef __T1_CON
+   DPM::init(L,N);
+#endif
+
    SUP::init(L,N);
    EIG::init(L,N);
-
+/*
    TPM ham;
    ham.hubbard(U);
 
@@ -214,8 +221,15 @@ int main(int argc,char *argv[]){
 
    //print density matrix to file
    //(S.tpm(0)).out("rdm.out");
+*/
+#ifdef __T1_CON
+   DPM::clear();
+#endif
 
+#ifdef __G_CON
    PHM::clear();
+#endif
+
    SPM::clear();
    TPM::clear();
 

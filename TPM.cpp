@@ -360,7 +360,6 @@ void TPM::init_overlap(){
 
 #endif
 
-
 }
 
 /**
@@ -982,7 +981,7 @@ double TPM::spin() const{
 
    double ward = 0.0;
 
-   int S,K;
+   int S;
 
    for(int B = 0;B < gnr();++B){
 
