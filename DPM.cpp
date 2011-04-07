@@ -346,9 +346,9 @@ void DPM::init(int L_in,int N_in){
       v[2] = k_b;
       v[3] = k_c;
 
-      dp2s[block].push_back(v);
+      dp2s[block + L/2 + 3].push_back(v);
 
-      s2dp[block][1][0][k_b][k_c] = dp;
+      s2dp[block + L/2 + 3][1][0][k_b][k_c] = dp;
 
       ++dp;
 
@@ -366,9 +366,9 @@ void DPM::init(int L_in,int N_in){
                v[2] = k_b;
                v[3] = k_c;
 
-               dp2s[block].push_back(v);
+               dp2s[block + L/2 + 3].push_back(v);
 
-               s2dp[block][1][k_a][k_b][k_c] = dp;
+               s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
 
                ++dp;
 
@@ -378,8 +378,538 @@ void DPM::init(int L_in,int N_in){
 
    ++block;
 
-   //Now 0 < K < L/2
+   //Now 0 < K < L/2: degeneracy between parity + and -
+
+   for(int K = 1;K < L/2;++K){
+
+      //first S = 1/2:
+      dp = 0;
+
+      block_char[block][0] = 0;//S = 1/2
+      block_char[block][1] = K;
+      block_char[block][2] = 0;
+
+      char_block[0][K][0] = block;
+      char_block[0][K][1] = block;
+
+      //first S_ab = 0 and k_a = k_b != k_c
+      for(int k_a = 0;k_a < L;++k_a){
+
+         for(int k_c = 0;k_c < k_a;++k_c){
+
+            if( (2*k_a + k_c)%L == K ){
+
+               v[0] = 0;
+               v[1] = k_a;
+               v[2] = k_a;
+               v[3] = k_c;
+
+               dp2s[block].push_back(v);
+
+               s2dp[block][0][k_a][k_a][k_c] = dp;
+
+               ++dp;
+
+            }
+
+         }
+
+         for(int k_c = k_a + 1;k_c < L;++k_c){
+
+            if( (2*k_a + k_c)%L == K ){
+
+               v[0] = 0;
+               v[1] = k_a;
+               v[2] = k_a;
+               v[3] = k_c;
+
+               dp2s[block].push_back(v);
+
+               s2dp[block][0][k_a][k_a][k_c] = dp;
+
+               ++dp;
+
+            }
+
+         }
+
+      }
+
+      //then, for S_ab = 0/1, k_a < k_b < k_c
+      for(int S_ab = 0;S_ab < 2;++S_ab){
+
+         for(int k_a = 0;k_a < L;++k_a)
+            for(int k_b = k_a + 1;k_b < L;++k_b)
+               for(int k_c = k_b + 1;k_c < L;++k_c){
+
+                  if( (k_a + k_b + k_c)%L == K ){
+
+                     v[0] = S_ab;
+                     v[1] = k_a;
+                     v[2] = k_b;
+                     v[3] = k_c;
+
+                     dp2s[block].push_back(v);
+
+                     s2dp[block][S_ab][k_a][k_b][k_c] = dp;
+
+                     ++dp;
+
+                  }
+
+               }
+
+      }
+
+      //now S = 3/2
+      dp = 0;
+
+      block_char[block + L/2 + 3][0] = 1;//S = 3/2
+      block_char[block + L/2 + 3][1] = K;
+      block_char[block + L/2 + 3][2] = 0;
+
+      char_block[1][K][0] = block + L/2 + 3;
+      char_block[1][K][1] = block + L/2 + 3;
+
+      for(int k_a = 0;k_a < L;++k_a)
+         for(int k_b = k_a + 1;k_b < L;++k_b)
+            for(int k_c = k_b + 1;k_c < L;++k_c){
+
+               if( (k_a + k_b + k_c)%L == K ){
+
+                  v[0] = 1;
+                  v[1] = k_a;
+                  v[2] = k_b;
+                  v[3] = k_c;
+
+                  dp2s[block + L/2 + 3].push_back(v);
+
+                  s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+
+                  ++dp;
+
+               }
+
+            }
+
+      ++block;
+
+   }
+
+   //now the last ones: K = L/2 positive parity
    dp = 0;
+
+   block_char[block][0] = 0;//S = 1/2
+   block_char[block][1] = L/2;
+   block_char[block][2] = 0;
+
+   char_block[0][L/2][0] = block;
+
+   //again first S_ab = 0, k_a == k_b != k_c
+
+   //for positive parity one extra state: |0 0 L/2>
+   v[0] = 0;//S_ab
+   v[1] = 0;//k_a
+   v[2] = 0;//k_b
+   v[3] = L/2;//k_c
+
+   dp2s[block].push_back(v);
+
+   s2dp[block][0][0][0][L/2] = dp;
+
+   ++dp;
+
+   for(int k_a = 1;k_a < L/2;++k_a){
+
+      for(int k_c = 0;k_c < k_a;++k_c){
+
+         if( (2*k_a + k_c)%L == L/2 ){
+
+            v[0] = 0;//S_ab
+            v[1] = k_a;//k_a
+            v[2] = k_a;//k_b
+            v[3] = k_c;//k_c
+
+            dp2s[block].push_back(v);
+
+            s2dp[block][0][k_a][k_a][k_c] = dp;
+
+            ++dp;
+
+         }
+
+      }
+
+      for(int k_c = k_a + 1;k_c < L;++k_c){
+
+         if( (2*k_a + k_c)%L == L/2 ){
+
+            v[0] = 0;//S_ab
+            v[1] = k_a;//k_a
+            v[2] = k_a;//k_b
+            v[3] = k_c;//k_c
+
+            dp2s[block].push_back(v);
+
+            s2dp[block][0][k_a][k_a][k_c] = dp;
+
+            ++dp;
+
+         }
+
+      }
+
+   }
+
+   //then, for S_ab = 0,1: k_a < k_b < k_c: this is quite involved.
+   for(int S_ab = 0;S_ab < 2;++S_ab){
+
+      //first with k_a = 0, k_b < k_c < L/2
+      for(int k_b = 1;k_b < L/2;++k_b)
+         for(int k_c = k_b + 1;k_c < L/2;++k_c){
+
+            if( (k_b + k_c) == L/2 ){
+
+               v[0] = S_ab;//S_ab
+               v[1] = 0;//k_a
+               v[2] = k_b;//k_b
+               v[3] = k_c;//k_c
+
+               dp2s[block].push_back(v);
+
+               s2dp[block][S_ab][0][k_b][k_c] = dp;
+
+               ++dp;
+
+            }
+
+         }
+
+      //then k_a < k_b < k_c
+      for(int k_a = 1;k_a < L/2;++k_a){
+
+         for(int k_b = k_a + 1;k_b < L/2;++k_b)
+            for(int k_c = k_b + 1;k_c < L/2;++k_c){
+
+               if( (k_a + k_b + k_c) == L/2){
+
+                  v[0] = S_ab;//S_ab
+                  v[1] = k_a;//k_a
+                  v[2] = k_b;//k_b
+                  v[3] = k_c;//k_c
+
+                  dp2s[block].push_back(v);
+
+                  s2dp[block][S_ab][k_a][k_b][k_c] = dp;
+
+                  ++dp;
+
+               }
+
+            }
+
+         //only S_ab == 0 has k's equal to L/2 for positive parity
+         for(int k_b = L/2 + S_ab;k_b < L;++k_b)
+            for(int k_c = k_b + 1;k_c < L;++k_c){
+
+               if( (k_a + k_b + k_c)%L == L/2 ){
+
+                  v[0] = S_ab;//S_ab
+                  v[1] = k_a;//k_a
+                  v[2] = k_b;//k_b
+                  v[3] = k_c;//k_c
+
+                  dp2s[block].push_back(v);
+
+                  s2dp[block][S_ab][k_a][k_b][k_c] = dp;
+
+                  ++dp;
+
+               }
+
+            }
+
+      }
+
+   }
+   
+   //then K = L/2, S = 3/2 positive parity:
+   dp = 0;
+
+   block_char[block + L/2 + 3][0] = 1;//S = 3/2
+   block_char[block + L/2 + 3][1] = L/2;
+   block_char[block + L/2 + 3][2] = 0;
+
+   char_block[1][L/2][0] = block + L/2 + 3;
+
+   //first with k_a = 0, k_b < k_c < L/2
+   for(int k_b = 1;k_b < L/2;++k_b)
+      for(int k_c = k_b + 1;k_c < L/2;++k_c){
+
+         if( (k_b + k_c) == L/2 ){
+
+            v[0] = 1;//S_ab
+            v[1] = 0;//k_a
+            v[2] = k_b;//k_b
+            v[3] = k_c;//k_c
+
+            dp2s[block + L/2 + 3].push_back(v);
+
+            s2dp[block + L/2 + 3][1][0][k_b][k_c] = dp;
+
+            ++dp;
+
+         }
+
+      }
+
+   //then k_a < k_b < k_c
+   for(int k_a = 1;k_a < L/2;++k_a){
+
+      for(int k_b = k_a + 1;k_b < L/2;++k_b)
+         for(int k_c = k_b + 1;k_c < L/2;++k_c){
+
+            if( (k_a + k_b + k_c) == L/2){
+
+               v[0] = 1;//S_ab
+               v[1] = k_a;//k_a
+               v[2] = k_b;//k_b
+               v[3] = k_c;//k_c
+
+               dp2s[block + L/2 + 3].push_back(v);
+
+               s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+
+               ++dp;
+
+            }
+
+         }
+
+      //only negative parity has k's equal to L/2
+      for(int k_b = L/2 + 1;k_b < L;++k_b)
+         for(int k_c = k_b + 1;k_c < L;++k_c){
+
+            if( (k_a + k_b + k_c)%L == L/2 ){
+
+               v[0] = 1;//S_ab
+               v[1] = k_a;//k_a
+               v[2] = k_b;//k_b
+               v[3] = k_c;//k_c
+
+               dp2s[block + L/2 + 3].push_back(v);
+
+               s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+
+               ++dp;
+
+            }
+
+         }
+
+   }
+
+   block++;
+
+   //K = L/2, negative parity, start with S = 1/2
+   dp = 0;
+
+   block_char[block][0] = 0;//S = 1/2
+   block_char[block][1] = L/2;
+   block_char[block][2] = 1;//negative parity
+
+   char_block[0][L/2][1] = block;
+
+   //again first S_ab = 0, k_a == k_b != k_c
+   for(int k_a = 1;k_a < L/2;++k_a){
+
+      for(int k_c = 0;k_c < k_a;++k_c){
+
+         if( (2*k_a + k_c)%L == L/2 ){
+
+            v[0] = 0;//S_ab
+            v[1] = k_a;//k_a
+            v[2] = k_a;//k_b
+            v[3] = k_c;//k_c
+
+            dp2s[block].push_back(v);
+
+            s2dp[block][0][k_a][k_a][k_c] = dp;
+
+            ++dp;
+
+         }
+
+      }
+
+      for(int k_c = k_a + 1;k_c < L;++k_c){
+
+         if( (2*k_a + k_c)%L == L/2 ){
+
+            v[0] = 0;//S_ab
+            v[1] = k_a;//k_a
+            v[2] = k_a;//k_b
+            v[3] = k_c;//k_c
+
+            dp2s[block].push_back(v);
+
+            s2dp[block][0][k_a][k_a][k_c] = dp;
+
+            ++dp;
+
+         }
+
+      }
+
+   }
+
+   //then k_a < k_b < k_c:
+   for(int S_ab = 0;S_ab < 2;++S_ab){
+
+      //first with k_a = 0, k_b < k_c < L/2
+      for(int k_b = 1;k_b < L/2;++k_b)
+         for(int k_c = k_b + 1;k_c < L/2;++k_c){
+
+            if( (k_b + k_c) == L/2 ){
+
+               v[0] = S_ab;//S_ab
+               v[1] = 0;//k_a
+               v[2] = k_b;//k_b
+               v[3] = k_c;//k_c
+
+               dp2s[block].push_back(v);
+
+               s2dp[block][S_ab][0][k_b][k_c] = dp;
+
+               ++dp;
+
+            }
+
+         }
+
+      //then k_a < k_b < k_c
+      for(int k_a = 1;k_a < L/2;++k_a){
+
+         for(int k_b = k_a + 1;k_b < L/2;++k_b)
+            for(int k_c = k_b + 1;k_c < L/2;++k_c){
+
+               if( (k_a + k_b + k_c) == L/2){
+
+                  v[0] = S_ab;//S_ab
+                  v[1] = k_a;//k_a
+                  v[2] = k_b;//k_b
+                  v[3] = k_c;//k_c
+
+                  dp2s[block].push_back(v);
+
+                  s2dp[block][S_ab][k_a][k_b][k_c] = dp;
+
+                  ++dp;
+
+               }
+
+            }
+
+         //only S_ab == 1 has k's equal to L/2 for negative parity
+         for(int k_b = L/2 + (1 - S_ab);k_b < L;++k_b)
+            for(int k_c = k_b + 1;k_c < L;++k_c){
+
+               if( (k_a + k_b + k_c)%L == L/2 ){
+
+                  v[0] = S_ab;//S_ab
+                  v[1] = k_a;//k_a
+                  v[2] = k_b;//k_b
+                  v[3] = k_c;//k_c
+
+                  dp2s[block].push_back(v);
+
+                  s2dp[block][S_ab][k_a][k_b][k_c] = dp;
+
+                  ++dp;
+
+               }
+
+            }
+
+      }
+
+   }
+
+   //at last we have the last block, K = L/2, S = 3/2, negative parity
+   dp = 0;
+
+   block_char[block + L/2 + 3][0] = 1;//S = 3/2
+   block_char[block + L/2 + 3][1] = L/2;
+   block_char[block + L/2 + 3][2] = 1;
+
+   char_block[1][L/2][1] = block + L/2 + 3;
+
+   //first with k_a = 0, k_b < k_c < L/2
+   for(int k_b = 1;k_b < L/2;++k_b)
+      for(int k_c = k_b + 1;k_c < L/2;++k_c){
+
+         if( (k_b + k_c) == L/2 ){
+
+            v[0] = 1;//S_ab
+            v[1] = 0;//k_a
+            v[2] = k_b;//k_b
+            v[3] = k_c;//k_c
+
+            dp2s[block + L/2 + 3].push_back(v);
+
+            s2dp[block + L/2 + 3][1][0][k_b][k_c] = dp;
+
+            ++dp;
+
+         }
+
+      }
+
+   //then k_a < k_b < k_c
+   for(int k_a = 1;k_a < L/2;++k_a){
+
+      for(int k_b = k_a + 1;k_b < L/2;++k_b)
+         for(int k_c = k_b + 1;k_c < L/2;++k_c){
+
+            if( (k_a + k_b + k_c) == L/2){
+
+               v[0] = 1;//S_ab
+               v[1] = k_a;//k_a
+               v[2] = k_b;//k_b
+               v[3] = k_c;//k_c
+
+               dp2s[block + L/2 + 3].push_back(v);
+
+               s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+
+               ++dp;
+
+            }
+
+         }
+
+      //only negative parity has k's equal to L/2
+      for(int k_b = L/2;k_b < L;++k_b)
+         for(int k_c = k_b + 1;k_c < L;++k_c){
+
+            if( (k_a + k_b + k_c)%L == L/2 ){
+
+               v[0] = 1;//S_ab
+               v[1] = k_a;//k_a
+               v[2] = k_b;//k_b
+               v[3] = k_c;//k_c
+
+               dp2s[block + L/2 + 3].push_back(v);
+
+               s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+
+               ++dp;
+
+            }
+
+         }
+
+   }
 
 }
 
