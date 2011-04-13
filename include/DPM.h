@@ -48,9 +48,11 @@ class DPM : public BlockMatrix {
       //easy to access the numbers, in sp mode
       double operator()(int B,int S_ab,int a,int b,int c,int S_de,int d,int e,int f) const;
 
-      double operator()(int S,int K,int S_ab,int a,int b,int c,int S_de,int d,int e,int f) const;
+      double operator()(int S,int K,int p,int S_ab,int a,int b,int c,int S_de,int d,int e,int f) const;
 
-      int get_inco(int S,int S_ab,int a,int b,int c,int *i,double *coef) const;
+      static int get_phase_order(int S,int &K,int p,int &S_ab,int &a,int &b,int &c);
+
+      static int get_inco(int S,int K,int p,int S_ab,int a,int b,int c,int *i,double *coef);
 
       //geef N terug
       int gN() const;
@@ -64,6 +66,8 @@ class DPM : public BlockMatrix {
       int gS(int block) const;
 
       int gK(int block) const;
+
+      int gp(int block) const;
 
       //generalized T1 map
       void T(double,double,double,const TPM &);
@@ -80,6 +84,8 @@ class DPM : public BlockMatrix {
       static void init(int,int);
 
       static void clear();
+
+      static void print_basis();
 
    private:
 

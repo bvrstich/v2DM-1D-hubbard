@@ -4,6 +4,7 @@
 #include <cmath>
 
 using std::endl;
+using std::cout;
 using std::ostream;
 using std::ofstream;
 using std::ifstream;
@@ -387,5 +388,19 @@ void BlockMatrix::out(const char *filename) const{
    output.precision(10);
 
    output << *this;
+
+}
+
+/**
+ * @return the total dimension of the object
+ */
+int BlockMatrix::total_dim() const {
+
+   int tmp = 0;
+
+   for(int B = 0;B < gnr();++B)
+      tmp += gdim(B)*gdeg(B);
+
+   return tmp;
 
 }
