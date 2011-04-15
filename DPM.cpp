@@ -136,25 +136,25 @@ void DPM::init(int L_in,int N_in){
 
    }
 
-   //now S_ab = 0, k_a < k_b < k_c, but start with k_a == 0
-   for(int k_b = 1;k_b < L/2;++k_b){
+   //now S_ab = 0, k_a != k_b != k_c (transitive) , but with k_c == 0: only positive parity contribution!
+   for(int k_a = 1;k_a < L/2;++k_a){
 
-      int k_c = L - k_b;
+      int k_b = L - k_a;
 
       v[0] = 0;//S_ab
-      v[1] = 0;
+      v[1] = k_a;
       v[2] = k_b;
-      v[3] = k_c;
+      v[3] = 0;
 
       dp2s[block].push_back(v);
 
-      s2dp[block][0][0][k_b][k_c] = dp;
+      s2dp[block][0][k_a][k_b][0] = dp;
 
       ++dp;
 
    }
 
-   //then, for both S_ab = 0/1, k_a < k_b < k_c
+   //then, for both S_ab = 0/1, k_a < k_b < k_c: no zero momentum
    for(int S_ab = 0;S_ab < 2;++S_ab){
 
       for(int k_a = 1;k_a < L;++k_a)
@@ -288,18 +288,18 @@ void DPM::init(int L_in,int N_in){
          }
 
    //then the negative parity with 0, which are S_ab = 1 states!
-   for(int k_b = 1;k_b < L/2;++k_b){
+   for(int k_a = 1;k_a < L/2;++k_a){
 
-      int k_c = L - k_b;
+      int k_b = L - k_a;
 
       v[0] = 1;
-      v[1] = 0;
+      v[1] = k_a;
       v[2] = k_b;
-      v[3] = k_c;
+      v[3] = 0;
 
       dp2s[block].push_back(v);
 
-      s2dp[block][1][0][k_b][k_c] = dp;
+      s2dp[block][1][k_a][k_b][0] = dp;
 
       ++dp;
 
@@ -561,7 +561,25 @@ void DPM::init(int L_in,int N_in){
 
    }
 
-   //then, for S_ab = 0,1: k_a < k_b < k_c: this is quite involved.
+   //then, for S_ab == 0 and positive parity, terms for which k_c = L/2
+   for(int k_a = 1;k_a < L/2;++k_a){
+
+      int k_b = L - k_a;
+
+      v[0] = 0;
+      v[1] = k_a;
+      v[2] = k_b;
+      v[3] = L/2;
+
+      dp2s[block].push_back(v);
+
+      s2dp[block][0][k_a][k_b][L/2] = dp;
+
+      ++dp;
+
+   }
+
+   //for both S_ab = 0 and 1: k_a < k_b < k_c: this is quite involved.
    for(int S_ab = 0;S_ab < 2;++S_ab){
 
       //first with k_a = 0, k_b < k_c < L/2
@@ -585,7 +603,7 @@ void DPM::init(int L_in,int N_in){
 
          }
 
-      //then k_a < k_b < k_c
+      //then k_a < k_b < k_c with no zero's
       for(int k_a = 1;k_a < L/2;++k_a){
 
          for(int k_b = k_a + 1;k_b < L/2;++k_b)
@@ -608,8 +626,7 @@ void DPM::init(int L_in,int N_in){
 
             }
 
-         //only S_ab == 0 has k's equal to L/2 for positive parity
-         for(int k_b = L/2 + S_ab;k_b < L;++k_b)
+         for(int k_b = L/2 + 1;k_b < L;++k_b)
             for(int k_c = k_b + 1;k_c < L;++k_c){
 
                if( (k_a + k_b + k_c)%L == L/2 ){
@@ -811,7 +828,24 @@ void DPM::init(int L_in,int N_in){
             }
 
          //only S_ab == 1 has k's equal to L/2 for negative parity
-         for(int k_b = L/2 + (1 - S_ab);k_b < L;++k_b)
+         if(S_ab == 1){
+
+            int k_b = L - k_a;
+
+            v[0] = 1;
+            v[1] = k_a;
+            v[2] = k_b;
+            v[3] = L/2;
+
+            dp2s[block].push_back(v);
+
+            s2dp[block][1][k_a][k_b][L/2] = dp;
+
+            ++dp;
+
+         }
+
+         for(int k_b = L/2 + 1;k_b < L;++k_b)
             for(int k_c = k_b + 1;k_c < L;++k_c){
 
                if( (k_a + k_b + k_c)%L == L/2 ){
@@ -1220,7 +1254,7 @@ double DPM::operator()(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int S_
       return 0.0;
 
    }
-   
+
    int B = char_block[S][K][p];
 
    double ward = 0.0;
@@ -1289,6 +1323,14 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                return (1 - 2*p);
 
             }
+            else if(index == L/2){//only positive parity!
+
+               if(p == 0)
+                  return 1;
+               else
+                  return 0;
+
+            }
             else
                return 1;
 
@@ -1303,35 +1345,44 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_c < k_b){//switcheroo!
 
-                        index = k_b;
-                        k_b = k_c;
-                        k_c = index;
-
-                        return 1;
-
-                     }
-                     else
-                        return 1;
-
-                  }
-                  else{//S_ab == 1
-
-                     if(k_c < k_b){
-
-                        index = k_b;
-                        k_b = k_c;
-                        k_c = index;
-
-                        S_ab = 0;
+                        k_a = k_c;
+                        k_c = 0;
 
                         return -1;
 
                      }
                      else{
 
-                        S_ab = 0;
+                        k_a = k_b;
+                        k_b = k_c;
+                        k_c = 0;
 
                         return -1;
+
+                     }
+
+                  }
+                  else{//S_ab == 1
+
+                     if(k_c < k_b){
+
+                        k_a = k_c;
+                        k_c = 0;
+
+                        S_ab = 0;
+
+                        return 1;
+
+                     }
+                     else{
+
+                        k_a = k_b;
+                        k_b = k_c;
+                        k_c = 0;
+
+                        S_ab = 0;
+
+                        return 1;
 
                      }
 
@@ -1344,20 +1395,23 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_c < k_b){
 
-                        index = k_b;
-                        k_b = k_c;
-                        k_c = index;
-
-                        S_ab = 1;
-
-                        return -1;
-
-                     }
-                     else{
+                        k_a = k_c;
+                        k_c = 0;
 
                         S_ab = 1;
 
                         return 1;
+
+                     }
+                     else{
+
+                        k_a = k_b;
+                        k_b = k_c;
+                        k_c = 0;
+
+                        S_ab = 1;
+
+                        return -1;
 
                      }
 
@@ -1366,15 +1420,21 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_c < k_b){//switcheroo
 
-                        index = k_b;
+                        k_a = k_c;
+                        k_c = 0;
+
+                        return 1;
+
+                     }
+                     else{
+
+                        k_a = k_b;
                         k_b = k_c;
-                        k_c = index;
+                        k_c = 0;
 
                         return -1;
 
                      }
-                     else
-                        return 1;
 
                   }
 
@@ -1389,19 +1449,19 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_c < k_a){
 
-                        k_b = k_c;
-                        k_c = k_a;
-                        k_a = 0;
+                        k_b = k_a;
+                        k_a = k_c;
+                        k_c = 0;
 
-                        return 1;
+                        return -1;
 
                      }
                      else{
 
-                        k_b = k_a;
-                        k_a = 0;
+                        k_b = k_c;
+                        k_c = 0;
 
-                        return 1;
+                        return -1;
 
                      }
 
@@ -1410,9 +1470,9 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_c < k_a){
 
-                        k_b = k_c;
-                        k_c = k_a;
-                        k_a = 0;
+                        k_b = k_a;
+                        k_a = k_c;
+                        k_c = 0;
 
                         S_ab = 0;
 
@@ -1421,8 +1481,8 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      }
                      else{
 
-                        k_b = k_a;
-                        k_a = 0;
+                        k_b = k_c;
+                        k_c = 0;
 
                         S_ab = 0;
 
@@ -1439,23 +1499,23 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_c < k_a){
 
-                        k_b = k_c;
-                        k_c = k_a;
-                        k_a = 0;
-
-                        S_ab = 1;
-
-                        return -1;
-
-                     }
-                     else{
-
                         k_b = k_a;
-                        k_a = 0;
+                        k_a = k_c;
+                        k_c = 0;
 
                         S_ab = 1;
 
                         return 1;
+
+                     }
+                     else{
+
+                        k_b = k_c;
+                        k_c = 0;
+
+                        S_ab = 1;
+
+                        return -1;
 
                      }
 
@@ -1464,19 +1524,19 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_c < k_a){
 
-                        k_b = k_c;
-                        k_c = k_a;
-                        k_a = 0;
+                        k_b = k_a;
+                        k_a = k_c;
+                        k_c = 0;
 
-                        return 1;
+                        return -1;
 
                      }
                      else{
 
-                        k_b = k_a;
-                        k_a = 0;
+                        k_b = k_c;
+                        k_c = 0;
 
-                        return -1;
+                        return 1;
 
                      }
 
@@ -1493,21 +1553,16 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_b < k_a){
 
-                        k_c = k_a;
-                        k_a = 0;
-
-                        return -1;
-
-                     }
-                     else{
-
                         k_c = k_b;
                         k_b = k_a;
-                        k_a = 0;
+                        k_a = k_c;
+                        k_c = 0;
 
-                        return -1;
+                        return 1;
 
                      }
+                     else
+                        return 1;
 
                   }
                   else//S_ab = 1 cannot have positive parity
@@ -1522,21 +1577,16 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_b < k_a){
 
-                        k_c = k_a;
-                        k_a = 0;
-
-                        return 1;
-
-                     }
-                     else{
-
                         k_c = k_b;
                         k_b = k_a;
-                        k_a = 0;
+                        k_a = k_c;
+                        k_c = 0;
 
                         return -1;
 
                      }
+                     else
+                        return 1;
 
                   }
 
@@ -1598,6 +1648,14 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                return 1 - 2*p;
 
             }
+            else if(index == 0){//only positive parity
+
+               if(p == 0)
+                  return 1;
+               else
+                  return 0;
+
+            }
             else
                return 1;
 
@@ -1613,18 +1671,18 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      if(k_c < k_b){
 
                         k_a = k_c;
-                        k_c = k_b;
-                        k_b = L/2;
+                        k_c = L/2;
 
-                        return 1;
+                        return -1;
 
                      }
                      else{
 
                         k_a = k_b;
-                        k_b = L/2;
+                        k_b = k_c;
+                        k_c = L/2;
 
-                        return 1;
+                        return -1;
 
                      }
 
@@ -1634,22 +1692,22 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      if(k_c < k_b){
 
                         k_a = k_c;
-                        k_c = k_b;
-                        k_b = L/2;
+                        k_c = L/2;
 
                         S_ab = 0;
 
-                        return -1;
+                        return 1;
 
                      }
                      else{
 
                         k_a = k_b;
-                        k_b = L/2;
+                        k_b = k_c;
+                        k_c = L/2;
 
                         S_ab = 0;
 
-                        return -1;
+                        return 1;
 
                      }
 
@@ -1663,7 +1721,6 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      if(k_c < k_b){
 
                         k_a = k_c;
-                        k_c = k_b;
                         k_c = L/2;
 
                         S_ab = 1;
@@ -1674,7 +1731,8 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      else{
 
                         k_a = k_b;
-                        k_b = L/2;
+                        k_b = k_c;
+                        k_c = L/2;
 
                         S_ab = 1;
 
@@ -1688,8 +1746,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      if(k_c < k_b){
 
                         k_a = k_c;
-                        k_c = k_b;
-                        k_b = L/2;
+                        k_c = L/2;
 
                         return 1;
 
@@ -1697,7 +1754,8 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      else{
 
                         k_a = k_b;
-                        k_b = L/2;
+                        k_b = k_c;
+                        k_c = L/2;
 
                         return -1;
 
@@ -1716,24 +1774,30 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_c < k_a){
 
-                        index = k_a;
+                        k_b = k_a;
                         k_a = k_c;
-                        k_c = index;
+                        k_c = L/2;
 
-                        return 1;
+                        return -1;
 
                      }
-                     else
-                        return 1;
+                     else{
+
+                        k_b = k_c;
+                        k_c = L/2;
+
+                        return -1;
+
+                     }
 
                   }
                   else{//S_ab == 1
 
                      if(k_c < k_a){
 
-                        index = k_a;
+                        k_b = k_a;
                         k_a = k_c;
-                        k_c = index;
+                        k_c = L/2;
 
                         S_ab = 0;
 
@@ -1741,6 +1805,9 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      }
                      else{
+
+                        k_b = k_c;
+                        k_c = L/2;
 
                         S_ab = 0;
 
@@ -1757,9 +1824,9 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_c < k_a){
 
-                        index = k_a;
+                        k_b = k_a;
                         k_a = k_c;
-                        k_c = index;
+                        k_c = L/2;
 
                         S_ab = 1;
 
@@ -1767,6 +1834,9 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      }
                      else{
+
+                        k_b = k_c;
+                        k_c = L/2;
 
                         S_ab = 1;
 
@@ -1779,15 +1849,21 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                      if(k_c < k_a){
 
-                        index = k_a;
+                        k_b = k_a;
                         k_a = k_c;
-                        k_c = index;
+                        k_c = L/2;
 
                         return -1;
 
                      }
-                     else
+                     else{
+
+                        k_b = k_c;
+                        k_c = L/2;
+
                         return 1;
+
+                     }
 
                   }
 
@@ -1804,19 +1880,14 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                         k_c = k_a;
                         k_a = k_b;
-                        k_b = L/2;
+                        k_b = k_c;
+                        k_c = L/2;
 
-                        return -1;
-
-                     }
-                     else{
-
-                        k_c = k_b;
-                        k_b = L/2;
-
-                        return -1;
+                        return 1;
 
                      }
+                     else
+                        return 1;
 
                   }
                   else//S_ab == 1 does not exist
@@ -1834,19 +1905,14 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                         k_c = k_a;
                         k_a = k_b;
-                        k_b = L/2;
+                        k_b = k_c;
+                        k_c = L/2;
 
                         return -1;
 
                      }
-                     else{
-
-                        k_c = k_b;
-                        k_b = L/2;
-
+                     else
                         return 1;
-
-                     }
 
                   }
 
@@ -2216,264 +2282,754 @@ int DPM::get_inco(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int *i,doub
 }
 
 /**
- * The spincoupled, translationally invariant T1-like (generalized T1) map: maps a TPM object (tpm) on a DPM object (*this)
+ * The spincoupled, translationally invariant and parity symmetric T1-like (generalized T1) map: maps a TPM object (tpm) on a DPM object (*this)
  * @param A term before the tp part of the map
  * @param B term before the np part of the map
  * @param C term before the sp part of the map
  * @param tpm input TPM
  */
-/*
-   void DPM::T(double A,double B,double C,const TPM &tpm) {
+void DPM::T(double A,double B,double C,const TPM &tpm) {
 
-//make sp matrix out of tpm
-SPM spm(C,tpm);
+   //make sp matrix out of tpm
+   SPM spm(C,tpm);
 
-double ward = 2.0*B*tpm.trace();
+   double ward = 2.0*B*tpm.trace();
 
-int k_a,k_b,k_c,k_d,k_e,k_z;
-int S_ab,S_de;
+   int k_a,k_b,k_c,k_d,k_e,k_z;
+   int S_ab,S_de;
 
-int sign_ab,sign_de;
+   int k_a_,k_b_,k_c_,k_d_,k_e_,k_z_;
 
-double norm_ab,norm_de;
+   int K,p;
 
-double hard;
+   int K_tp;
 
-//start with the S = 1/2 blocks, these are the most difficult:
-for(int B = 0;B < M/2;++B){
+   int sign_ab,sign_de;
 
-for(int i = 0;i < gdim(B);++i){
+   int psign;
 
-S_ab = dp2s[B][i][0];
+   double norm_ab,norm_de;
 
-k_a = dp2s[B][i][1];
-k_b = dp2s[B][i][2];
-k_c = dp2s[B][i][3];
+   double hard,tard,kard;
 
-sign_ab = 1 - 2*S_ab;
+   //start with the S = 1/2 blocks, these are the most difficult:
+   for(int B = 0;B < L/2 + 3;++B){
 
-norm_ab = 1.0;
+      K = block_char[B][1];
+      p = block_char[B][2];
 
-if(k_a == k_b)
-norm_ab /= std::sqrt(2.0);
+      psign = 1 - 2*p;
 
-for(int j = i;j < gdim(B);++j){
+      for(int i = 0;i < gdim(B);++i){
 
-S_de = dp2s[B][j][0];
+         S_ab = dp2s[B][i][0];
 
-k_d = dp2s[B][j][1];
-k_e = dp2s[B][j][2];
-k_z = dp2s[B][j][3];
+         k_a = dp2s[B][i][1];
+         k_b = dp2s[B][i][2];
+         k_c = dp2s[B][i][3];
 
-sign_de = 1 - 2*S_de;
+         k_a_ = (L - k_a)%L;
+         k_b_ = (L - k_b)%L;
+         k_c_ = (L - k_c)%L;
 
-norm_de = 1.0;
+         sign_ab = 1 - 2*S_ab;
 
-if(k_d == k_e)
-norm_de /= std::sqrt(2.0);
+         norm_ab = 1.0;
 
-hard = std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * _6j[S_ab][S_de];
+         if(k_a == k_b)
+            norm_ab /= std::sqrt(2.0);
 
-//init
-(*this)(B,i,j) = 0.0;
+         for(int j = i;j < gdim(B);++j){
 
-//the np + sp part
-if(i == j)
-(*this)(B,i,j) = ward - spm[k_a] - spm[k_b] - spm[k_c];
+            S_de = dp2s[B][j][0];
 
-//other parts are a bit more difficult.
+            k_d = dp2s[B][j][1];
+            k_e = dp2s[B][j][2];
+            k_z = dp2s[B][j][3];
 
-//tp(1)
-if(k_c == k_z)
-if(S_ab == S_de)
-(*this)(B,i,j) += A * tpm(S_ab,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_e);
+            k_d_ = (L - k_d)%L;
+            k_e_ = (L - k_e)%L;
+            k_z_ = (L - k_z)%L;
 
-//tp(2)
-if(k_b == k_z){
+            sign_de = 1 - 2*S_de;
 
-if(k_a == k_c)
-(*this)(B,i,j) += std::sqrt(2.0) * A * norm_ab * sign_ab * sign_de * hard * tpm(S_de,(k_a + k_c)%(M/2),k_a,k_c,k_d,k_e);
-else
-(*this)(B,i,j) += A * norm_ab * sign_ab * sign_de * hard * tpm(S_de,(k_a + k_c)%(M/2),k_a,k_c,k_d,k_e);
+            norm_de = 1.0;
 
-}
+            if(k_d == k_e)
+               norm_de /= std::sqrt(2.0);
 
-//tp(3)
-if(k_a == k_z){
+            hard = std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * _6j[S_ab][S_de];
 
-   if(k_b == k_c)
-      (*this)(B,i,j) += std::sqrt(2.0) * A * norm_ab * sign_de * hard * tpm(S_de,(k_b + k_c)%(M/2),k_b,k_c,k_d,k_e);
-   else
-      (*this)(B,i,j) += A * norm_ab * sign_de * hard * tpm(S_de,(k_b + k_c)%(M/2),k_b,k_c,k_d,k_e);
+            //init
+            (*this)(B,i,j) = 0.0;
 
-}
+            //the np + sp part
+            if(i == j)
+               (*this)(B,i,j) = ward - spm[k_a] - spm[k_b] - spm[k_c];
 
-//tp(4)
-if(k_c == k_e){
+            kard = 0.0;
 
-   if(k_d == k_z)
-      (*this)(B,i,j) += std::sqrt(2.0) * A * norm_de * sign_ab * sign_de * hard * tpm(S_ab,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_z);
-   else
-      (*this)(B,i,j) += A * norm_de * sign_ab * sign_de * hard * tpm(S_ab,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_z);
+            if(K == 0 || K == L/2){//difference between parity + and - blocks: the exchange terms
 
-}
+               //tp(1)
+               if(S_ab == S_de){
 
-//tp(5)
-if(k_b == k_e){
+                  if(k_c == k_z_){
 
-   double hulp = 0.0;
+                     K_tp = (k_a + k_b)%L;
 
-   //sum over intermediate spin
-   for(int Z = 0;Z < 2;++Z)
-      hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,(k_a + k_c)%(M/2),k_a,k_c,k_d,k_z);
+                     tard = 0.0;
 
-   //correct for norms of the tpm
-   if(k_a == k_c)
-      hulp *= std::sqrt(2.0);
+                     for(int pi = 0;pi < 2;++pi)
+                        tard += tpm(S_ab,K_tp,pi,k_a,k_b,k_d_,k_e_);
 
-   if(k_d == k_z)
-      hulp *= std::sqrt(2.0);
+                     kard += A * psign * tard / ( 2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_d_,k_e_) );
 
-   (*this)(B,i,j) += A * norm_ab * norm_de * sign_ab * sign_de * std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * hulp;
+                  }
 
-}
+               }
 
-//tp(6)
-if(k_a == k_e){
+               //tp(2)
+               if(k_b == k_z_){
 
-   double hulp = 0.0;
+                  K_tp = (k_a + k_c)%L;
 
-   //sum over intermediate spin
-   for(int Z = 0;Z < 2;++Z)
-      hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,(k_b + k_c)%(M/2),k_b,k_c,k_d,k_z);
+                  tard = 0.0;
 
-   if(k_b == k_c)
-      hulp *= std::sqrt(2.0);
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(S_de,K_tp,pi,k_a,k_c,k_d_,k_e_);
 
-   if(k_d == k_z)
-      hulp *= std::sqrt(2.0);
+                  if(k_a == k_c)
+                     tard *= std::sqrt(2.0);
 
-   (*this)(B,i,j) += A * sign_de * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+                  kard += A * psign * norm_ab * sign_ab * sign_de * hard * tard / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_d_,k_e_) );
 
-}
+               }
 
-//tp(7)
-if(k_c == k_d){
+               //tp(3)
+               if(k_a == k_z_){
 
-   if(k_e == k_z)
-      (*this)(B,i,j) += std::sqrt(2.0) * A * norm_de * sign_ab * hard * tpm(S_ab,(k_a + k_b)%(M/2),k_a,k_b,k_e,k_z);
-   else
-      (*this)(B,i,j) += A * norm_de * sign_ab * hard * tpm(S_ab,(k_a + k_b)%(M/2),k_a,k_b,k_e,k_z);
+                  K_tp = (k_b + k_c)%L;
 
-}
+                  tard = 0.0;
 
-//tp(8)
-if(k_b == k_d){
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(S_de,K_tp,pi,k_b,k_c,k_d_,k_e_);
 
-   double hulp = 0.0;
+                  if(k_b == k_c)
+                     tard *= std::sqrt(2.0);
 
-   //sum over intermediate spin
-   for(int Z = 0;Z < 2;++Z)
-      hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,(k_a + k_c)%(M/2),k_a,k_c,k_e,k_z);
+                  kard += A * psign * norm_ab * sign_de * hard * tard / (2.0 * TPM::norm(K_tp,k_b,k_c) * TPM::norm(K_tp,k_d_,k_e_) ) ;
 
-   if(k_a == k_c)
-      hulp *= std::sqrt(2.0);
+               }
 
-   if(k_e == k_z)
-      hulp *= std::sqrt(2.0);
+               //tp(4)
+               if(k_c == k_e_){
 
-   (*this)(B,i,j) += A * sign_ab * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+                  K_tp = (k_a + k_b)%L;
 
-}
+                  tard = 0.0;
 
-//tp(9)
-if(k_a == k_d){
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(S_ab,K_tp,pi,k_a,k_b,k_d_,k_z_);
 
-   double hulp = 0.0;
+                  if(k_d == k_z)
+                     tard *= std::sqrt(2.0);
 
-   //sum over intermediate spin
-   for(int Z = 0;Z < 2;++Z)
-      hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,(k_b + k_c)%(M/2),k_b,k_c,k_e,k_z);
+                  kard += A * psign * norm_de * sign_ab * sign_de * hard * tard / (2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_d_,k_z_) ) ;
 
-   if(k_b == k_c)
-      hulp *= std::sqrt(2.0);
+               }
 
-   if(k_e == k_z)
-      hulp *= std::sqrt(2.0);
+               //tp(5)
+               if(k_b == k_e_){
 
-   (*this)(B,i,j) += A * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+                  K_tp = (k_a + k_c)%L;
 
-}
+                  tard = 0.0;
 
-}
-}
+                  //sum over intermediate spin
+                  for(int pi = 0;pi < 2;++pi)
+                     for(int Z = 0;Z < 2;++Z)
+                        tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_a,k_c,k_d_,k_z_);
 
-}
+                  //correct for norms of the tpm
+                  if(k_a == k_c)
+                     tard *= std::sqrt(2.0);
 
-//then the S = 3/2 blocks, this should be easy, totally antisymmetrical 
-for(int B = M/2;B < M;++B){
+                  if(k_d == k_z)
+                     tard *= std::sqrt(2.0);
 
-   for(int i = 0;i < gdim(B);++i){
+                  kard += A * psign * norm_ab * norm_de * sign_ab * sign_de * std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * tard 
 
-      k_a = dp2s[B][i][1];
-      k_b = dp2s[B][i][2];
-      k_c = dp2s[B][i][3];
+                     / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_d_,k_z_) ) ;
 
-      for(int j = i;j < gdim(B);++j){
+               }
 
-         k_d = dp2s[B][j][1];
-         k_e = dp2s[B][j][2];
-         k_z = dp2s[B][j][3];
+               //tp(6)
+               if(k_a == k_e_){
 
-         (*this)(B,i,j) = 0.0;
+                  tard = 0.0;
 
-         //np + sp part:
-         if(i == j)
-            (*this)(B,i,j) = ward - spm[k_a] - spm[k_b] - spm[k_c];
+                  K_tp = (k_b + k_c)%L;
 
-         //tp(1)
-         if(k_c == k_z)
-            (*this)(B,i,j) += A * tpm(1,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_e);
+                  //sum over intermediate spin
+                  for(int pi = 0;pi < 2;++pi)
+                     for(int Z = 0;Z < 2;++Z)
+                        tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_b,k_c,k_d_,k_z_);
 
-         //tp(2)
-         if(k_b == k_z)
-            (*this)(B,i,j) -= A * tpm(1,(k_a + k_c)%(M/2),k_a,k_c,k_d,k_e);
+                  if(k_b == k_c)
+                     tard *= std::sqrt(2.0);
 
-         //tp(4)
-         if(k_c == k_e)
-            (*this)(B,i,j) -= A * tpm(1,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_z);
+                  if(k_d == k_z)
+                     tard *= std::sqrt(2.0);
 
-         //tp(5)
-         if(k_b == k_e)
-            (*this)(B,i,j) += A * tpm(1,(k_a + k_c)%(M/2),k_a,k_c,k_d,k_z);
+                  kard += A * psign * sign_de * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * tard
 
-         //tp(7)
-         if(k_c == k_d)
-            (*this)(B,i,j) += A * tpm(1,(k_a + k_b)%(M/2),k_a,k_b,k_e,k_z);
+                     / (2.0 * TPM::norm(K_tp,k_b,k_c) * TPM::norm(K_tp,k_d_,k_z_) ) ;
 
-         //tp(8)
-         if(k_b == k_d)
-            (*this)(B,i,j) -= A * tpm(1,(k_a + k_c)%(M/2),k_a,k_c,k_e,k_z);
+               }
 
-         //tp(9)
-         if(k_a == k_d)
-            (*this)(B,i,j) += A * tpm(1,(k_b + k_c)%(M/2),k_b,k_c,k_e,k_z);
+               //tp(7)
+               if(k_c == k_d_){
 
+                  tard = 0.0;
+
+                  K_tp = (k_a + k_b)%L;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(S_ab,K_tp,pi,k_a,k_b,k_e_,k_z_);
+
+                  if(k_e == k_z)
+                     tard *= std::sqrt(2.0);
+
+                  kard += A * psign * norm_de * sign_ab * hard * tard / (2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_e,k_z) );
+
+               }
+
+               //tp(8)
+               if(k_b == k_d_){
+
+                  tard = 0.0;
+
+                  K_tp = (k_a + k_c)%L;
+
+                  //sum over intermediate spin
+                  for(int pi = 0;pi < 2;++pi)
+                     for(int Z = 0;Z < 2;++Z)
+                        tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_a,k_c,k_e_,k_z_);
+
+                  if(k_a == k_c)
+                     tard *= std::sqrt(2.0);
+
+                  if(k_e == k_z)
+                     tard *= std::sqrt(2.0);
+
+                  kard += A * psign * sign_ab * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * tard
+
+                     / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_e_,k_z_) );
+
+               }
+
+               //tp(9)
+               if(k_a == k_d_){
+
+                  tard = 0.0;
+
+                  K_tp = (k_b + k_c)%L;
+
+                  //sum over intermediate spin
+                  for(int pi = 0;pi < 2;++pi)
+                     for(int Z = 0;Z < 2;++Z)
+                        tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_b,k_c,k_e_,k_z_);
+
+                  if(k_b == k_c)
+                     tard *= std::sqrt(2.0);
+
+                  if(k_e == k_z)
+                     tard *= std::sqrt(2.0);
+
+                  kard += A * psign * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * tard
+
+                     / (2.0 * TPM::norm(K_tp,k_b,k_c) * TPM::norm(K_tp,k_e_,k_z_));
+
+               }
+
+            }
+
+            //tp(1)
+            if(k_c == k_z)
+               if(S_ab == S_de){
+
+                  K_tp = (k_a + k_b)%L;
+
+                  tard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(S_ab,K_tp,pi,k_a,k_b,k_d,k_e);
+
+                  kard += A * tard / ( 2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_d,k_e) ) ;
+
+               }
+
+            //tp(2)
+            if(k_b == k_z){
+
+               K_tp = (k_a + k_c)%L;
+
+               tard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  tard += tpm(S_de,K_tp,pi,k_a,k_c,k_d,k_e);
+
+               if(k_a == k_c)
+                  tard *= std::sqrt(2.0);
+
+               kard += A * norm_ab * sign_ab * sign_de * hard * tard / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_d,k_e) );
+
+            }
+
+            //tp(3)
+            if(k_a == k_z){
+
+               K_tp = (k_b + k_c)%L;
+
+               tard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  tard += tpm(S_de,K_tp,pi,k_b,k_c,k_d,k_e);
+
+               if(k_b == k_c)
+                  tard *= std::sqrt(2.0);
+
+               kard += A * norm_ab * sign_de * hard * tard / (2.0 * TPM::norm(K_tp,k_b,k_c) * TPM::norm(K_tp,k_d,k_e) ) ;
+
+            }
+
+            //tp(4)
+            if(k_c == k_e){
+
+               K_tp = (k_a + k_b)%L;
+
+               tard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  tard += tpm(S_ab,K_tp,pi,k_a,k_b,k_d,k_z);
+
+               if(k_d == k_z)
+                  tard *= std::sqrt(2.0);
+
+               kard += A * norm_de * sign_ab * sign_de * hard * tard / (2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_d,k_z) ) ;
+
+            }
+
+            //tp(5)
+            if(k_b == k_e){
+
+               K_tp = (k_a + k_c)%L;
+
+               tard = 0.0;
+
+               //sum over intermediate spin
+               for(int pi = 0;pi < 2;++pi)
+                  for(int Z = 0;Z < 2;++Z)
+                     tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_a,k_c,k_d,k_z);
+
+               //correct for norms of the tpm
+               if(k_a == k_c)
+                  tard *= std::sqrt(2.0);
+
+               if(k_d == k_z)
+                  tard *= std::sqrt(2.0);
+
+               kard += A * norm_ab * norm_de * sign_ab * sign_de * std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * tard 
+
+                  / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_d,k_z) ) ;
+
+            }
+
+            //tp(6)
+            if(k_a == k_e){
+
+               tard = 0.0;
+
+               K_tp = (k_b + k_c)%L;
+
+               //sum over intermediate spin
+               for(int pi = 0;pi < 2;++pi)
+                  for(int Z = 0;Z < 2;++Z)
+                     tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_b,k_c,k_d,k_z);
+
+               if(k_b == k_c)
+                  tard *= std::sqrt(2.0);
+
+               if(k_d == k_z)
+                  tard *= std::sqrt(2.0);
+
+               kard += A * sign_de * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * tard
+
+                  / (2.0 * TPM::norm(K_tp,k_b,k_c) * TPM::norm(K_tp,k_d,k_z) ) ;
+
+            }
+
+            //tp(7)
+            if(k_c == k_d){
+
+               tard = 0.0;
+
+               K_tp = (k_a + k_b)%L;
+
+               for(int pi = 0;pi < 2;++pi)
+                  tard += tpm(S_ab,K_tp,pi,k_a,k_b,k_e,k_z);
+
+               if(k_e == k_z)
+                  tard *= std::sqrt(2.0);
+
+               kard += A * norm_de * sign_ab * hard * tard / (2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_e,k_z) );
+
+            }
+
+            //tp(8)
+            if(k_b == k_d){
+
+               tard = 0.0;
+
+               K_tp = (k_a + k_c)%L;
+
+               //sum over intermediate spin
+               for(int pi = 0;pi < 2;++pi)
+                  for(int Z = 0;Z < 2;++Z)
+                     tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_a,k_c,k_e,k_z);
+
+               if(k_a == k_c)
+                  tard *= std::sqrt(2.0);
+
+               if(k_e == k_z)
+                  tard *= std::sqrt(2.0);
+
+               kard += A * sign_ab * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * tard
+
+                  / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_e,k_z) );
+
+            }
+
+            //tp(9)
+            if(k_a == k_d){
+
+               tard = 0.0;
+
+               K_tp = (k_b + k_c)%L;
+
+               //sum over intermediate spin
+               for(int pi = 0;pi < 2;++pi)
+                  for(int Z = 0;Z < 2;++Z)
+                     tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_b,k_c,k_e,k_z);
+
+               if(k_b == k_c)
+                  tard *= std::sqrt(2.0);
+
+               if(k_e == k_z)
+                  tard *= std::sqrt(2.0);
+
+               kard += A * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * tard
+
+                  / (2.0 * TPM::norm(K_tp,k_b,k_c) * TPM::norm(K_tp,k_e,k_z));
+
+            }
+
+            //finally the DPM norm
+            kard *= DPM::norm(0,K,p,S_ab,k_a,k_b,k_c) * DPM::norm(0,K,p,S_de,k_d,k_e,k_z);
+
+            (*this)(B,i,j) += kard;
+
+         }
       }
+
    }
 
+   //then the S = 3/2 blocks, this should be easy, totally antisymmetrical 
+   for(int B = L/2 + 3;B < gnr();++B){
+
+      K = block_char[B][1];
+      p = block_char[B][2];
+
+      psign = 1 - 2*p;
+
+      for(int i = 0;i < gdim(B);++i){
+
+         k_a = dp2s[B][i][1];
+         k_b = dp2s[B][i][2];
+         k_c = dp2s[B][i][3];
+
+         k_a_ = (L - k_a)%L;
+         k_b_ = (L - k_b)%L;
+         k_c_ = (L - k_c)%L;
+
+         for(int j = i;j < gdim(B);++j){
+
+            k_d = dp2s[B][j][1];
+            k_e = dp2s[B][j][2];
+            k_z = dp2s[B][j][3];
+
+            k_d_ = (L - k_d)%L;
+            k_e_ = (L - k_e)%L;
+            k_z_ = (L - k_z)%L;
+
+            (*this)(B,i,j) = 0.0;
+
+            //np + sp part:
+            if(i == j)
+               (*this)(B,i,j) = ward - spm[k_a] - spm[k_b] - spm[k_c];
+
+            kard = 0.0;
+
+            if(K == 0 || K == L/2){//difference between parity + and - blocks
+
+               //tp(1)
+               if(k_c == k_z_){
+
+                  K_tp = (k_a + k_b)%L;
+
+                  tard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(1,K_tp,pi,k_a,k_b,k_d_,k_e_);
+
+                  kard += A * psign * tard / ( 2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_d_,k_e_) );
+
+               }
+
+               //tp(2)
+               if(k_b == k_z_){
+
+                  K_tp = (k_a + k_c)%L;
+
+                  tard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(1,K_tp,pi,k_a,k_c,k_d_,k_e_);
+
+                  kard -= A * psign * tard / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_d_,k_e_) );
+
+               }
+
+               //tp(3):
+               if(k_a == k_z_){
+
+                  K_tp = (k_b + k_c)%L;
+
+                  tard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(1,K_tp,pi,k_b,k_c,k_d_,k_e_);
+
+                  kard += A * psign * tard / (2.0 * TPM::norm(K_tp,k_b,k_c) * TPM::norm(K_tp,k_d_,k_e_) );
+
+               }
+
+               //tp(4)
+               if(k_c == k_e_){
+
+                  K_tp = (k_a + k_b)%L;
+
+                  tard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(1,K_tp,pi,k_a,k_b,k_d_,k_z_);
+
+                  kard -= A * psign * tard / (2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_d_,k_z_) ) ;
+
+               }
+
+               //tp(5)
+               if(k_b == k_e_){
+
+                  K_tp = (k_a + k_c)%L;
+
+                  tard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(1,K_tp,pi,k_a,k_c,k_d_,k_z_);
+
+                  kard += A * psign * tard / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_d_,k_z_) );
+
+               }
+
+               //tp(6)
+               if(k_a == k_e_){
+
+                  K_tp = (k_b + k_c)%L;
+
+                  tard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(1,K_tp,pi,k_b,k_c,k_d_,k_z_);
+
+                  kard -= A * psign * tard / (2.0 * TPM::norm(K_tp,k_b,k_c) * TPM::norm(K_tp,k_d_,k_z_) );
+
+               }
+
+               //tp(7)
+               if(k_c == k_d_){
+
+                  K_tp = (k_a + k_b)%L;
+
+                  tard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(1,K_tp,pi,k_a,k_b,k_e_,k_z_);
+
+                  kard += A * psign * tard / (2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_e_,k_z_) );
+
+               }
+
+               //tp(8)
+               if(k_b == k_d_){
+
+                  K_tp = (k_a + k_c)%L;
+
+                  tard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(1,K_tp,pi,k_a,k_c,k_e_,k_z_);
+
+                  kard -= A * psign * tard / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_e_,k_z_) );
+
+               }
+
+               //tp(9)
+               if(k_a == k_d_){
+
+                  K_tp = (k_b + k_c)%L;
+
+                  tard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     tard += tpm(1,K_tp,pi,k_b,k_c,k_e_,k_z_);
+
+                  kard += A * psign * tard / (2.0 * TPM::norm(K_tp,k_b,k_c) * TPM::norm(K_tp,k_e_,k_z_) );
+
+               }
+
+            }
+
+            //tp(1)
+            if(k_c == k_z){
+
+               K_tp = (k_a + k_b)%L;
+
+               tard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  tard += tpm(1,K_tp,pi,k_a,k_b,k_d,k_e);
+
+               kard += A * tard / ( 2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_d,k_e) ) ;
+
+            }
+
+
+            //tp(2)
+            if(k_b == k_z){
+
+               K_tp = (k_a + k_c)%L;
+
+               tard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  tard += tpm(1,K_tp,pi,k_a,k_c,k_d,k_e);
+
+               kard -= A * tard / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_d,k_e) );
+
+            }
+
+            //tp(4)
+            if(k_c == k_e){
+
+               K_tp = (k_a + k_b)%L;
+
+               tard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  tard += tpm(1,K_tp,pi,k_a,k_b,k_d,k_z);
+
+               kard -= A * tard / (2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_d,k_z) ) ;
+
+            }
+
+            //tp(5)
+            if(k_b == k_e){
+
+               K_tp = (k_a + k_c)%L;
+
+               tard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  tard += tpm(1,K_tp,pi,k_a,k_c,k_d,k_z);
+
+               kard += A * tard / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_d,k_z) );
+
+            }
+
+            //tp(7)
+            if(k_c == k_d){
+
+               K_tp = (k_a + k_b)%L;
+
+               tard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  tard += tpm(1,K_tp,pi,k_a,k_b,k_e,k_z);
+
+               kard += A * tard / (2.0 * TPM::norm(K_tp,k_a,k_b) * TPM::norm(K_tp,k_e,k_z) );
+
+            }
+
+            //tp(8)
+            if(k_b == k_d){
+
+               K_tp = (k_a + k_c)%L;
+
+               tard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  tard += tpm(1,K_tp,pi,k_a,k_c,k_e,k_z);
+
+               kard -= A * tard / (2.0 * TPM::norm(K_tp,k_a,k_c) * TPM::norm(K_tp,k_e,k_z) );
+
+            }
+
+            //tp(9)
+            if(k_a == k_d){
+
+               K_tp = (k_b + k_c)%L;
+
+               tard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  tard += tpm(1,K_tp,pi,k_b,k_c,k_e,k_z);
+
+               kard += A * tard / (2.0 * TPM::norm(K_tp,k_b,k_c) * TPM::norm(K_tp,k_e,k_z) );
+
+            }
+
+            //finally the DPM norm
+            kard *= DPM::norm(1,K,p,S_ab,k_a,k_b,k_c) * DPM::norm(1,K,p,S_de,k_d,k_e,k_z);
+
+            (*this)(B,i,j) += kard;
+
+         }
+      }
+
+   }
+
+   this->symmetrize();
+
 }
 
-this->symmetrize();
-
-}
-*/
 /**
  * The T1-map: maps a TPM object (tpm) on a DPM object (*this). 
  * @param tpm input TPM
  */
-/*
-   void DPM::T(const TPM &tpm){
+void DPM::T(const TPM &tpm){
 
    double a = 1.0;
    double b = 1.0/(N*(N - 1.0));
@@ -2481,15 +3037,14 @@ this->symmetrize();
 
    this->T(a,b,c,tpm);
 
-   }
- */
+}
+
 /** 
  * The hat function maps a TPM object tpm to a DPM object (*this) so that bar(this) = tpm,
  * The inverse of the TPM::bar function. It is a T1-like map.
  * @param tpm input TPM
  */
-/*
-   void DPM::hat(const TPM &tpm){
+void DPM::hat(const TPM &tpm){
 
    double a = 1.0/(M - 4.0);
    double b = 1.0/((M - 4.0)*(M - 3.0)*(M - 2.0));
@@ -2497,28 +3052,37 @@ this->symmetrize();
 
    this->T(a,b,c,tpm);
 
-   }
+}
 
- */
 /**
- * Output to file, to be read by the spin_pd program.
- * @param filename output file
+ * @param S dp spin
+ * @param K dp momentum
+ * @param p dp parity
+ * @param S_ab intermediate spin
+ * @param k_a first momentum index
+ * @param k_b second momentum index
+ * @param k_c third momentum index
+ * @return the norm of the basisstate
  */
-/*
-   void DPM::out_sp(const char *filename) const{
+double DPM::norm(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c){
 
-   ofstream output(filename);
-   output.precision(15);
+   if(K == 0){
 
-   for(int B = 0;B < gnr();++B){
-
-   for(int i = 0;i < gdim(B);++i)
-   for(int j = i;j < gdim(B);++j)
-   output << block_char[B][0] << "\t" << dp2s[B][i][0] << "\t" << dp2s[B][i][1] << "\t" << dp2s[B][i][2] << "\t" << dp2s[B][i][3] << "\t"
-
-   << dp2s[B][j][0] << "\t" << dp2s[B][j][1] << "\t" << dp2s[B][j][2] << "\t" << dp2s[B][j][3] << "\t" << (*this)(B,i,j) << endl;
+      if(k_a == 0 || k_b == 0 || k_c == 0)
+         return 0.5;
+      else
+         return 1.0/std::sqrt(2.0);
 
    }
+   else if(K == L/2){
+
+      if(k_a == L/2 || k_b == L/2 || k_c == L/2)
+         return 0.5;
+      else
+         return 1.0/std::sqrt(2.0);
 
    }
- */
+   else
+      return 1.0/std::sqrt(2.0);
+
+}

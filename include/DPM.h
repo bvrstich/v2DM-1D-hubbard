@@ -87,6 +87,8 @@ class DPM : public BlockMatrix {
 
       static void print_basis();
 
+      static double norm(int,int,int,int,int,int,int);
+
    private:
 
       //!static list that takes in a dp index i for block B and returns the sp properties: S_ab,a,b,c

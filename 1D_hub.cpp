@@ -56,6 +56,17 @@ int main(int argc,char *argv[]){
    SUP::init(L,N);
    EIG::init(L,N);
 
+   TPM tpm;
+   tpm.fill_Random();
+
+   tpm.out_sp("../1D_hub-bright/tpm.in");
+
+   DPM dpm;
+   dpm.T(tpm);
+
+   BlockVector<DPM> v(dpm);
+   cout << v;
+
 /*
    TPM ham;
    ham.hubbard(U);
