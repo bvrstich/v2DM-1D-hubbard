@@ -1261,7 +1261,7 @@ double DPM::operator()(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int S_
 
    for(int I = 0;I < dim_i;++I)
       for(int J = 0;J < dim_j;++J)
-         ward += coef_i[I] * coef_j[J] * (*this)(B,i[I],j[J]);
+         ward += pphase_i * pphase_j * coef_i[I] * coef_j[J] * (*this)(B,i[I],j[J]);
 
    delete [] i;
    delete [] j;
@@ -1643,7 +1643,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                k_a = (L - k_a)%L;
                k_b = (L - k_b)%L;
-               k_c = (L - k_b)%L;
+               k_c = (L - k_c)%L;
 
                return 1 - 2*p;
 
@@ -2118,6 +2118,24 @@ int DPM::get_inco(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int *i,doub
    if(S == 0){//spin 1/2 block:
 
       //if normal basis:
+      if(K == 0 && k_c == 0){
+
+         i[0] = s2dp[char_block[S][K][p]][S_ab][k_a][k_b][k_c];
+         coef[0] = 1;
+
+         return 1;
+
+      }
+
+      if(K == L/2 && k_c == L/2){
+
+         i[0] = s2dp[char_block[S][K][p]][S_ab][k_a][k_b][k_c];
+         coef[0] = 1;
+
+         return 1;
+
+      }
+
       if(k_a == k_b){
 
          if(S_ab == 1)//spin has to be zero for k_a == k_b
@@ -3012,7 +3030,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             }
 
             //finally the DPM norm
-            kard *= DPM::norm(1,K,p,S_ab,k_a,k_b,k_c) * DPM::norm(1,K,p,S_de,k_d,k_e,k_z);
+            kard *= DPM::norm(1,K,p,1,k_a,k_b,k_c) * DPM::norm(1,K,p,1,k_d,k_e,k_z);
 
             (*this)(B,i,j) += kard;
 
@@ -3066,23 +3084,103 @@ void DPM::hat(const TPM &tpm){
  */
 double DPM::norm(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c){
 
+   if(S == 0){//S = 1/2
+
    if(K == 0){
 
-      if(k_a == 0 || k_b == 0 || k_c == 0)
-         return 0.5;
+      if(k_a == 0 || k_b == 0 || k_c == 0){
+
+         if( (k_a == k_b) || (k_b == k_c) || (k_c == k_a))//(L/2 0 L/2) is mapped onto itsself
+            return 0.5;
+
+         if(k_c == 0)
+            return 0.5;
+         else{//recoupling needed!
+
+            if(p == 0){//positive parity
+
+               if(S_ab == 0)
+                  return 1;
+               else
+                  return 1.0/std::sqrt(3.0);
+
+            }
+            else{//negative parity
+
+               if(S_ab == 0)
+                  return 1.0/std::sqrt(3.0);
+               else
+                  return 1;
+
+            }
+
+         }
+
+      }
       else
          return 1.0/std::sqrt(2.0);
 
    }
    else if(K == L/2){
 
-      if(k_a == L/2 || k_b == L/2 || k_c == L/2)
-         return 0.5;
+      if(k_a == L/2 || k_b == L/2 || k_c == L/2){
+
+         if( (k_a == k_b) || (k_b == k_c) || (k_c == k_a))//(0 0 L/2) is mapped onto itsself
+            return 0.5;
+
+         if(k_c == L/2)//normal: mapped onto itsself
+            return 0.5;
+         else{//recoupling needed!
+
+            if(p == 0){//positive parity
+
+               if(S_ab == 0)
+                  return 1;
+               else
+                  return 1.0/std::sqrt(3.0);
+
+            }
+            else{//negative parity
+
+               if(S_ab == 0)
+                  return 1.0/std::sqrt(3.0);
+               else
+                  return 1;
+
+            }
+
+         }
+
+      }
       else
          return 1.0/std::sqrt(2.0);
 
    }
    else
       return 1.0/std::sqrt(2.0);
+
+   }
+   else{//S = 3/2
+
+      if(K == 0){
+
+         if(k_a == 0 || k_b == 0 || k_c == 0)
+            return 0.5;
+         else
+            return 1.0/std::sqrt(2.0);
+
+      }
+      else if (K == L/2){
+
+         if(k_a == L/2 || k_b == L/2 || k_c == L/2)
+            return 0.5;
+         else
+            return 1.0/std::sqrt(2.0);
+
+      }
+      else
+         return 1.0/std::sqrt(2.0);
+
+   }
 
 }

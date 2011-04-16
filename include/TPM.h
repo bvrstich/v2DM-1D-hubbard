@@ -13,6 +13,7 @@ using std::vector;
 
 class SUP;
 class PHM;
+class DPM;
 
 /**
  * @author Brecht Verstichel
@@ -109,6 +110,12 @@ class TPM : public BlockMatrix {
       static double norm(int,int,int);
 
       void G(const PHM &);
+
+      //trace one pair of indices of DPM
+      void bar(const DPM &);
+
+      //T1 down
+      void T(const DPM &);
 
    private:
 

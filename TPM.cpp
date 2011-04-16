@@ -1315,3 +1315,175 @@ void TPM::G(const PHM &phm){
    this->symmetrize();
 
 }
+
+/**
+ * Construct a spincoupled, translationally invariant and parity symmetric TPM matrix out of a spincoupled, translationally invariant and parity symmetric DPM matrix.
+ * For the definition and derivation see symmetry.pdf
+ * @param dpm input DPM
+ */
+void TPM::bar(const DPM &dpm){
+
+   int k_a,k_b,k_c,k_d;
+   int k_c_,k_d_;
+
+   double ward,hard;
+
+   int K,K_dp,p,psign;
+
+   //first the S = 0 part, easiest:
+   for(int B = 0;B < L/2 + 2;++B){
+
+      K = block_char[B][1];
+      p = block_char[B][2];
+
+      psign = 1 - 2*p;
+
+      for(int i = 0;i < gdim(B);++i){
+
+         k_a = t2s[B][i][0];
+         k_b = t2s[B][i][1];
+
+         for(int j = i;j < gdim(B);++j){
+
+            k_c = t2s[B][j][0];
+            k_d = t2s[B][j][1];
+
+            k_c_ = (L - k_c)%L; 
+            k_d_ = (L - k_d)%L;
+
+            (*this)(B,i,j) = 0.0;
+
+            //only total S = 1/2 can remain because cannot couple to S = 3/2 with intermediate S = 0
+            if(K == 0 || K == L/2){
+
+               for(int k = 0;k < L;++k){
+
+                  K_dp = (k_a + k_b + k)%L;
+
+                  hard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += dpm(0,K_dp,pi,0,k_a,k_b,k,0,k_c_,k_d_,k) / ( DPM::norm(0,K_dp,pi,0,k_a,k_b,k) * DPM::norm(0,K_dp,pi,0,k_c_,k_d_,k) );
+
+                  (*this)(B,i,j) += psign * hard;
+
+               }
+
+            }
+
+            for(int k = 0;k < L;++k){
+
+               K_dp = (k_a + k_b + k)%L;
+
+               hard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  hard += dpm(0,K_dp,pi,0,k_a,k_b,k,0,k_c,k_d,k)/ ( DPM::norm(0,K_dp,pi,0,k_a,k_b,k) * DPM::norm(0,K_dp,pi,0,k_c,k_d,k) );
+
+               (*this)(B,i,j) += hard;
+
+            }
+
+            (*this)(B,i,j) *= TPM::norm(K,k_a,k_b) * TPM::norm(K,k_c,k_d);
+
+         }
+      }
+
+   }
+
+   //then the S = 1 part:
+   for(int B = L/2 + 2;B < gnr();++B){
+
+      K = block_char[B][1];
+      p = block_char[B][2];
+
+      psign = 1 - 2*p;
+
+      for(int i = 0;i < gdim(B);++i){
+
+         k_a = t2s[B][i][0];
+         k_b = t2s[B][i][1];
+
+         for(int j = i;j < gdim(B);++j){
+
+            k_c = t2s[B][j][0];
+            k_d = t2s[B][j][1];
+
+            k_c_ = (L - k_c)%L;
+            k_d_ = (L - k_d)%L;
+
+            (*this)(B,i,j) = 0.0;
+
+            if(K == 0 || K == L/2){
+
+               for(int Z = 0;Z < 2;++Z){//loop over the dpm blocks: S = 1/2 and 3/2 = Z + 1/2
+
+                  ward = 0.0;
+
+                  for(int k = 0;k < L;++k){
+
+                     K_dp = (k + k_a + k_b)%L;
+
+                     hard = 0.0;
+
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += dpm(Z,K_dp,pi,1,k_a,k_b,k,1,k_c_,k_d_,k) / (DPM::norm(Z,K_dp,pi,1,k_a,k_b,k) * DPM::norm(Z,K_dp,pi,1,k_c_,k_d_,k) );
+
+                     ward += 0.5 * psign * hard;
+
+                  }
+
+                  (*this)(B,i,j) += ward * (2 * (Z + 0.5) + 1.0)/3.0;
+
+               }
+
+            }
+
+            for(int Z = 0;Z < 2;++Z){//loop over the dpm blocks: S = 1/2 and 3/2 = Z + 1/2
+
+               ward = 0.0;
+
+               for(int k = 0;k < L;++k){
+
+                  K_dp = (k + k_a + k_b)%L;
+
+                  hard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += dpm(Z,K_dp,pi,1,k_a,k_b,k,1,k_c,k_d,k) / (DPM::norm(Z,K_dp,pi,1,k_a,k_b,k) * DPM::norm(Z,K_dp,pi,1,k_c,k_d,k) );
+
+                  ward += 0.5 * hard;
+
+               }
+
+               (*this)(B,i,j) += ward * (2 * (Z + 0.5) + 1.0)/3.0;
+
+            }
+
+            (*this)(B,i,j) *= TPM::norm(K,k_a,k_b) * TPM::norm(K,k_c,k_d);
+
+         }
+      }
+
+   }
+
+   this->symmetrize();
+
+}
+
+/** 
+ * The T1-down map that maps a DPM on TPM. This is just a Q-like map using the TPM::bar (dpm) as input.
+ * @param dpm the input DPM matrix
+ */
+void TPM::T(const DPM &dpm){
+
+   TPM tpm;
+   tpm.bar(dpm);
+
+   double a = 1;
+   double b = 1.0/(3.0*N*(N - 1.0));
+   double c = 0.5/(N - 1.0);
+
+   this->Q(1,a,b,c,tpm);
+
+}

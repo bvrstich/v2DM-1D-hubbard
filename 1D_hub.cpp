@@ -45,6 +45,7 @@ int main(int argc,char *argv[]){
 
    TPM::init(L,N);
    SPM::init(L,N);
+
 #ifdef __G_CON
    PHM::init(L,N);
 #endif
@@ -64,7 +65,10 @@ int main(int argc,char *argv[]){
    DPM dpm;
    dpm.T(tpm);
 
-   BlockVector<DPM> v(dpm);
+   TPM bar;
+   bar.bar(dpm);
+
+   BlockVector<TPM> v(bar);
    cout << v;
 
 /*
