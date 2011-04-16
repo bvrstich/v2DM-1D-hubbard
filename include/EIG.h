@@ -15,6 +15,13 @@ using std::ostream;
 
 #endif
 
+#ifdef PQGT1
+
+#define __G_CON
+#define __T1_CON
+
+#endif
+
 /**
  * @author Brecht Verstichel
  * @date 06-05-2010\n\n
@@ -74,6 +81,14 @@ class EIG{
 
 #endif
 
+#ifdef __T1_CON
+
+   BlockVector<DPM> &dpv();
+
+   const BlockVector<DPM> &dpv() const;
+
+#endif
+
    double min() const;
 
    double max() const;
@@ -94,13 +109,20 @@ class EIG{
 
 #endif
 
+#ifdef __T1_CON
+
+   //!single pointer to a BlockVector<DPM> object, the eigenvalues of T1 part of a SUP matrix will be stored here.
+   BlockVector<DPM> *v_dp;
+
+#endif
+
    //!number of particles
    static int N;
 
    //!dimension of sp space
    static int M;
 
-   //!nr of sites
+   //!dimension of sp space
    static int L;
 
    //!total dimension of the EIG object

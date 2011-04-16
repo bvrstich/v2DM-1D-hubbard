@@ -10,10 +10,18 @@ using std::ifstream;
 
 #include "TPM.h"
 #include "PHM.h"
+#include "DPM.h"
 
 #ifdef PQG
 
 #define __G_CON
+
+#endif
+
+#ifdef PQGT1
+
+#define __G_CON
+#define __T1_CON
 
 #endif
 
@@ -131,6 +139,14 @@ class SUP{
 
 #endif
 
+#ifdef __T1_CON
+      
+      DPM &dpm();
+
+      const DPM &dpm() const;
+
+#endif
+      
       static void init(int,int);
 
    private:
@@ -138,14 +154,14 @@ class SUP{
       //!double pointer of TPM's, will contain the P and Q block of the SUP in the first and second block.
       TPM **SZ_tp;
 
-      //!number of sites
-      static int L;
-
       //!number of sp orbitals
       static int M;
 
       //!nr of particles
       static int N;
+
+      //!nr of sites
+      static int L;
 
       //!total dimension of the SUP matrix
       static int dim;
@@ -154,6 +170,13 @@ class SUP{
 
       //!pointer to the particle hole matrix
       PHM *SZ_ph;
+
+#endif
+
+#ifdef __T1_CON
+      
+      //!pointer tot he three particles matrix DPM
+      DPM *SZ_dp;
 
 #endif
 

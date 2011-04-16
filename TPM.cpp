@@ -360,6 +360,13 @@ void TPM::init_overlap(){
 
 #endif
 
+#ifdef __T1_CON
+
+   Sa += M - 4.0;
+   Sc -= (M*M + 2.0*N*N - 4.0*M*N - M + 8.0*N - 4.0)/( 2.0*(N - 1.0)*(N - 1.0) );
+
+#endif
+
 }
 
 /**
@@ -859,6 +866,21 @@ void TPM::H(const TPM &b,const SUP &D){
 
 #endif
 
+#ifdef __T1_CON
+
+   DPM T1b;
+   T1b.T(b);
+
+   DPM hulp_T1;
+
+   hulp_T1.L_map(D.dpm(),T1b);
+
+   hulp.T(hulp_T1);
+
+   *this += hulp;
+
+#endif
+
    this->proj_Tr();
 
 }
@@ -964,6 +986,14 @@ void TPM::collaps(int option,const SUP &S){
 #ifdef __G_CON
 
    hulp.G(S.phm());
+
+   *this += hulp;
+
+#endif
+
+#ifdef __T1_CON
+
+   hulp.T(S.dpm());
 
    *this += hulp;
 
