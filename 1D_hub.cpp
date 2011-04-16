@@ -57,15 +57,6 @@ int main(int argc,char *argv[]){
    SUP::init(L,N);
    EIG::init(L,N);
 
-   TPM tpm;
-   tpm.fill_Random();
-
-   DPM dpm;
-   dpm.T(tpm);
-
-   TPM bar;
-   bar.bar(dpm);
-
 /*
    TPM ham;
    ham.hubbard(U);
