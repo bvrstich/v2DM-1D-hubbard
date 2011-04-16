@@ -60,16 +60,11 @@ int main(int argc,char *argv[]){
    TPM tpm;
    tpm.fill_Random();
 
-   tpm.out_sp("../1D_hub-bright/tpm.in");
-
    DPM dpm;
    dpm.T(tpm);
 
    TPM bar;
    bar.bar(dpm);
-
-   BlockVector<TPM> v(bar);
-   cout << v;
 
 /*
    TPM ham;

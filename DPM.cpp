@@ -1235,8 +1235,14 @@ double DPM::operator()(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int S_
 
    int pphase_j = get_phase_order(S,K,p,S_de,k_d,k_e,k_z);
 
-   if(pphase_j == 0)
+   if(pphase_j == 0){
+
+      delete [] i;
+      delete [] coef_i;
+
       return 0.0;
+
+   }
 
    int *j = new int [2];
    double *coef_j = new double [2];
@@ -2252,19 +2258,19 @@ int DPM::get_inco(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int *i,doub
 
          if(k_b < k_c){//k_a < k_b < k_c
 
-            i[0] = s2dp[B][0][k_a][k_b][k_c];
+            i[0] = s2dp[B][1][k_a][k_b][k_c];
             coef[0] = 1;
 
          }
          else if(k_c < k_a){//k_c < k_a < k_b
 
-            i[0] = s2dp[B][0][k_c][k_a][k_b];
+            i[0] = s2dp[B][1][k_c][k_a][k_b];
             coef[0] = 1;
 
          }
          else{//k_a < k_c < k_b
 
-            i[0] = s2dp[B][0][k_a][k_c][k_b];
+            i[0] = s2dp[B][1][k_a][k_c][k_b];
             coef[0] = -1;
 
          }
@@ -2274,19 +2280,19 @@ int DPM::get_inco(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int *i,doub
 
          if(k_a < k_c){//k_b < k_a < k_c
 
-            i[0] = s2dp[B][0][k_b][k_a][k_c];
+            i[0] = s2dp[B][1][k_b][k_a][k_c];
             coef[0] = -1;
 
          }
          else if(k_c < k_b){//k_c < k_b < k_a
 
-            i[0] = s2dp[B][0][k_c][k_b][k_a];
+            i[0] = s2dp[B][1][k_c][k_b][k_a];
             coef[0] = -1;
 
          }
          else{//k_b < k_c < k_a
 
-            i[0] = s2dp[B][0][k_b][k_c][k_a];
+            i[0] = s2dp[B][1][k_b][k_c][k_a];
             coef[0] = 1;
 
          }
