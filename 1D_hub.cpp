@@ -61,10 +61,6 @@ int main(int argc,char *argv[]){
    SUP::init(L,N);
    EIG::init(L,N);
 
-   PPHM pphm;
-
-   pphm.print_basis();
-
 /*
    TPM ham;
    ham.hubbard(U);

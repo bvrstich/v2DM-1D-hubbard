@@ -1180,7 +1180,7 @@ void PPHM::clear(){
 /**
  * standard constructor
  */
-PPHM::PPHM() : BlockMatrix(M) {
+PPHM::PPHM() : BlockMatrix(L + 6) {
 
    //first K = 0: 4 blocks
 
