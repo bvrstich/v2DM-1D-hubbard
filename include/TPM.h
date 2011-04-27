@@ -45,8 +45,6 @@ class TPM : public BlockMatrix {
       //destructor
       virtual ~TPM();
 
-      void constr_lists();
-
       using BlockMatrix::operator=;
 
       using BlockMatrix::operator();

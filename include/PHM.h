@@ -35,8 +35,6 @@ class PHM : public BlockMatrix {
       //destructor
       virtual ~PHM();
 
-      void constr_lists();
-
       using BlockMatrix::operator=;
 
       using BlockMatrix::operator();

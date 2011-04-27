@@ -37,10 +37,6 @@ class DPM : public BlockMatrix {
       //destructor
       virtual ~DPM();
 
-      void construct_lists();
-
-      static void set_dimlist(int);
-
       using BlockMatrix::operator=;
 
       using BlockMatrix::operator();
