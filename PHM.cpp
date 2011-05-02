@@ -719,3 +719,161 @@ double PHM::norm(int K,int k_a,int k_b){
       return 1.0/std::sqrt(2.0);
 
 }
+
+/**
+ * The bar function that maps a PPHM object onto a PHM object by tracing away the first pair of incdices of the PPHM
+ * @param pphm Input PPHM object
+ */
+void PHM::bar(const PPHM &pphm){
+
+   int k_a,k_b,k_c,k_d;
+   int k_a_,k_b_;
+
+   double ward,hard;
+
+   int psign;
+
+   int Z,K,p;
+
+   int K_pph;
+
+   for(int B = 0;B < gnr();++B){//loop over the blocks PHM
+
+      Z = block_char[B][0];
+      K = block_char[B][1];
+      p = block_char[B][2];
+
+      psign = 1 - 2*p;
+
+      for(int i = 0;i < gdim(B);++i){
+
+         k_a = ph2s[B][i][0];
+         k_b = ph2s[B][i][1];
+
+         k_a_ = (L - k_a)%L;
+         k_b_ = (L - k_b)%L;
+
+         for(int j = i;j < gdim(B);++j){
+
+            k_c = ph2s[B][j][0];
+            k_d = ph2s[B][j][1];
+
+            //init
+            (*this)(B,i,j) = 0.0;
+
+            if(K == 0 || K == L/2){
+
+               //first the contribution of the S = 1/2 block of the PPHM matrix:
+               for(int S_ab = 0;S_ab < 2;++S_ab)
+                  for(int S_de = 0;S_de < 2;++S_de){
+
+                     ward = 0.0;
+
+                     for(int k_l = 0;k_l < L;++k_l){
+
+                        K_pph = (k_l + k_a_ + k_b_)%L;
+
+                        hard = 0.0;
+
+                        for(int pi = 0;pi < 2;++pi)
+                           hard += pphm(0,K_pph,pi,S_ab,k_l,k_a_,k_b_,S_de,k_l,k_c,k_d);
+
+                        if(k_l == k_a_)
+                           hard *= std::sqrt(2.0);
+
+                        if(k_l == k_c)
+                           hard *= std::sqrt(2.0);
+
+                        ward += 0.5/ ( PPHM::norm(K_pph,k_l,k_a_,k_b_) * PPHM::norm(K_pph,k_l,k_c,k_d) ) * hard;
+
+                     }
+
+                     (*this)(B,i,j) += 2.0 * psign * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) ) * _6j[Z][S_ab] * _6j[Z][S_de] * ward;
+
+                  }
+
+               //then the S = 3/2 contribution: this only occurs when Z = 1
+               if(Z == 1){
+
+                  ward = 0.0;
+
+                  for(int k_l = 0;k_l < L;++k_l){
+
+                     K_pph = (k_l + k_a_ + k_b_)%L;
+
+                     hard = 0.0;
+
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += pphm(1,K_pph,pi,1,k_l,k_a_,k_b_,1,k_l,k_c,k_d);
+
+                     ward += 0.5/ ( PPHM::norm(K_pph,k_l,k_a_,k_b_) * PPHM::norm(K_pph,k_l,k_c,k_d) ) * hard;
+
+                  }
+
+                  (*this)(B,i,j) += psign * ward * 4.0/3.0;
+
+               }
+
+            }
+
+            //first the contribution of the S = 1/2 block of the PPHM matrix:
+            for(int S_ab = 0;S_ab < 2;++S_ab)
+               for(int S_de = 0;S_de < 2;++S_de){
+
+                  ward = 0.0;
+
+                  for(int k_l = 0;k_l < L;++k_l){
+
+                     K_pph = (k_l + k_a + k_b)%L;
+
+                     hard = 0.0;
+
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += pphm(0,K_pph,pi,S_ab,k_l,k_a,k_b,S_de,k_l,k_c,k_d);
+
+                     if(k_l == k_a)
+                        hard *= std::sqrt(2.0);
+
+                     if(k_l == k_c)
+                        hard *= std::sqrt(2.0);
+
+                     ward += 0.5/ ( PPHM::norm(K_pph,k_l,k_a,k_b) * PPHM::norm(K_pph,k_l,k_c,k_d) ) * hard;
+
+                  }
+
+                  (*this)(B,i,j) += 2.0 * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) ) * _6j[Z][S_ab] * _6j[Z][S_de] * ward;
+
+               }
+
+            //then the S = 3/2 contribution: this only occurs when Z = 1
+            if(Z == 1){
+
+               ward = 0.0;
+
+               for(int k_l = 0;k_l < L;++k_l){
+
+                  K_pph = (k_l + k_a + k_b)%L;
+
+                  hard = 0.0;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += pphm(1,K_pph,pi,1,k_l,k_a,k_b,1,k_l,k_c,k_d);
+
+                  ward += 0.5/ ( PPHM::norm(K_pph,k_l,k_a,k_b) * PPHM::norm(K_pph,k_l,k_c,k_d) ) * hard;
+
+               }
+
+               (*this)(B,i,j) += ward * 4.0/3.0;
+
+            }
+
+            (*this)(B,i,j) *= PHM::norm(K,k_a,k_b) * PHM::norm(K,k_c,k_d);
+
+         }
+      }
+
+   }
+
+   this->symmetrize();
+
+}

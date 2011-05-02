@@ -69,10 +69,11 @@ int main(int argc,char *argv[]){
    PPHM pphm;
    pphm.T(tpm);
 
-   SPM spm;
-   spm.bar(1.0,pphm);
+   PHM phm;
+   phm.bar(pphm);
 
-   cout << spm;
+   BlockVector<PHM> v(phm);
+   cout << v;
 
 /*
    TPM ham;
