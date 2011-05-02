@@ -64,15 +64,10 @@ int main(int argc,char *argv[]){
    TPM tpm;
    tpm.fill_Random();
 
-   cout << tpm << endl;
-
    tpm.out_sp("../1D_hub-bright/tpm.in");
 
    PPHM pphm;
    pphm.T(tpm);
-
-   BlockVector<PPHM> v(pphm);
-   cout << v;
 
 /*
    TPM ham;

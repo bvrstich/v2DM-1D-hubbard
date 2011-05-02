@@ -14,6 +14,7 @@ using std::vector;
 class SUP;
 class PHM;
 class DPM;
+class PPHM;
 
 /**
  * @author Brecht Verstichel
@@ -114,6 +115,12 @@ class TPM : public BlockMatrix {
 
       //T1 down
       void T(const DPM &);
+
+      //trace last pair of indices of PPHM
+      void bar(const PPHM &);
+
+      //T2 down
+      void T(const PPHM &);
 
    private:
 

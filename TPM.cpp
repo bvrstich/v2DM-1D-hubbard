@@ -1517,3 +1517,90 @@ void TPM::T(const DPM &dpm){
    this->Q(1,a,b,c,tpm);
 
 }
+
+/**
+ * The bar function that maps a PPHM object onto a TPM object by tracing away the last pair of incdices of the PPHM
+ * @param pphm Input PPHM object
+ */
+void TPM::bar(const PPHM &pphm){
+
+   int k_a,k_b,k_c,k_d;
+
+   int k_a_,k_b_;
+
+   int Z,K,p;
+   int psign;
+
+   int K_pph;
+
+   double ward,hard;
+
+   for(int B = 0;B < gnr();++B){//loop over the tp blocks
+
+      Z = block_char[B][0];//spin of the TPM - block
+      K = block_char[B][1];//momentum of the TPM - block
+      p = block_char[B][2];//parity of the TPM - block
+
+      psign = 1 - 2*p;
+
+      for(int i = 0;i < gdim(B);++i){
+
+         k_a = t2s[B][i][0];
+         k_b = t2s[B][i][1];
+
+         k_a_ = (L - k_a)%L;
+         k_b_ = (L - k_b)%L;
+
+         for(int j = i;j < gdim(B);++j){
+
+            k_c = t2s[B][j][0];
+            k_d = t2s[B][j][1];
+
+            for(int S = 0;S < 2;++S){//loop over three particle spin: 1/2 and 3/2
+
+               ward = 0.0;
+
+               if(K == 0 || K == L/2){
+
+                  for(int k_l = 0;k_l < L;++k_l){
+
+                     hard = 0.0;
+
+                     K_pph = (k_a_ + k_b_ + k_l)%L;
+
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += pphm(S,K_pph,pi,Z,k_a_,k_b_,k_l,Z,k_c,k_d,k_l);
+
+                     ward += psign * 0.5/( PPHM::norm(K_pph,k_a_,k_b_,k_l) * PPHM::norm(K_pph,k_c,k_d,k_l) )* hard;
+
+                  }
+
+               }
+
+               for(int k_l = 0;k_l < L;++k_l){
+
+                  hard = 0.0;
+
+                  K_pph = (k_a + k_b + k_l)%L;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += pphm(S,K_pph,pi,Z,k_a,k_b,k_l,Z,k_c,k_d,k_l);
+
+                  ward += 0.5/( PPHM::norm(K_pph,k_a,k_b,k_l) * PPHM::norm(K_pph,k_c,k_d,k_l) )* hard;
+
+               }
+
+               (*this)(B,i,j) += (2*(S + 0.5) + 1.0) * ward;
+
+            }
+
+            (*this)(B,i,j) *= TPM::norm(K,k_a,k_b) * TPM::norm(K,k_c,k_d)/(2.0*Z + 1.0);
+
+         }
+      }
+
+   }
+
+   this->symmetrize();
+
+}
