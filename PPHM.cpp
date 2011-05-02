@@ -535,7 +535,7 @@ void PPHM::init(int L_in,int N_in){
                }
 
             }
-      
+
       ++block;
 
    }
@@ -860,7 +860,7 @@ void PPHM::init(int L_in,int N_in){
    pph = 0;
 
    //now negative parity, K = L/2
-   
+
    //S = 1/2
    block_char[block][0] = 0;//S
    block_char[block][1] = L/2;//K
@@ -1127,6 +1127,18 @@ void PPHM::init(int L_in,int N_in){
       }
    }
 
+   //allocate
+   _6j = new double * [2];
+
+   for(int S = 0;S < 2;++S)
+      _6j[S] = new double [2];
+
+   //initialize
+   _6j[0][0] = -0.5;
+   _6j[0][1] = 0.5;
+   _6j[1][0] = 0.5;
+   _6j[1][1] = 1.0/6.0;
+
 }
 
 /**
@@ -1175,6 +1187,10 @@ void PPHM::clear(){
 
    delete [] char_block;
 
+   for(int S = 0;S < 2;++S)
+      delete [] _6j[S];
+
+   delete [] _6j;
 }
 
 /**
@@ -1291,20 +1307,21 @@ int PPHM::gp(int block) const{
  * @param k_z third sp index that forms the pph column index j together with k_d, k_e and S_de in block B
  * @return the number on place PPHM(B,i,j) with the right phase.
  */
-/*
-   double PPHM::operator()(int B,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const {
+double PPHM::operator()(int B,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const {
 
    int S = block_char[B][0];
    int K = block_char[B][1];
+   int p = block_char[B][2];
 
-   return (*this)(S,K,S_ab,k_a,k_b,k_c,S_de,k_d,k_e,k_z);
+   return (*this)(S,K,p,S_ab,k_a,k_b,k_c,S_de,k_d,k_e,k_z);
 
-   }
- */
+}
+
 /**
  * access the elements of the matrix in sp mode, special symmetry and antisymmetry relations are automatically accounted for:\n\n
  * @param S The pphm-spin index, when == 0 then access the block S = 1/2, for spinindex == 1 we access the S = 3/2.
  * @param K The pphm-momentum index
+ * @param p The pphm-parity index
  * @param S_ab The intermediate spinquantumnumber of k_a and k_b.
  * @param k_a first sp index that forms the pph row index i together with k_b, k_c and S_ab in block B
  * @param k_b second sp index that forms the pph row index i together with k_a, k_c and S_ab in block B
@@ -1315,39 +1332,314 @@ int PPHM::gp(int block) const{
  * @param k_z third sp index that forms the pph column index j together with k_d, k_e and S_de in block B
  * @return the number on place PPHM(B,i,j) with the right phase.
  */
-/*
-   double PPHM::operator()(int S,int K,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const {
+double PPHM::operator()(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const {
 
-//check the momentum
-if( (k_a + k_b + k_c)%(M/2) != K)
-return 0;
+   //check the momentum
+   if( (k_a + k_b + k_c)%L != K)
+      return 0;
 
-if( (k_d + k_e + k_z)%(M/2) != K)
-return 0;
+   if( (k_d + k_e + k_z)%L != K)
+      return 0;
 
-//associated blockindex
-int B = (M/2)*S + K;
+   int K_copy = K;
 
-int i,j;
+   int i,j;
 
-int phase_i = get_inco(S,K,S_ab,k_a,k_b,k_c,i);
+   int phase_i = get_phase_order(S,K_copy,p,S_ab,k_a,k_b,k_c);
 
-if(phase_i == 0)
-return 0;
+   if(phase_i == 0)
+      return 0;
 
-int phase_j = get_inco(S,K,S_de,k_d,k_e,k_z,j);
+   int B = char_block[S][K_copy][p];
 
-if(phase_j == 0)
-return 0;
+   phase_i *= get_inco(B,S,S_ab,k_a,k_b,k_c,i);
 
-return phase_i*phase_j* (*this)(B,i,j);
+   if(phase_i == 0)
+      return 0;
+
+   int phase_j = get_phase_order(S,K,p,S_de,k_d,k_e,k_z);
+
+   if(phase_j == 0)
+      return 0;
+
+   phase_j *= get_inco(B,S,S_de,k_d,k_e,k_z,j);
+
+   if(phase_j == 0)
+      return 0;
+
+   return phase_i*phase_j* (*this)(B,i,j);
 
 }
+
+/**
+ * check if the momenta are in the right form, if not change them and return the accompanying phase
+ * @param S The pph spin
+ * @param K the pph momentum
+ * @param p the pph parity
+ * @param S_ab the intermediate spin
+ * @param k_a the first momentum index
+ * @param k_b the second momentum index
+ * @param k_c the third momentum index
+ * @return the phase 
  */
+int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c){
+
+   if(K == 0){
+
+      if(k_a == 0 || k_b == 0 || k_c == 0){
+
+         if(k_c == 0){
+
+            if(k_a == 0 || k_a == L/2){//only positive parity allowed
+
+               if(p == 1)
+                  return 0;
+               else
+                  return 1;
+
+            }
+            else{//only + for S_ab == 0 and - for S_ab = 1
+
+               if(p == 0){
+
+                  if(S_ab == 1)
+                     return 0;
+                  else
+                     return 1;
+
+               }
+               else{
+
+                  if(S_ab == 0)
+                     return 0;
+                  else
+                     return 1;
+
+               }
+
+            }
+
+         }
+         else{//k_a or k_b are 0
+
+            if(k_c == L/2){//only positive parity
+
+               if(p == 1)
+                  return 0;
+               else
+                  return 1;
+
+            }
+            else{//k_c != L/2
+
+               if(k_a == 0){
+
+                  if(k_b > k_c){//switcheroo
+
+                     k_a = k_b;
+                     k_b = k_c;
+                     k_c = k_a;
+                     k_a = 0;
+
+                     return (1 - 2*p);
+
+                  }
+                  else
+                     return 1;
+
+               }
+               else{//k_b == 0
+
+                  if(k_a > k_c){
+
+                     k_b = k_a;
+                     k_a = k_c;
+                     k_c = k_b;
+                     k_b = 0;
+
+                     return (1 - 2*p);
+
+                  }
+                  else
+                     return 1;
+
+               }
+
+            }
+
+         }
+
+      }
+      else{//no zeros
+
+         if(k_a + k_b + k_c == 2*L){
+
+            k_a = L - k_a;
+            k_b = L - k_b;
+            k_c = L - k_c;
+
+            return (1 - 2*p);
+
+         }
+         else
+            return 1;
+
+      }
+
+   }
+   else if(K == L/2){
+
+      if(k_a == L/2 || k_b == L/2 || k_c == L/2){
+
+         if(k_c == L/2){
+
+            if(k_a == 0 || k_a == L/2){//only positive parity states
+
+               if(p == 1)
+                  return 0;
+               else
+                  return 1;
+
+            }
+            else{//positive parity only with S_ab = 0, negative with S_ab = 1
+
+               if(S_ab == 0){
+
+                  if(p == 0)
+                     return 1;
+                  else
+                     return 0;
+
+               }
+               else{
+
+                  if(p == 0)
+                     return 0;
+                  else
+                     return 1;
+
+               }
+
+            }
+
+         }
+         else{//k_a or k_b == L/2
+
+            if(k_c == 0){//only positive parity
+
+               if(p == 1)
+                  return 0;
+               else
+                  return 1;
+
+            }
+            else{
+
+               if(k_a == L/2){
+
+                  if(k_b > k_c){//switch
+
+                     k_a = k_b;
+                     k_b = k_c;
+                     k_c = k_a;
+                     k_a = L/2;
+
+                     return (1 - 2*p);
+
+                  }
+                  else
+                     return 1;
+
+               }
+               else{//k_b == L/2
+
+                  if(k_a > k_c){//switch
+
+                     k_b = k_a;
+                     k_a = k_c;
+                     k_c = k_b;
+                     k_b = L/2;
+
+                     return (1 - 2*p);
+
+                  }
+                  else
+                     return 1;
+
+               }
+
+            }
+
+         }
+
+      }
+      else if(k_a == 0 || k_b == 0 || k_c == 0){
+
+         if(k_a + k_b + k_c == L/2)
+            return 1;
+         else{
+
+            k_a = (L - k_a)%L;
+            k_b = (L - k_b)%L;
+            k_c = (L - k_c)%L;
+
+            return (1 - 2*p);
+
+         }
+
+      }
+      else{//no L/2 or 0 present
+
+         if(k_a + k_b + k_c == L/2)
+            return 1;
+         else if(k_a + k_b + k_c == L + L/2){
+
+            if(k_c > L/2)
+               return 1;
+            else{
+
+               k_a = (L - k_a)%L;
+               k_b = (L - k_b)%L;
+               k_c = (L - k_c)%L;
+
+               return (1 - 2*p);
+
+            }
+
+         }
+         else{
+
+            k_a = (L - k_a)%L;
+            k_b = (L - k_b)%L;
+            k_c = (L - k_c)%L;
+
+            return (1 - 2*p);
+
+         }
+
+      }
+
+   }
+   else if(K > L/2){
+
+      K = L - K;
+
+      k_a = (L - k_a)%L;
+      k_b = (L - k_b)%L;
+      k_c = (L - k_c)%L;
+
+      return (1 - 2*p);
+
+   }
+   else
+      return 1;
+
+}
+
 /** 
  * Member function that gets the pph-index and phase corresponding to the sp indices S, K, S_ab, k_a, k_b, k_c.
- * @param S spin-index of the state, 0 -> S = 1/2, 1 -> S = 3/2
- * @param K momentum-index of the state, 0 <= K < M/2
+ * @param B block index
+ * @param S pph spin
  * @param S_ab intermediate spincoupling of k_a and k_b. = 0 or 1
  * @param k_a first sp orbital
  * @param k_b second sp orbital
@@ -1355,312 +1647,63 @@ return phase_i*phase_j* (*this)(B,i,j);
  * @param i the corresponding pph index will be stored in this int after calling the function
  * @return the phase needed to get to a normal ordering of indices that corresponds to a pph index i
  */
-/*
-   int PPHM::get_inco(int S,int K,int S_ab,int k_a,int k_b,int k_c,int &i) const{
+int PPHM::get_inco(int B,int S,int S_ab,int k_a,int k_b,int k_c,int &i) const{
 
-//block index:
-int B = (M/2)*S + K;
+   if(S == 0){//S = 1/2
 
-if(S == 0){//S = 1/2
+      if(S_ab == 0){//symmetric in spatial sp's
 
-if(S_ab == 0){//symmetric in spatial sp's
+         if(k_a <= k_b)
+            i = s2pph[B][0][k_a][k_b][k_c];
+         else
+            i = s2pph[B][0][k_b][k_a][k_c];
 
-if(k_a <= k_b)
-i = s2pph[B][0][k_a][k_b][k_c];
-else
-i = s2pph[B][0][k_b][k_a][k_c];
+         return 1;
 
-return 1;
+      }
+      else{//antisymmetric in spatial sp's
 
-}
-else{//antisymmetric in spatial sp's
+         if(k_a == k_b)
+            return 0;
 
-if(k_a == k_b)
-return 0;
+         if(k_a < k_b){
 
-if(k_a < k_b){
+            i = s2pph[B][1][k_a][k_b][k_c];
 
-i = s2pph[B][1][k_a][k_b][k_c];
+            return 1;
 
-return 1;
+         }
+         else{
 
-}
-else{
+            i = s2pph[B][1][k_b][k_a][k_c];
 
-i = s2pph[B][1][k_b][k_a][k_c];
+            return -1;
 
-return -1;
+         }
 
-}
-
-}
-
-}
-else{//S = 3/2
-
-if(S_ab == 0)//no possibile for S = 3/2
-return 0;
-
-if(k_a == k_b)//no possibile for S = 3/2
-return 0;
-
-if(k_a < k_b){
-
-i = s2pph[B][0][k_a][k_b][k_c];
-
-return 1;
-
-}
-else{
-
-i = s2pph[B][0][k_b][k_a][k_c];
-
-return -1;
-
-}
-
-}
-
-}
- */
-/**
- * The spincoupled, translationally invariant T2 map, maps a TPM onto a PPHM object. See notes for more info
- * be aware that the k_c and k_z in the T2 notation become -k_c and -k_z in TPM space (remember the G-map)
- * @param tpm input TPM matrix
- */
-/*
-   void PPHM::T(const TPM &tpm){
-
-   SPM spm(1.0/(N - 1.0),tpm);
-
-   int k_a,k_b,k_c,k_d,k_e,k_z;
-   int S_ab,S_de;
-
-   double norm_ab,norm_de;
-   int sign_ab,sign_de;
-
-//first the S = 1/2 blocks, these should be the most difficult ones.
-for(int B = 0;B < M/2;++B){
-
-for(int i = 0;i < gdim(B);++i){
-
-S_ab = pph2s[B][i][0];
-
-k_a = pph2s[B][i][1];
-k_b = pph2s[B][i][2];
-
-//change to tp-notation:
-k_c = (-pph2s[B][i][3] + M/2)%(M/2);
-
-sign_ab = 1 - 2*S_ab;
-
-norm_ab = 1.0;
-
-if(k_a == k_b)
-norm_ab /= std::sqrt(2.0);
-
-for(int j = i;j < gdim(B);++j){
-
-S_de = pph2s[B][j][0];
-
-k_d = pph2s[B][j][1];
-k_e = pph2s[B][j][2];
-
-//change to tp-notation:
-k_z = (-pph2s[B][j][3] + M/2)%(M/2);
-
-sign_de = 1 - 2*S_de;
-
-norm_de = 1.0;
-
-if(k_d == k_e)
-norm_de /= std::sqrt(2.0);
-
-//start the map: init
-(*this)(B,i,j) = 0.0;
-
-//sp term becomes diagonal here:
-if(i == j)
-(*this)(B,i,j) += spm[k_c];
-
-//tp(1)
-if(k_c == k_z)
-if(S_ab == S_de)
-(*this)(B,i,j) += tpm(S_ab,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_e);
-
-//tp(2)
-if(k_a == k_d){
-
-double ward = 0.0;
-
-for(int J = 0;J < 2;++J)
-for(int Z = 0;Z < 2;++Z)
-ward += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,(k_c + k_e)%(M/2),k_c,k_e,k_z,k_b);
-
-ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
-
-if(k_c == k_e)
-   ward *= std::sqrt(2.0);
-
-if(k_z == k_b)
-   ward *= std::sqrt(2.0);
-
-   (*this)(B,i,j) -= ward;
+      }
 
    }
+   else{//S = 3/2
 
-//tp(3)
-if(k_b == k_d){
+      if(S_ab == 0)//no possibile for S = 3/2
+         return 0;
 
-   double ward = 0.0;
+      if(k_a == k_b)//no possibile for S = 3/2
+         return 0;
 
-   for(int J = 0;J < 2;++J)
-      for(int Z = 0;Z < 2;++Z)
-         ward += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,(k_c + k_e)%(M/2),k_c,k_e,k_z,k_a);
+      if(k_a < k_b){
 
-   ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+         i = s2pph[B][1][k_a][k_b][k_c];
 
-   if(k_c == k_e)
-      ward *= std::sqrt(2.0);
+         return 1;
 
-   if(k_z == k_a)
-      ward *= std::sqrt(2.0);
+      }
+      else{
 
-   (*this)(B,i,j) -= sign_ab * ward;
+         i = s2pph[B][1][k_b][k_a][k_c];
 
-}
-
-//tp(4)
-if(k_a == k_e){
-
-   double ward = 0.0;
-
-   for(int J = 0;J < 2;++J)
-      for(int Z = 0;Z < 2;++Z)
-         ward += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,(k_c + k_d)%(M/2),k_c,k_d,k_z,k_b);
-
-   ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
-
-   if(k_c == k_d)
-      ward *= std::sqrt(2.0);
-
-   if(k_z == k_b)
-      ward *= std::sqrt(2.0);
-
-   (*this)(B,i,j) -= sign_de * ward;
-
-}
-
-//tp(5)
-if(k_b == k_e){
-
-   double ward = 0.0;
-
-   for(int J = 0;J < 2;++J)
-      for(int Z = 0;Z < 2;++Z)
-         ward += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,(k_c + k_d)%(M/2),k_c,k_d,k_z,k_a);
-
-   ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
-
-   if(k_c == k_d)
-      ward *= std::sqrt(2.0);
-
-   if(k_z == k_a)
-      ward *= std::sqrt(2.0);
-
-   (*this)(B,i,j) -= sign_ab * sign_de * ward;
-
-}
-
-}
-
-}
-
-}
-
-//the easier S = 3/2 part:
-for(int B = M/2;B < M;++B){
-
-   for(int i = 0;i < gdim(B);++i){
-
-      k_a = pph2s[B][i][1];
-      k_b = pph2s[B][i][2];
-
-      //change to correct sp-momentum
-      k_c = (-pph2s[B][i][3] + M/2)%(M/2);
-
-      for(int j = i;j < gdim(B);++j){
-
-         k_d = pph2s[B][j][1];
-         k_e = pph2s[B][j][2];
-
-         //change to correct sp-momentum
-         k_z = (-pph2s[B][j][3] + M/2)%(M/2);
-
-         //init
-         (*this)(B,i,j) = 0.0;
-
-         //sp part is diagonal
-         if(i == j)
-            (*this)(B,i,j) += spm[k_c];
-
-         //tp(1)
-         if(k_c == k_z)
-            (*this)(B,i,j) += tpm(1,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_e);
-
-         //tp(2)
-         if(k_a == k_d){
-
-            double ward = 0.0;
-
-            for(int Z = 0;Z < 2;++Z)
-               ward += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,(k_c + k_e)%(M/2),k_c,k_e,k_z,k_b);
-
-            if(k_c == k_e)
-               ward *= std::sqrt(2.0);
-
-            if(k_z == k_b)
-               ward *= std::sqrt(2.0);
-
-            (*this)(B,i,j) -= ward;
-
-         }
-
-         //tp(3)
-         if(k_b == k_d){
-
-            double ward = 0.0;
-
-            for(int Z = 0;Z < 2;++Z)
-               ward += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,(k_c + k_e)%(M/2),k_c,k_e,k_z,k_a);
-
-            if(k_c == k_e)
-               ward *= std::sqrt(2.0);
-
-            if(k_z == k_a)
-               ward *= std::sqrt(2.0);
-
-            (*this)(B,i,j) += ward;
-
-         }
-
-         //tp(5)
-         if(k_b == k_e){
-
-            double ward = 0.0;
-
-            for(int Z = 0;Z < 2;++Z)
-               ward += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,(k_c + k_d)%(M/2),k_c,k_d,k_z,k_a);
-
-            if(k_c == k_d)
-               ward *= std::sqrt(2.0);
-
-            if(k_z == k_a)
-               ward *= std::sqrt(2.0);
-
-            (*this)(B,i,j) -= ward;
-
-         }
+         return -1;
 
       }
 
@@ -1668,10 +1711,565 @@ for(int B = M/2;B < M;++B){
 
 }
 
-this->symmetrize();
+/**
+ * The spincoupled, translationally invariant and parity symmetric T2 map, maps a TPM onto a PPHM object. See notes for more info
+ * be aware that the k_c and k_z in the T2 notation become -k_c and -k_z in TPM space (remember the G-map)
+ * @param tpm input TPM matrix
+ */
+void PPHM::T(const TPM &tpm){
+
+   SPM spm(1.0/(N - 1.0),tpm);
+
+   int k_a,k_b,k_c,k_d,k_e,k_z;
+   int k_a_,k_b_,k_c_,k_d_,k_e_,k_z_;
+   int S_ab,S_de;
+
+   int K,p;
+   int psign;
+
+   double ward,hard;
+
+   double norm_ab,norm_de;
+   int sign_ab,sign_de;
+
+   //first the S = 1/2 blocks, these should be the most difficult ones.
+   for(int B = 0;B < L/2 + 3;++B){
+
+      K = block_char[B][1];
+      p = block_char[B][2];
+
+      psign = 1 - 2*p;
+
+      for(int i = 0;i < gdim(B);++i){
+
+         S_ab = pph2s[B][i][0];
+
+         k_a = pph2s[B][i][1];
+         k_b = pph2s[B][i][2];
+         k_c = pph2s[B][i][3];
+
+         k_a_ = (L - k_a)%L;
+         k_b_ = (L - k_b)%L;
+         k_c_ = (L - k_c)%L;
+
+         sign_ab = 1 - 2*S_ab;
+
+         norm_ab = 1.0;
+
+         if(k_a == k_b)
+            norm_ab /= std::sqrt(2.0);
+
+         for(int j = i;j < gdim(B);++j){
+
+            S_de = pph2s[B][j][0];
+
+            k_d = pph2s[B][j][1];
+            k_e = pph2s[B][j][2];
+            k_z = pph2s[B][j][3];
+
+            k_d_ = (L - k_d)%L;
+            k_e_ = (L - k_e)%L;
+            k_z_ = (L - k_z)%L;
+
+            sign_de = 1 - 2*S_de;
+
+            norm_de = 1.0;
+
+            if(k_d == k_e)
+               norm_de /= std::sqrt(2.0);
+
+            //start the map: init
+            (*this)(B,i,j) = 0.0;
+
+            //sp term becomes diagonal here:
+            if(i == j)
+               (*this)(B,i,j) += spm[k_c];
+
+            ward = 0.0;
+
+            if(K == 0 || K == L/2){//parity exchange terms
+
+               //tp(1)
+               if(S_ab == S_de)
+                  if(k_c_ == k_z){
+
+                     hard = 0.0;
+
+                     int K_ab = (k_a_ + k_b_)%L;
+
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += tpm(S_ab,K_ab,pi,k_a_,k_b_,k_d,k_e);
+
+                     ward += psign * 0.5/(TPM::norm(K_ab,k_a_,k_b_) * TPM::norm(K_ab,k_d,k_e)) * hard;
+
+                  }
+
+               //tp(2)
+               if(k_a_ == k_d){
+
+                  hard = 0.0;
+
+                  int K_ce = (k_c + k_e)%L;
+
+                  for(int J = 0;J < 2;++J)
+                     for(int Z = 0;Z < 2;++Z)
+                        for(int pi = 0;pi < 2;++pi)
+                           hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_b_);
+
+                  hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(k_c == k_e)
+                     hard *= std::sqrt(2.0);
+
+                  if(k_z_ == k_b_)
+                     hard *= std::sqrt(2.0);
+
+                  ward -= psign * 0.5 / ( TPM::norm(K_ce,k_c,k_e) * TPM::norm(K_ce,k_z_,k_b_) ) * hard;
+
+               }
+
+               //tp(3)
+               if(k_b_ == k_d){
+
+                  hard = 0.0;
+
+                  int K_ce = (k_c + k_e)%L;
+
+                  for(int J = 0;J < 2;++J)
+                     for(int Z = 0;Z < 2;++Z)
+                        for(int pi = 0;pi < 2;++pi)
+                           hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_a_);
+
+                  hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(k_c == k_e)
+                     hard *= std::sqrt(2.0);
+
+                  if(k_z_ == k_a_)
+                     hard *= std::sqrt(2.0);
+
+                  ward -= psign * sign_ab * 0.5 / (TPM::norm(K_ce,k_c,k_e) * TPM::norm(K_ce,k_z_,k_a_) ) * hard;
+
+               }
+
+               //tp(4)
+               if(k_a_ == k_e){
+
+                  int K_cd = (k_c + k_d)%L;
+
+                  hard = 0.0;
+
+                  for(int J = 0;J < 2;++J)
+                     for(int Z = 0;Z < 2;++Z)
+                        for(int pi = 0;pi < 2;++pi)
+                           hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_b_);
+
+                  hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(k_c == k_d)
+                     hard *= std::sqrt(2.0);
+
+                  if(k_z_ == k_b_)
+                     hard *= std::sqrt(2.0);
+
+                  ward -= psign * sign_de * 0.5 / (TPM::norm(K_cd,k_c,k_d) * TPM::norm(K_cd,k_z_,k_b_) ) * hard;
+
+               }
+
+               //tp(5)
+               if(k_b_ == k_e){
+
+                  hard = 0.0;
+
+                  int K_cd = (k_c + k_d)%L;
+
+                  for(int J = 0;J < 2;++J)
+                     for(int Z = 0;Z < 2;++Z)
+                        for(int pi = 0;pi < 2;++pi)
+                           hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_a_);
+
+                  hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(k_c == k_d)
+                     hard *= std::sqrt(2.0);
+
+                  if(k_z_ == k_a_)
+                     hard *= std::sqrt(2.0);
+
+                  ward -= psign * sign_ab * sign_de * 0.5 / (TPM::norm(K_cd,k_c,k_d) * TPM::norm(K_cd,k_z_,k_a_) ) * hard;
+
+               }
+
+            }
+
+            //tp(1)
+            if(k_c == k_z)
+               if(S_ab == S_de){
+
+                  hard = 0.0;
+
+                  int K_ab = (k_a + k_b)%L;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += tpm(S_ab,K_ab,pi,k_a,k_b,k_d,k_e);
+
+                  ward += 0.5/(TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,k_d,k_e)) * hard;
+
+               }
+
+            //tp(2)
+            if(k_a == k_d){
+
+               hard = 0.0;
+
+               int K_ce = (k_c_ + k_e)%L;
+
+               for(int J = 0;J < 2;++J)
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_b);
+
+               hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+               if(k_c_ == k_e)
+                  hard *= std::sqrt(2.0);
+
+               if(k_z_ == k_b)
+                  hard *= std::sqrt(2.0);
+
+               ward -= 0.5/( TPM::norm(K_ce,k_c_,k_e) * TPM::norm(K_ce,k_z_,k_b) ) * hard;
+
+            }
+
+            //tp(3)
+            if(k_b == k_d){
+
+               hard = 0.0;
+
+               int K_ce = (k_c_ + k_e)%L;
+
+               for(int J = 0;J < 2;++J)
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_a);
+
+               hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+               if(k_c_ == k_e)
+                  hard *= std::sqrt(2.0);
+
+               if(k_z_ == k_a)
+                  hard *= std::sqrt(2.0);
+
+               ward -= sign_ab * 0.5 / (TPM::norm(K_ce,k_c_,k_e) * TPM::norm(K_ce,k_z_,k_a) ) * hard;
+
+            }
+
+            //tp(4)
+            if(k_a == k_e){
+
+               int K_cd = (k_c_ + k_d)%L;
+
+               hard = 0.0;
+
+               for(int J = 0;J < 2;++J)
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_b);
+
+               hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+               if(k_c_ == k_d)
+                  hard *= std::sqrt(2.0);
+
+               if(k_z_ == k_b)
+                  hard *= std::sqrt(2.0);
+
+               ward -= sign_de * 0.5 / (TPM::norm(K_cd,k_c_,k_d) * TPM::norm(K_cd,k_z_,k_b) ) * hard;
+
+            }
+
+            //tp(5)
+            if(k_b == k_e){
+
+               hard = 0.0;
+
+               int K_cd = (k_c_ + k_d)%L;
+
+               for(int J = 0;J < 2;++J)
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_a);
+
+               hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+               if(k_c_ == k_d)
+                  hard *= std::sqrt(2.0);
+
+               if(k_z_ == k_a)
+                  hard *= std::sqrt(2.0);
+
+               ward -= sign_ab * sign_de * 0.5 / (TPM::norm(K_cd,k_c_,k_d) * TPM::norm(K_cd,k_z_,k_a) ) * hard;
+
+            }
+
+            (*this)(B,i,j) += PPHM::norm(K,k_a,k_b,k_c) * PPHM::norm(K,k_d,k_e,k_z) * ward;
+
+         }
+
+      }
+
+   }
+
+   //the easier S = 3/2 part:
+   for(int B = L/2 + 3;B < gnr();++B){
+
+      K = block_char[B][1];
+      p = block_char[B][2];
+
+      psign = 1 - 2*p;
+
+      for(int i = 0;i < gdim(B);++i){
+
+         k_a = pph2s[B][i][1];
+         k_b = pph2s[B][i][2];
+         k_c = pph2s[B][i][3];
+
+         k_a_ = (L - k_a)%L;
+         k_b_ = (L - k_b)%L;
+         k_c_ = (L - k_c)%L;
+
+         for(int j = i;j < gdim(B);++j){
+
+            k_d = pph2s[B][j][1];
+            k_e = pph2s[B][j][2];
+            k_z = pph2s[B][j][3];
+
+            k_d_ = (L - k_d)%L;
+            k_e_ = (L - k_e)%L;
+            k_z_ = (L - k_z)%L;
+
+            //init
+            (*this)(B,i,j) = 0.0;
+
+            //sp part is diagonal
+            if(i == j)
+               (*this)(B,i,j) += spm[k_c];
+
+            ward = 0.0;
+
+            if(K == 0 || K == L/2){//parity exchange terms
+
+               //tp(1)
+               if(k_c_ == k_z){
+
+                  hard = 0.0;
+
+                  int K_ab = (k_a_ + k_b_)%L;
+
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += tpm(1,K_ab,pi,k_a_,k_b_,k_d,k_e);
+
+                  ward += psign * 0.5 / (TPM::norm(K_ab,k_a_,k_b_) * TPM::norm(K_ab,k_d,k_e) ) * hard;
+
+               }
+
+               //tp(2)
+               if(k_a_ == k_d){
+
+                  hard = 0.0;
+
+                  int K_ce = (k_c + k_e)%L;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_b_);
+
+                  if(k_c == k_e)
+                     hard *= std::sqrt(2.0);
+
+                  if(k_z_ == k_b_)
+                     hard *= std::sqrt(2.0);
+
+                  ward -= psign * 0.5 / (TPM::norm(K_ce,k_c,k_e) * TPM::norm(K_ce,k_z_,k_b_) ) * hard;
+
+               }
+
+               //tp(3)
+               if(k_b_ == k_d){
+
+                  hard = 0.0;
+
+                  int K_ce = (k_c + k_e)%L;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_a_);
+
+                  if(k_c == k_e)
+                     hard *= std::sqrt(2.0);
+
+                  if(k_z_ == k_a_)
+                     hard *= std::sqrt(2.0);
+
+                  ward += psign * 0.5 / (TPM::norm(K_ce,k_c,k_e) * TPM::norm(K_ce,k_z_,k_a_) ) * hard;
+
+               }
+
+               //tp(4)
+               if(k_a_ == k_e){
+
+                  hard = 0.0;
+
+                  int K_cd = (k_c + k_d)%L;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_b_);
+
+                  if(k_c == k_d)
+                     hard *= std::sqrt(2.0);
+
+                  if(k_z_ == k_b_)
+                     hard *= std::sqrt(2.0);
+
+                  ward += psign * 0.5 / (TPM::norm(K_cd,k_c,k_d) * TPM::norm(K_cd,k_z_,k_b_) ) * hard;
+
+               }
+
+               //tp(5)
+               if(k_b_ == k_e){
+
+                  hard = 0.0;
+
+                  int K_cd = (k_c + k_d)%L;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_a_);
+
+                  if(k_c == k_d)
+                     hard *= std::sqrt(2.0);
+
+                  if(k_z_ == k_a_)
+                     hard *= std::sqrt(2.0);
+
+                  ward -= psign * 0.5 / (TPM::norm(K_cd,k_c,k_d) * TPM::norm(K_cd,k_z_,k_a_) ) * hard;
+
+               }
+
+            }
+
+            //tp(1)
+            if(k_c == k_z){
+
+               hard = 0.0;
+
+               int K_ab = (k_a + k_b)%L;
+
+               for(int pi = 0;pi < 2;++pi)
+                  hard += tpm(1,K_ab,pi,k_a,k_b,k_d,k_e);
+
+               ward += 0.5 / (TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,k_d,k_e) ) * hard;
+
+            }
+
+            //tp(2)
+            if(k_a == k_d){
+
+               hard = 0.0;
+
+               int K_ce = (k_c_ + k_e)%L;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_b);
+
+               if(k_c_ == k_e)
+                  hard *= std::sqrt(2.0);
+
+               if(k_z_ == k_b)
+                  hard *= std::sqrt(2.0);
+
+               ward -= 0.5 / (TPM::norm(K_ce,k_c_,k_e) * TPM::norm(K_ce,k_z_,k_b) ) * hard;
+
+            }
+
+            //tp(3)
+            if(k_b == k_d){
+
+               hard = 0.0;
+
+               int K_ce = (k_c_ + k_e)%L;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_a);
+
+               if(k_c_ == k_e)
+                  hard *= std::sqrt(2.0);
+
+               if(k_z_ == k_a)
+                  hard *= std::sqrt(2.0);
+
+               ward += 0.5 / (TPM::norm(K_ce,k_c_,k_e) * TPM::norm(K_ce,k_z_,k_a) ) * hard;
+
+            }
+
+            //tp(4)
+            if(k_a == k_e){
+
+               hard = 0.0;
+
+               int K_cd = (k_c_ + k_d)%L;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_b);
+
+               if(k_c_ == k_d)
+                  hard *= std::sqrt(2.0);
+
+               if(k_z_ == k_b)
+                  hard *= std::sqrt(2.0);
+
+               ward += 0.5 / (TPM::norm(K_cd,k_c_,k_d) * TPM::norm(K_cd,k_z_,k_b) ) * hard;
+
+            }
+
+            //tp(5)
+            if(k_b == k_e){
+
+               hard = 0.0;
+
+               int K_cd = (k_c_ + k_d)%L;
+
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_a);
+
+               if(k_c_ == k_d)
+                  hard *= std::sqrt(2.0);
+
+               if(k_z_ == k_a)
+                  hard *= std::sqrt(2.0);
+
+               ward -= 0.5 / (TPM::norm(K_cd,k_c_,k_d) * TPM::norm(K_cd,k_z_,k_a) ) * hard;
+
+            }
+
+            (*this)(B,i,j) += PPHM::norm(K,k_a,k_b,k_c) * PPHM::norm(K,k_d,k_e,k_z) * ward;
+
+         }
+
+      }
+
+   }
+
+   this->symmetrize();
 
 }
-*/
+
 ostream &operator<<(ostream &output,const PPHM &pphm_p){
 
    for(int B = 0;B < pphm_p.gnr();++B){
@@ -1705,7 +2303,7 @@ ostream &operator<<(ostream &output,const PPHM &pphm_p){
  */
 void PPHM::print_basis(){
 
-    for(int B = 0;B < L + 6;++B){
+   for(int B = 0;B < L + 6;++B){
 
       cout << endl;
       cout << B << "\t" << gdim(B) << "\t" << gdeg(B) << "\t(" << block_char[B][0] << "," << block_char[B][1] << "," << 1 - 2*block_char[B][2] << ")\t" << endl;
@@ -1726,8 +2324,65 @@ int PPHM::total_dim(){
    int tmp = 0;
 
    for(int B = 0;B < gnr();++B)
-      tmp = gdim(B)*gdeg(B);
+      tmp += gdim(B)*gdeg(B);
 
    return tmp;
+
+}
+
+/**
+ * @param S pph spin
+ * @param K pph momentum
+ * @param p pph parity
+ * @param S_ab intermediate spin
+ * @param k_a first momentum index
+ * @param k_b second momentum index
+ * @param k_c third momentum index
+ * @return the norm of the basisstate
+ */
+double PPHM::norm(int K,int k_a,int k_b,int k_c){
+
+   if(K == 0){
+
+      if(k_a == 0 || k_b == 0 || k_c == 0){
+
+         if(k_c == 0)
+            return 0.5;
+         else{//k_c != 0: k_a or k_b == 0
+
+            if(k_c == L/2)
+               return 0.5;
+            else
+               return 1.0/std::sqrt(2.0);
+
+         }
+
+      }
+      else
+         return 1.0/std::sqrt(2.0);
+
+   }
+   else if(K == L/2){
+
+      if(k_a == L/2 || k_b == L/2 || k_c == L/2){
+
+         if(k_c == L/2)
+            return 0.5;
+         else{//k_c != L/2: k_a or k_b == L/2
+
+            if(k_c == 0)
+               return 0.5;
+            else
+               return 1.0/std::sqrt(2.0);
+
+         }
+
+      }
+      else
+         return 1.0/std::sqrt(2.0);
+
+   }
+   else
+      return 1.0/std::sqrt(2.0);
 
 }
