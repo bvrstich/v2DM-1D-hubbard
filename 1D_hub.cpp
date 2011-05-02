@@ -69,6 +69,11 @@ int main(int argc,char *argv[]){
    PPHM pphm;
    pphm.T(tpm);
 
+   SPM spm;
+   spm.bar(1.0,pphm);
+
+   cout << spm;
+
 /*
    TPM ham;
    ham.hubbard(U);

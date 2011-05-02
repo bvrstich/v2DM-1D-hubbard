@@ -252,3 +252,62 @@ void SPM::bar(double scale,const PHM &phm){
    }
 
 }
+
+/** 
+ * This bar function maps a PPHM object directly onto a SPM object, scaling it with a factor scale
+ * @param scale the scalefactor
+ * @param pphm Input PPHM object
+ */
+void SPM::bar(double scale,const PPHM &pphm){
+
+   double ward;
+
+   int K_pph;
+
+   for(int k = 0;k <= L/2;++k){
+
+      (*this)[k] = 0.0;
+
+      //first S = 1/2 part
+      for(int S_ab = 0;S_ab < 2;++S_ab){//S_ab can be both 0 and 1
+
+         for(int k_a = 0;k_a < L;++k_a)
+            for(int k_b = 0;k_b < L;++k_b){
+
+               ward = 0.0;
+
+               K_pph = (k_a + k_b + k)%L;
+
+               for(int pi = 0;pi < 2;++pi)
+                  ward += pphm(0,K_pph,pi,S_ab,k_a,k_b,k,S_ab,k_a,k_b,k);
+
+               if(k_a == k_b)
+                  ward *= 2.0;
+
+               (*this)[k] += 0.25/(PPHM::norm(K_pph,k_a,k_b,k) * PPHM::norm(K_pph,k_a,k_b,k)) * ward;
+
+            }
+
+      }
+
+      //then S = 3/2 part:
+      for(int k_a = 0;k_a < L;++k_a)
+         for(int k_b = 0;k_b < L;++k_b){
+
+            ward = 0.0;
+
+            K_pph = (k_a + k_b + k)%L;
+
+            for(int pi = 0;pi < 2;++pi)
+               ward += pphm(1,K_pph,pi,1,k_a,k_b,k,1,k_a,k_b,k);
+
+            (*this)[k] += 0.5/(PPHM::norm(K_pph,k_a,k_b,k) * PPHM::norm(K_pph,k_a,k_b,k)) * ward;
+
+         }
+
+      //scaling
+      (*this)[k] *= scale;
+
+   }
+
+}
