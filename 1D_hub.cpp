@@ -60,21 +60,6 @@ int main(int argc,char *argv[]){
 
    SUP::init(L,N);
    EIG::init(L,N);
-
-   TPM tpm;
-   tpm.fill_Random();
-
-   tpm.out_sp("../1D_hub-bright/tpm.in");
-
-   PPHM pphm;
-   pphm.T(tpm);
-
-   PHM phm;
-   phm.bar(pphm);
-
-   BlockVector<PHM> v(phm);
-   cout << v;
-
 /*
    TPM ham;
    ham.hubbard(U);
