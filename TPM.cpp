@@ -367,6 +367,13 @@ void TPM::init_overlap(){
 
 #endif
 
+#ifdef __T2_CON
+
+   Sa += 5.0*M - 8.0;
+   Sc += (2.0*N*N + (M - 2.0)*(4.0*N - 3.0) - M*M)/(2.0*(N - 1.0)*(N - 1.0));
+
+#endif
+
 }
 
 /**
@@ -881,6 +888,22 @@ void TPM::H(const TPM &b,const SUP &D){
 
 #endif
 
+#ifdef __T2_CON
+
+   PPHM T2b;
+   T2b.T(b);
+
+   PPHM hulp_T2;
+
+   hulp_T2.L_map(D.pphm(),T2b);
+
+   hulp.T(hulp_T2);
+
+   *this += hulp;
+
+#endif
+
+
    this->proj_Tr();
 
 }
@@ -994,6 +1017,14 @@ void TPM::collaps(int option,const SUP &S){
 #ifdef __T1_CON
 
    hulp.T(S.dpm());
+
+   *this += hulp;
+
+#endif
+
+#ifdef __T2_CON
+
+   hulp.T(S.pphm());
 
    *this += hulp;
 
@@ -1543,7 +1574,7 @@ void TPM::T(const PPHM &pphm){
 
    int K_ph;
 
-   double ward,hard;
+   double ward;
 
    int sign;
    int psign;

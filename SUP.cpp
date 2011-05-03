@@ -14,9 +14,9 @@ int SUP::L;
 int SUP::dim;
 
 /**
- * initialize the static variables
- * @param L_in nr of sites
- * @param N_in nr of particles
+ * initialize the statics
+ * @param L_in the nr of sites
+ * @param N_in the nr of particles
  */
 void SUP::init(int L_in,int N_in){
 
@@ -30,34 +30,38 @@ void SUP::init(int L_in,int N_in){
 #ifdef __G_CON
    dim += M*M;
 #endif
-   
+
 #ifdef __T1_CON
    dim += M*(M - 1)*(M - 2)/6;
+#endif
+
+#ifdef __T2_CON
+   dim += M*M*(M - 1)/2;
 #endif
 
 }
 
 /**
  * standard constructor\n
- * Allocates two TPM matrices and optionally a PHM, DPM 
+ * Allocates two TPM matrices and optionally a PHM, DPM or PPHM matrix.
  */
 SUP::SUP(){
-   
+
    SZ_tp = new TPM * [2];
 
    for(int i = 0;i < 2;++i)
       SZ_tp[i] = new TPM();
 
 #ifdef __G_CON
-   
    SZ_ph = new PHM();
-
 #endif
 
 #ifdef __T1_CON
-   
    SZ_dp = new DPM();
+#endif
 
+#ifdef __T2_CON
+   SZ_pph = new PPHM();
 #endif
 
 }
@@ -81,6 +85,10 @@ SUP::SUP(const SUP &SZ_c){
 
 #ifdef __T1_CON
    SZ_dp = new DPM(*SZ_c.SZ_dp);
+#endif
+
+#ifdef __T2_CON
+   SZ_pph = new PPHM(*SZ_c.SZ_pph);
 #endif
 
 }
@@ -107,6 +115,12 @@ SUP::~SUP(){
 
 #endif
 
+#ifdef __T2_CON
+   
+   delete SZ_pph;
+
+#endif
+
 }
 
 /**
@@ -127,6 +141,12 @@ SUP &SUP::operator+=(const SUP &SZ_pl){
 #ifdef __T1_CON
 
    (*SZ_dp) += (*SZ_pl.SZ_dp);
+
+#endif
+
+#ifdef __T2_CON
+
+   (*SZ_pph) += (*SZ_pl.SZ_pph);
 
 #endif
 
@@ -155,6 +175,12 @@ SUP &SUP::operator-=(const SUP &SZ_pl){
 
 #endif
 
+#ifdef __T2_CON
+
+   (*SZ_pph) -= (*SZ_pl.SZ_pph);
+
+#endif
+
    return *this;
 
 }
@@ -177,6 +203,12 @@ SUP &SUP::operator=(const SUP &SZ_c){
 #ifdef __T1_CON
 
    (*SZ_dp) = (*SZ_c.SZ_dp);
+
+#endif
+
+#ifdef __T2_CON
+
+   (*SZ_pph) = (*SZ_c.SZ_pph);
 
 #endif
 
@@ -203,6 +235,12 @@ SUP &SUP::operator=(double &a){
 #ifdef __T1_CON
 
    (*SZ_dp) = a;
+
+#endif
+
+#ifdef __T2_CON
+
+   (*SZ_pph) = a;
 
 #endif
 
@@ -277,6 +315,29 @@ const DPM &SUP::dpm() const{
 
 #endif
 
+#ifdef __T2_CON
+
+/**
+ * const version
+ * @return pointer to the PPHM block: SZ_pph
+ */
+const PPHM &SUP::pphm() const{
+
+   return *SZ_pph;
+
+}
+
+/**
+ * @return pointer to the PPHM block: SZ_pph
+ */
+PPHM &SUP::pphm(){
+
+   return *SZ_pph;
+
+}
+
+#endif
+
 /**
  * Initialization of the SUP matrix S, is just u^0: see primal_dual.pdf for more information
  */
@@ -307,6 +368,13 @@ ostream &operator<<(ostream &output,const SUP &SZ_p){
 
 #endif
 
+#ifdef __T2_CON
+
+   output << std::endl;
+   output << (*SZ_p.SZ_pph);
+
+#endif
+
    return output;
 
 }
@@ -328,6 +396,12 @@ void SUP::fill_Random(){
 #ifdef __T1_CON
 
    SZ_dp->fill_Random();
+
+#endif
+
+#ifdef __T2_CON
+
+   SZ_pph->fill_Random();
 
 #endif
 
@@ -357,20 +431,20 @@ int SUP::gN() const {
 }
 
 /**
- * @return number of sites
- */
-int SUP::gL() const {
-
-   return L;
-
-}
-
-/**
  * @return dimension of sp space
  */
 int SUP::gM() const{
 
    return M;
+
+}
+
+/**
+ * @return nr of sites
+ */
+int SUP::gL() const{
+
+   return L;
 
 }
 
@@ -406,6 +480,12 @@ double SUP::ddot(const SUP &SZ_i) const{
 
 #endif
 
+#ifdef __T2_CON
+
+   ward += SZ_pph->ddot(*SZ_i.SZ_pph);
+
+#endif
+
    return ward;
 
 }
@@ -431,6 +511,12 @@ void SUP::invert(){
 
 #endif
 
+#ifdef __T2_CON
+   
+   SZ_pph->invert();
+
+#endif
+
 }
 
 /**
@@ -451,6 +537,12 @@ void SUP::dscal(double alpha){
 #ifdef __T1_CON
    
    SZ_dp->dscal(alpha);
+
+#endif
+
+#ifdef __T2_CON
+   
+   SZ_pph->dscal(alpha);
 
 #endif
 
@@ -553,6 +645,12 @@ void SUP::sqrt(int option){
 
 #endif
 
+#ifdef __T2_CON
+
+   SZ_pph->sqrt(option);
+
+#endif
+
 }
 
 /**
@@ -578,6 +676,12 @@ void SUP::L_map(const SUP &map,const SUP &object){
 
 #endif
 
+#ifdef __T2_CON
+
+   SZ_pph->L_map(map.pphm(),object.pphm());
+
+#endif
+
 }
 
 /**
@@ -599,6 +703,12 @@ void SUP::daxpy(double alpha,const SUP &SZ_p){
 #ifdef __T1_CON
    
    SZ_dp->daxpy(alpha,SZ_p.dpm());
+
+#endif
+
+#ifdef __T2_CON
+   
+   SZ_pph->daxpy(alpha,SZ_p.pphm());
 
 #endif
 
@@ -644,6 +754,12 @@ SUP &SUP::mprod(const SUP &A,const SUP &B){
 
 #endif
 
+#ifdef __T2_CON
+
+   SZ_pph->mprod(A.pphm(),B.pphm());
+
+#endif
+
    return *this;
 
 }
@@ -669,6 +785,12 @@ void SUP::fill(const TPM &tpm){
 
 #endif
 
+#ifdef __T2_CON
+   
+   SZ_pph->T(tpm);
+
+#endif
+
 }
 
 /**
@@ -688,6 +810,12 @@ void SUP::fill(){
 #ifdef __T1_CON
 
    SZ_dp->T(*SZ_tp[0]);
+
+#endif 
+
+#ifdef __T2_CON
+
+   SZ_pph->T(*SZ_tp[0]);
 
 #endif 
 
@@ -904,6 +1032,86 @@ void SUP::out(ofstream &output) const{
       for(int i = 0;i < this->dpm().gdim(B);++i)
          for(int j = 0;j < this->dpm().gdim(B);++j)
             output << i << "\t" << j << "\t" << this->dpm()(B,i,j) << std::endl;
+
+   }
+
+#endif
+
+#ifdef __T2_CON
+
+   //T2
+   for(int B = 0;B < this->pphm().gnr();++B){
+
+      for(int i = 0;i < this->pphm().gdim(B);++i)
+         for(int j = 0;j < this->pphm().gdim(B);++j)
+            output << i << "\t" << j << "\t" << this->pphm()(B,i,j) << std::endl;
+
+   }
+
+#endif
+
+}
+
+/*
+ * Input a SUP matrix from a file
+ * @param input ifstream object association with input file.
+ */
+void SUP::in(ifstream &input){
+
+   int I,J;
+
+   //first P
+   for(int B = 0;B < (this->tpm(0)).gnr();++B){
+
+      for(int i = 0;i < (this->tpm(0)).gdim(B);++i)
+         for(int j = 0;j < (this->tpm(0)).gdim(B);++j)
+            input >> I >> J >> (this->tpm(0))(B,i,j);
+
+   }
+
+   //then Q
+   for(int B = 0;B < (this->tpm(1)).gnr();++B){
+
+      for(int i = 0;i < (this->tpm(1)).gdim(B);++i)
+         for(int j = 0;j < (this->tpm(1)).gdim(B);++j)
+            input >> I >> J >> (this->tpm(1))(B,i,j);
+
+   }
+
+#ifdef __G_CON
+
+   //then G
+   for(int B = 0;B < (this->phm()).gnr();++B){
+
+      for(int i = 0;i < (this->phm()).gdim(B);++i)
+         for(int j = 0;j < (this->phm()).gdim(B);++j)
+            input >> I >> J >> (this->phm())(B,i,j);
+
+   }
+
+#endif
+
+#ifdef __T1_CON
+
+   //then T1
+   for(int B = 0;B < (this->dpm()).gnr();++B){
+
+      for(int i = 0;i < (this->dpm()).gdim(B);++i)
+         for(int j = 0;j < (this->dpm()).gdim(B);++j)
+            input >> I >> J >> (this->dpm())(B,i,j);
+
+   }
+
+#endif
+
+#ifdef __T2_CON
+
+   //(finally) T2
+   for(int B = 0;B < (this->pphm()).gnr();++B){
+
+      for(int i = 0;i < (this->pphm()).gdim(B);++i)
+         for(int j = 0;j < (this->pphm()).gdim(B);++j)
+            input >> I >> J >> (this->pphm())(B,i,j);
 
    }
 

@@ -22,6 +22,21 @@ using std::ostream;
 
 #endif
 
+#ifdef PQGT2
+
+#define __G_CON
+#define __T2_CON
+
+#endif
+
+#ifdef PQGT
+
+#define __G_CON
+#define __T1_CON
+#define __T2_CON
+
+#endif
+
 /**
  * @author Brecht Verstichel
  * @date 06-05-2010\n\n
@@ -33,11 +48,7 @@ using std::ostream;
 class EIG{
 
    /**
-    * Output stream operator overloaded, the usage is simple, if you want to print to a file, make an
-    * ifstream object and type:\n\n
-    * object << eig_p << endl;\n\n
-    * For output onto the screen type: \n\n
-    * cout << eig_p << endl;\n\n
+    * Output stream operator overloaded
     * @param output The stream to which you are writing (e.g. cout)
     * @param eig_p the EIG you want to print
     */
@@ -89,6 +100,14 @@ class EIG{
 
 #endif
 
+#ifdef __T2_CON
+
+   BlockVector<PPHM> &pphv();
+
+   const BlockVector<PPHM> &pphv() const;
+
+#endif
+
    double min() const;
 
    double max() const;
@@ -116,13 +135,20 @@ class EIG{
 
 #endif
 
+#ifdef __T2_CON
+
+   //!single pointer to a BlockVector<PPHM> object, the eigenvalues of T2 part of a SUP matrix will be stored here.
+   BlockVector<PPHM> *v_pph;
+
+#endif
+
    //!number of particles
    static int N;
 
    //!dimension of sp space
    static int M;
 
-   //!dimension of sp space
+   //!nr of sites
    static int L;
 
    //!total dimension of the EIG object

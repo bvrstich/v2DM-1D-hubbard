@@ -11,6 +11,7 @@ using std::ifstream;
 #include "TPM.h"
 #include "PHM.h"
 #include "DPM.h"
+#include "PPHM.h"
 
 #ifdef PQG
 
@@ -22,6 +23,21 @@ using std::ifstream;
 
 #define __G_CON
 #define __T1_CON
+
+#endif
+
+#ifdef PQGT2
+
+#define __G_CON
+#define __T2_CON
+
+#endif
+
+#ifdef PQGT
+
+#define __G_CON
+#define __T1_CON
+#define __T2_CON
 
 #endif
 
@@ -38,11 +54,7 @@ class EIG;
 class SUP{
   
    /**
-    * Output stream operator overloaded, the usage is simple, if you want to print to a file, make an
-    * ifstream object and type:\n\n
-    * object << sup_p << endl;\n\n
-    * For output onto the screen type: \n\n
-    * cout << sup_p << endl;\n\n
+    * Output stream operator overloaded
     * @param output The stream to which you are writing (e.g. cout)
     * @param SZ_p the SUP you want to print
     */
@@ -146,7 +158,15 @@ class SUP{
       const DPM &dpm() const;
 
 #endif
-      
+
+#ifdef __T2_CON
+
+      PPHM &pphm();
+
+      const PPHM &pphm() const;
+
+#endif
+
       static void init(int,int);
 
    private:
@@ -177,6 +197,13 @@ class SUP{
       
       //!pointer tot he three particles matrix DPM
       DPM *SZ_dp;
+
+#endif
+
+#ifdef __T2_CON
+
+      //!pointer tot he three particles matrix DPM
+      PPHM *SZ_pph;
 
 #endif
 

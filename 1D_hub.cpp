@@ -60,7 +60,7 @@ int main(int argc,char *argv[]){
 
    SUP::init(L,N);
    EIG::init(L,N);
-/*
+
    TPM ham;
    ham.hubbard(U);
 
@@ -226,7 +226,7 @@ int main(int argc,char *argv[]){
 
    //print density matrix to file
    //(S.tpm(0)).out("rdm.out");
-*/
+
 #ifdef __T2_CON
    PPHM::clear();
 #endif
