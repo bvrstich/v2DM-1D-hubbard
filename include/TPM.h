@@ -81,11 +81,7 @@ class TPM : public BlockMatrix {
 
       void proj_Tr();
 
-      //de hessiaan afbeelding:
-      void H(const TPM &b,const SUP &D);
-
-      //los het stelsel op
-      int solve(TPM &b,const SUP &D);
+      int solve(double, const SUP &,TPM &);
 
       void min_unit(double scale);
 
@@ -121,6 +117,14 @@ class TPM : public BlockMatrix {
 
       //T2 down
       void T(const PPHM &);
+
+      void constr_grad(double t,const TPM &ham,const SUP &P);
+
+      double line_search(double t,SUP &P,const TPM &ham);
+
+      void H(double t,const TPM &b,const SUP &P);
+
+      double line_search(double t,const TPM &rdm,const TPM &ham);
 
    private:
 
