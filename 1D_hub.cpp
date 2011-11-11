@@ -117,7 +117,7 @@ int main(int argc,char *argv[]){
 
       cout << nr_newton_iter << "\t" << nr_cg_iter << endl;
 
-      t /= 1.1;
+      t /= 1.5;
 
    }
 

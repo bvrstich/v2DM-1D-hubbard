@@ -1692,7 +1692,7 @@ int TPM::solve(double t,const SUP &P,TPM &b){
 
    TPM Hb;
 
-   while(rr > 1.0e-12){ 
+   while(rr > 1.0e-10){ 
 
       Hb.H(t,b,P);
 
