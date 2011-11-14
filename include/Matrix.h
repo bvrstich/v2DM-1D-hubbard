@@ -89,6 +89,8 @@ class Matrix{
 
       void symmetrize();
 
+      void sep_pm(Matrix &p,Matrix &m);
+
       void out(const char*) const;
 
    private:

@@ -81,7 +81,7 @@ class SUP{
       SUP &operator=(const SUP &);
 
       //overload equality operator
-      SUP &operator=(double &);
+      SUP &operator=(double );
 
       TPM &tpm(int i);
 
@@ -166,6 +166,8 @@ class SUP{
       const PPHM &pphm() const;
 
 #endif
+
+      void sep_pm(SUP &,SUP &);
 
       static void init(int,int);
 

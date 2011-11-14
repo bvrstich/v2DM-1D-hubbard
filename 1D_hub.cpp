@@ -61,178 +61,128 @@ int main(int argc,char *argv[]){
    SUP::init(L,N);
    EIG::init(L,N);
 
+      //hamiltoniaan
    TPM ham;
    ham.hubbard(U);
 
-   SUP S;
-   S.init_S();
+   TPM ham_copy(ham);
 
+   //only traceless hamiltonian needed in program.
+   ham.proj_Tr();
+
+   //primal
+   SUP X;
+
+   //dual
    SUP Z;
-   Z.init_Z(10000.0,ham,S);
 
-   int dim = Z.gdim();
+   //Lagrange multiplier
+   SUP V;
 
-   //eerste primal dual gap:
-   double pd_gap = S.ddot(Z);
-   double energy = (S.tpm(0)).ddot(ham);
+   //just dubya
+   SUP W;
 
-   double center_dev = S.center_dev(Z);
+   SUP u_0;
 
-   //eerst centering
-   double gamma = 1.0;
+   //little help
+   TPM hulp;
 
-   double tolerance = 1.0e-5;
+   u_0.tpm(0).unit();
 
-   //flag == 0 : initiele centering run (tot op tolerance)
-   //flag == 1 : doe een stap met gamma = 0
-   //flag == 2 : doe een stap met gamma = 1
-   //flag == 3 : game over man
-   int flag = 0;
+   u_0.fill();
 
-   double a;//stapgrootte
+   X = 0.0;
+   Z = 0.0;
 
-   int iter = 0;
+   //what does this do?
+   double sigma = 1.0;
 
-   while(flag != 3){
+   double tolerance = 1.0e-7;
 
-      cout << (S.tpm(0)).trace() << "\t" << pd_gap << "\t" << center_dev << "\t" << energy << "\t" << S.tpm(0).spin() << "\t";
+   double D_conv(1.0),P_conv(1.0),convergence(1.0);
 
-      //matrix D aanmaken voor de hessiaan van het duale stelsel
-      SUP D;
-      D.D(S,Z);
+   int iter;
+   int max_iter = 1;
 
-      //D inverteren voor de hessiaan van het primale stelsel
-      SUP D_inv(D);
-      D_inv.invert();
+   while(D_conv > tolerance || P_conv > tolerance || fabs(convergence) > tolerance){
 
-      //rechterlid maken van stelsel dat moet worden opgelost:
-      SUP B(S);
+      D_conv = 1.0;
 
-      //invert B
-      B.invert();
+      iter = 0;
 
-      //schalen met 
-      B.dscal(gamma*pd_gap/dim);
+      while(D_conv > tolerance && iter <= max_iter){
 
-      B -= Z;
+         ++iter;
 
-      //collaps B onto b to construct the right hand side of the primal Newton equation
-      TPM b;
+         //solve system
+         SUP B(Z);
 
-      b.collaps(1,B);
+         B -= u_0;
 
-      //dit wordt de stap:
-      TPM delta;
+         B.daxpy(1.0/sigma,X);
 
-      //los het stelsel op, geeft aantal iteraties nodig terug:
-      cout << delta.solve(b,D_inv) << "\t";
+         TPM b;
 
-      //nog updaten van S en Z
-      SUP DS;
+         b.collaps(1,B);
 
-      DS.fill(delta);
+         b.daxpy(-1.0/sigma,ham);
 
-      //DZ is B - D^{-1}*DS*D^{-1}
-      SUP DZ(B);
+         hulp.S(-1,b);
 
-      //eerst D^{-1}*DS*D^{-1} in DZ stoppen
-      B.L_map(D_inv,DS);
+         //hulp is the matrix containing the gamma_i's
+         hulp.proj_Tr();
 
-      DZ -= B;
+         //construct W
+         W.fill(hulp);
 
-      //voor de zekerheid nog projecteren op juiste subruimte:
-      DZ.proj_C();
+         W += u_0;
 
-      //met deze 'ansatz' het Z stelsel proberen op te lossen
-      //eerst rechterlid B maken
-      B = Z;
+         W.daxpy(-1.0/sigma,X);
 
-      B.invert();
+         //update Z and V with eigenvalue decomposition:
+         W.sep_pm(Z,V);
 
-      B.dscal(gamma*pd_gap/dim);
+         V.dscal(-sigma);
 
-      B -= S;
+         //check infeasibility of the dual problem:
+         TPM v;
 
-      B.proj_C();
+         v.collaps(1,V);
 
-      //los het stelsel op, geeft aantal duale iteraties nodig terug:
-      cout << DZ.solve(B,D) << endl;
+         v -= ham;
 
-      //welke stapgrootte moet ik nemen?
-      if(flag == 0 || flag == 2){//voor centering
+         D_conv = sqrt(v.ddot(v));
 
-         S += DS;
-         Z += DZ;
+     }
 
-      }
-      else{
+      //update primal:
+      X = V;
 
-         iter++;
+      //check primal feasibility (W is a helping variable now)
+      W.fill(hulp);
 
-         //zoek de ideale afstand (geef ook een waarde mee voor de maximale afwijking van het centraal pad):
-         a = DS.line_search(DZ,S,Z,2.0);
+      W += u_0;
 
-         S.daxpy(a,DS);
-         Z.daxpy(a,DZ);
+      W -= Z;
 
-      }
+      P_conv = sqrt(W.ddot(W));
 
-      //update van enkele belangrijke variabelen
-      pd_gap = S.ddot(Z);
-      energy = (S.tpm(0)).ddot(ham);
-      center_dev = S.center_dev(Z);
+      convergence = Z.tpm(0).ddot(ham) + X.ddot(u_0);
 
-      //keuze voor volgende iteratie:
-      if(flag == 0){
+      cout << P_conv << "\t" << D_conv << "\t" << sigma << "\t" << convergence << "\t" << Z.tpm(0).ddot(ham_copy) << endl;
 
-         //als hij voldoende gecenterd is, exit.
-         if(center_dev < tolerance){
-
-            flag = 1;
-            gamma = 0.0;
-
-         }
-
-      }
-      else if(flag == 1){
-
-         if(pd_gap < tolerance)//exit when converged
-            flag = 3;
-         else{//center when not convergence
-
-            flag = 2;
-            gamma = 1.0;
-
-         }
-
-      }
-      else{//flag == 2: dus na een centering stap
-
-         if(pd_gap < tolerance)//exit when converged
-            flag = 3;
-         else{//take another step downwards when not converged
-
-            flag = 1;
-            gamma = 0;
-
-         }
-
-      }
+      if(D_conv < P_conv)
+         sigma *= 1.01;
+      else
+         sigma /= 1.01;
 
    }
 
    cout << endl;
-   cout << "FINAL RESULT " << endl;
-   cout << endl;
-   cout << "E_0 = " << energy << " with accuracy of " << pd_gap << " and a deviation from centrality of " << center_dev << endl;
-   cout << endl;
-   cout << "<S^2>\t=\t" << S.tpm(0).spin() << endl;
-
-   cout << endl;
-   cout << iter << endl;
-
-   //print density matrix to file
-   //(S.tpm(0)).out("rdm.out");
+   cout << "Energy: " << ham_copy.ddot(Z.tpm(0)) << endl;
+   cout << "pd gap: " << Z.ddot(X) << endl;
+   cout << "dual conv: " << D_conv << endl;
+   cout << "primal conv: " << P_conv << endl;
 
 #ifdef __T2_CON
    PPHM::clear();

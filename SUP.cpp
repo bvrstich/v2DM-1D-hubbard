@@ -221,7 +221,7 @@ SUP &SUP::operator=(const SUP &SZ_c){
  * e.g. SZ = 0 makes all the Matrix elements zero.
  * @param a the number
  */
-SUP &SUP::operator=(double &a){
+SUP &SUP::operator=(double a){
 
    (*SZ_tp[0]) = a;
    (*SZ_tp[1]) = a;
@@ -1114,6 +1114,36 @@ void SUP::in(ifstream &input){
             input >> I >> J >> (this->pphm())(B,i,j);
 
    }
+
+#endif
+
+}
+
+/**
+ * Seperate SUP into two SUP's, a positive and negative semidefinite part.
+ * @param p positive (plus) output part
+ * @param m negative (minus) output part
+ */
+void SUP::sep_pm(SUP &p,SUP &m){
+
+   for(int i = 0;i < 2;++i)
+      SZ_tp[i]->sep_pm(p.tpm(i),m.tpm(i));
+
+#ifdef __G_CON
+
+      SZ_ph->sep_pm(p.phm(),m.phm());
+
+#endif
+
+#ifdef __T1_CON
+
+      SZ_dp->sep_pm(p.dpm(),m.dpm());
+
+#endif
+
+#ifdef __T2_CON
+
+      SZ_pph->sep_pm(p.pphm(),m.pphm());
 
 #endif
 
