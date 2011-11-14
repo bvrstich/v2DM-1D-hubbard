@@ -81,7 +81,7 @@ int main(int argc,char *argv[]){
    //eerst centering
    double gamma = 1.0;
 
-   double tolerance = 1.0e-4;
+   double tolerance = 1.0e-5;
 
    //flag == 0 : initiele centering run (tot op tolerance)
    //flag == 1 : doe een stap met gamma = 0
@@ -90,6 +90,8 @@ int main(int argc,char *argv[]){
    int flag = 0;
 
    double a;//stapgrootte
+
+   int iter = 0;
 
    while(flag != 3){
 
@@ -165,6 +167,8 @@ int main(int argc,char *argv[]){
       }
       else{
 
+         iter++;
+
          //zoek de ideale afstand (geef ook een waarde mee voor de maximale afwijking van het centraal pad):
          a = DS.line_search(DZ,S,Z,2.0);
 
@@ -223,6 +227,9 @@ int main(int argc,char *argv[]){
    cout << "E_0 = " << energy << " with accuracy of " << pd_gap << " and a deviation from centrality of " << center_dev << endl;
    cout << endl;
    cout << "<S^2>\t=\t" << S.tpm(0).spin() << endl;
+
+   cout << endl;
+   cout << iter << endl;
 
    //print density matrix to file
    //(S.tpm(0)).out("rdm.out");

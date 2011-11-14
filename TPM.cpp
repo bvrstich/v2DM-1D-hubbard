@@ -932,7 +932,7 @@ int TPM::solve(TPM &b,const SUP &D){
 
    int cg_iter = 0;
 
-   while(rr > 1.0e-15){
+   while(rr > 1.0e-10){
 
       ++cg_iter;
 
