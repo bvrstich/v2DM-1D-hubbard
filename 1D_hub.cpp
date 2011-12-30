@@ -97,12 +97,14 @@ int main(int argc,char *argv[]){
    //what does this do?
    double sigma = 1.0;
 
-   double tolerance = 1.0e-7;
+   double tolerance = 1.0e-4;
 
    double D_conv(1.0),P_conv(1.0),convergence(1.0);
 
    int iter;
    int max_iter = 1;
+
+   int tot_iter;
 
    while(D_conv > tolerance || P_conv > tolerance || fabs(convergence) > tolerance){
 
@@ -111,6 +113,8 @@ int main(int argc,char *argv[]){
       iter = 0;
 
       while(D_conv > tolerance && iter <= max_iter){
+
+         tot_iter++;
 
          ++iter;
 
@@ -183,6 +187,9 @@ int main(int argc,char *argv[]){
    cout << "pd gap: " << Z.ddot(X) << endl;
    cout << "dual conv: " << D_conv << endl;
    cout << "primal conv: " << P_conv << endl;
+
+   cout << endl;
+   cout << tot_iter << endl;
 
 #ifdef __T2_CON
    PPHM::clear();
