@@ -61,7 +61,7 @@ int main(int argc,char *argv[]){
    SUP::init(L,N);
    EIG::init(L,N);
 
-      //hamiltoniaan
+   //hamiltoniaan
    TPM ham;
    ham.hubbard(U);
 
