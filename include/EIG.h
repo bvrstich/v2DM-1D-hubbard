@@ -67,14 +67,6 @@ class EIG{
 
    void diagonalize(SUP &);
 
-   int gN() const;
-
-   int gM() const;
-
-   int gL() const;
-
-   int gdim() const;
-
    double centerpot(double,const EIG &,double,double) const;
 
    //overload equality operator
@@ -112,10 +104,6 @@ class EIG{
 
    double max() const;
 
-   double center_dev() const;
-
-   static void init(int,int);
-
    double lsfunc(double alpha) const;
 
    private:
@@ -143,18 +131,6 @@ class EIG{
    BlockVector<PPHM> *v_pph;
 
 #endif
-
-   //!number of particles
-   static int N;
-
-   //!dimension of sp space
-   static int M;
-
-   //!nr of sites
-   static int L;
-
-   //!total dimension of the EIG object
-   static int dim;
 
 };
 

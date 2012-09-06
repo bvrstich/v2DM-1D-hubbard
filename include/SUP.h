@@ -167,44 +167,24 @@ class SUP{
 
 #endif
 
-      static void init(int,int);
-
    private:
 
       //!double pointer of TPM's, will contain the P and Q block of the SUP in the first and second block.
       TPM **SZ_tp;
 
-      //!number of sp orbitals
-      static int M;
-
-      //!nr of particles
-      static int N;
-
-      //!nr of sites
-      static int L;
-
-      //!total dimension of the SUP matrix
-      static int dim;
-
 #ifdef __G_CON
-
       //!pointer to the particle hole matrix
       PHM *SZ_ph;
-
 #endif
 
 #ifdef __T1_CON
-      
       //!pointer tot he three particles matrix DPM
       DPM *SZ_dp;
-
 #endif
 
 #ifdef __T2_CON
-
       //!pointer tot he three particles matrix DPM
       PPHM *SZ_pph;
-
 #endif
 
 };

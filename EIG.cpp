@@ -7,39 +7,6 @@ using std::endl;
 
 #include "include.h"
 
-int EIG::M;
-int EIG::N;
-int EIG::L;
-int EIG::dim;
-
-/**
- * initialize the statics
- * @param L_in the nr of sites
- * @param N_in the nr of particles
- */
-void EIG::init(int L_in,int N_in){
-
-   L = L_in;
-   N = N_in;
-
-   M = 2*L;
-
-   dim = M*(M - 1);
-
-#ifdef __G_CON
-   dim += M*M;
-#endif
-
-#ifdef __T1_CON
-   dim += M*(M - 1)*(M - 2)/6;
-#endif
-
-#ifdef __T2_CON
-   dim += M*M*(M - 1)/2;
-#endif
-
-}
-
 /**
  * standard constructor with initialization on the eigenvalues of a SUP object.
  * @param SZ input SUP object that will be destroyed after this function is called. The eigenvectors
@@ -209,33 +176,6 @@ ostream &operator<<(ostream &output,const EIG &eig_p){
 
 }
 
-/**
- * @return nr of particles
- */
-int EIG::gN() const{
-
-   return N;
-
-}
-
-/**
- * @return dimension of sp space
- */
-int EIG::gM() const{
-
-   return M;
-
-}
-
-/**
- * @return nr of sites
- */
-int EIG::gL() const{
-
-   return L;
-
-}
-
 /** 
  * get the BlockVector<TPM> object containing the eigenvalues of the TPM blocks P and Q
  * @param i == 0, the eigenvalues of the P block will be returned, i == 1, the eigenvalues of the Q block will be returned
@@ -332,16 +272,6 @@ const BlockVector<PPHM> &EIG::pphv() const{
 #endif
 
 /**
- * @return total dimension of the EIG object
- */
-int EIG::gdim() const{
-
-   return dim;
-
-}
-
-
-/**
  * @return the minimal element present in this EIG object.
  * watch out, only works when EIG is filled with the eigenvalues of a diagonalized SUP matrix
  */
@@ -416,82 +346,6 @@ double EIG::max() const{
    //highest eigenvalue of the T2 block
    if(ward < v_pph->max())
       ward = v_pph->max();
-
-#endif
-
-   return ward;
-
-}
-
-/**
- * @return The deviation of the central path as calculated with the logarithmic barrierfunction, the EIG object is calculated
- * in SUP::center_dev.
- */
-double EIG::center_dev() const{
-
-   double sum = v_tp[0]->sum() + v_tp[1]->sum();
-
-   double log_product = v_tp[0]->log_product() + v_tp[1]->log_product();
-
-#ifdef __G_CON
-
-   sum += v_ph->sum();
-
-   log_product += v_ph->log_product();
-
-#endif
-
-#ifdef __T1_CON
-
-   sum += v_dp->sum();
-
-   log_product += v_dp->log_product();
-
-#endif
-
-#ifdef __T2_CON
-
-   sum += v_pph->sum();
-
-   log_product += v_pph->log_product();
-
-#endif
-
-   return dim*log(sum/(double)dim) - log_product;
-
-}
-
-/**
- * @return the deviation of the central path measured trough the logarithmic potential barrier (see primal_dual.pdf), when you take a stepsize alpha from
- * the point (S,Z) in the primal dual newton direction (DS,DZ), for which you have calculated the generalized eigenvalues eigen_S and eigen_Z in SUP::line_search.
- * (*this) = eigen_S --> generalized eigenvalues for the DS step
- * @param alpha the stepsize
- * @param eigen_Z --> generalized eigenvalues for the DS step
- * @param c_S = Tr (DS Z)/Tr (SZ): parameter calculated in SUP::line_search
- * @param c_Z = Tr (S DZ)/Tr (SZ): parameter calculated in SUP::line_search
- */
-double EIG::centerpot(double alpha,const EIG &eigen_Z,double c_S,double c_Z) const{
-
-   double ward = dim*log(1.0 + alpha*(c_S + c_Z));
-
-   for(int i = 0;i < 2;++i)
-      ward -= v_tp[i]->centerpot(alpha) + (eigen_Z.tpv(i)).centerpot(alpha);
-
-#ifdef __G_CON
-
-   ward -= v_ph->centerpot(alpha) + (eigen_Z.phv()).centerpot(alpha);
-
-#endif
-
-#ifdef __T1_CON
-
-   ward -= v_dp->centerpot(alpha) + (eigen_Z.dpv()).centerpot(alpha);
-
-#endif
-
-#ifdef __T2_CON
-
-   ward -= v_pph->centerpot(alpha) + (eigen_Z.pphv()).centerpot(alpha);
 
 #endif
 

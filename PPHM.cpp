@@ -1753,10 +1753,9 @@ void PPHM::T(const TPM &tpm){
 
                   int K_ce = (k_c + k_e)%Tools::gL();
 
-                  for(int J = 0;J < 2;++J)
-                     for(int Z = 0;Z < 2;++Z)
-                        for(int pi = 0;pi < 2;++pi)
-                           hard += (2*J + 1.0) * (2*Z + 1.0) * Tools::g6j(0,0,J,S_ab) * Tools::g6j(0,0,J,S_de) * Tools::g6j(0,0,J,Z) * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_b_);
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_b_);
 
                   hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1777,10 +1776,9 @@ void PPHM::T(const TPM &tpm){
 
                   int K_ce = (k_c + k_e)%Tools::gL();
 
-                  for(int J = 0;J < 2;++J)
-                     for(int Z = 0;Z < 2;++Z)
-                        for(int pi = 0;pi < 2;++pi)
-                           hard += (2*J + 1.0) * (2*Z + 1.0) * Tools::g6j(0,0,J,S_ab) * Tools::g6j(0,0,J,S_de) * Tools::g6j(0,0,J,Z) * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_a_);
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_a_);
 
                   hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1801,10 +1799,9 @@ void PPHM::T(const TPM &tpm){
 
                   hard = 0.0;
 
-                  for(int J = 0;J < 2;++J)
-                     for(int Z = 0;Z < 2;++Z)
-                        for(int pi = 0;pi < 2;++pi)
-                           hard += (2*J + 1.0) * (2*Z + 1.0) * Tools::g6j(0,0,J,S_ab) * Tools::g6j(0,0,J,S_de) * Tools::g6j(0,0,J,Z) * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_b_);
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_b_);
 
                   hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1825,10 +1822,9 @@ void PPHM::T(const TPM &tpm){
 
                   int K_cd = (k_c + k_d)%Tools::gL();
 
-                  for(int J = 0;J < 2;++J)
-                     for(int Z = 0;Z < 2;++Z)
-                        for(int pi = 0;pi < 2;++pi)
-                           hard += (2*J + 1.0) * (2*Z + 1.0) * Tools::g6j(0,0,J,S_ab) * Tools::g6j(0,0,J,S_de) * Tools::g6j(0,0,J,Z) * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_a_);
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_a_);
 
                   hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1866,10 +1862,9 @@ void PPHM::T(const TPM &tpm){
 
                int K_ce = (k_c_ + k_e)%Tools::gL();
 
-               for(int J = 0;J < 2;++J)
-                  for(int Z = 0;Z < 2;++Z)
-                     for(int pi = 0;pi < 2;++pi)
-                        hard += (2*J + 1.0) * (2*Z + 1.0) * Tools::g6j(0,0,J,S_ab) * Tools::g6j(0,0,J,S_de) * Tools::g6j(0,0,J,Z) * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_b);
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_b);
 
                hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1890,10 +1885,9 @@ void PPHM::T(const TPM &tpm){
 
                int K_ce = (k_c_ + k_e)%Tools::gL();
 
-               for(int J = 0;J < 2;++J)
-                  for(int Z = 0;Z < 2;++Z)
-                     for(int pi = 0;pi < 2;++pi)
-                        hard += (2*J + 1.0) * (2*Z + 1.0) * Tools::g6j(0,0,J,S_ab) * Tools::g6j(0,0,J,S_de) * Tools::g6j(0,0,J,Z) * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_a);
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_a);
 
                hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1914,10 +1908,9 @@ void PPHM::T(const TPM &tpm){
 
                hard = 0.0;
 
-               for(int J = 0;J < 2;++J)
-                  for(int Z = 0;Z < 2;++Z)
-                     for(int pi = 0;pi < 2;++pi)
-                        hard += (2*J + 1.0) * (2*Z + 1.0) * Tools::g6j(0,0,J,S_ab) * Tools::g6j(0,0,J,S_de) * Tools::g6j(0,0,J,Z) * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_b);
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_b);
 
                hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1938,10 +1931,9 @@ void PPHM::T(const TPM &tpm){
 
                int K_cd = (k_c_ + k_d)%Tools::gL();
 
-               for(int J = 0;J < 2;++J)
-                  for(int Z = 0;Z < 2;++Z)
-                     for(int pi = 0;pi < 2;++pi)
-                        hard += (2*J + 1.0) * (2*Z + 1.0) * Tools::g6j(0,0,J,S_ab) * Tools::g6j(0,0,J,S_de) * Tools::g6j(0,0,J,Z) * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_a);
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_a);
 
                hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
