@@ -8,39 +8,6 @@ using std::ifstream;
 
 #include "include.h"
 
-int SUP::M;
-int SUP::N;
-int SUP::L;
-int SUP::dim;
-
-/**
- * initialize the statics
- * @param L_in the nr of sites
- * @param N_in the nr of particles
- */
-void SUP::init(int L_in,int N_in){
-
-   L = L_in;
-   N = N_in;
-
-   M = 2*L;
-
-   dim = M*(M - 1);
-
-#ifdef __G_CON
-   dim += M*M;
-#endif
-
-#ifdef __T1_CON
-   dim += M*(M - 1)*(M - 2)/6;
-#endif
-
-#ifdef __T2_CON
-   dim += M*M*(M - 1)/2;
-#endif
-
-}
-
 /**
  * standard constructor\n
  * Allocates two TPM matrices and optionally a PHM, DPM or PPHM matrix.
@@ -418,42 +385,6 @@ void SUP::init_Z(double alpha,const TPM &ham,const SUP &u_0){
 
    //nog een eenheidsmatrix maal constante bijtellen zodat Z positief definiet is:
    this->daxpy(alpha,u_0); 
-
-}
-
-/**
- * @return number of particles
- */
-int SUP::gN() const {
-
-   return N;
-
-}
-
-/**
- * @return dimension of sp space
- */
-int SUP::gM() const{
-
-   return M;
-
-}
-
-/**
- * @return nr of sites
- */
-int SUP::gL() const{
-
-   return L;
-
-}
-
-/**
- * @return total dimension of SUP (carrier) space
- */
-int SUP::gdim() const{
-
-   return dim;
 
 }
 

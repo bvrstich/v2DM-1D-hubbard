@@ -13,63 +13,50 @@ using std::endl;
 vector< vector<int> > *PPHM::pph2s;
 int *****PPHM::s2pph;
 
-double **PPHM::_6j;
-
 int **PPHM::block_char;
 int ***PPHM::char_block;
 
-int PPHM::M;
-int PPHM::L;
-int PPHM::N;
-
 /**
  * initialize the static lists and static variables
- * @param L_in nr of sites
- * @param N_in nr of particles
  */
-void PPHM::init(int L_in,int N_in){
-
-   L = L_in;
-   N = N_in;
-
-   M = 2*L;
+void PPHM::init(){
 
    //allocate first
-   pph2s = new vector< vector<int> > [L + 6];
+   pph2s = new vector< vector<int> > [Tools::gL() + 6];
 
-   s2pph = new int **** [L + 6];
+   s2pph = new int **** [Tools::gL() + 6];
 
-   for(int B = 0;B < L + 6;++B){
+   for(int B = 0;B < Tools::gL() + 6;++B){
 
       s2pph[B] = new int *** [2];
 
       for(int S_ab = 0;S_ab < 2;++S_ab){
 
-         s2pph[B][S_ab] = new int ** [L];
+         s2pph[B][S_ab] = new int ** [Tools::gL()];
 
-         for(int k_a = 0;k_a < L;++k_a){
+         for(int k_a = 0;k_a < Tools::gL();++k_a){
 
-            s2pph[B][S_ab][k_a] = new int * [L];
+            s2pph[B][S_ab][k_a] = new int * [Tools::gL()];
 
-            for(int k_b = 0;k_b < L;++k_b)
-               s2pph[B][S_ab][k_a][k_b] = new int [L];
+            for(int k_b = 0;k_b < Tools::gL();++k_b)
+               s2pph[B][S_ab][k_a][k_b] = new int [Tools::gL()];
 
          }
       }
    }
 
-   block_char = new int * [L + 6];
+   block_char = new int * [Tools::gL() + 6];
 
-   for(int B = 0;B < L + 6;++B)
+   for(int B = 0;B < Tools::gL() + 6;++B)
       block_char[B] = new int [3];
 
    char_block = new int ** [2];
 
    for(int S = 0;S < 2;++S){
 
-      char_block[S] = new int * [L/2 + 1];
+      char_block[S] = new int * [Tools::gL()/2 + 1];
 
-      for(int K = 0;K <= L/2;++K)
+      for(int K = 0;K <= Tools::gL()/2;++K)
          char_block[S][K] = new int [2];
 
    }
@@ -109,31 +96,31 @@ void PPHM::init(int L_in,int N_in){
    //2)
    v[0] = 0;//S_ab
    v[1] = 0;
-   v[2] = L/2;
-   v[3] = L/2;
+   v[2] = Tools::gL()/2;
+   v[3] = Tools::gL()/2;
 
    pph2s[block].push_back(v);
 
-   s2pph[block][0][0][L/2][L/2] = pph;
+   s2pph[block][0][0][Tools::gL()/2][Tools::gL()/2] = pph;
 
    ++pph;
 
    //3)
    v[0] = 0;//S_ab
-   v[1] = L/2;
-   v[2] = L/2;
+   v[1] = Tools::gL()/2;
+   v[2] = Tools::gL()/2;
    v[3] = 0;
 
    pph2s[block].push_back(v);
 
-   s2pph[block][0][L/2][L/2][0] = pph;
+   s2pph[block][0][Tools::gL()/2][Tools::gL()/2][0] = pph;
 
    ++pph;
 
    //then the states which have a k = 0
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 0;//S_ab
       v[1] = k_a;
@@ -160,11 +147,11 @@ void PPHM::init(int L_in,int N_in){
    }
 
    //then the rest
-   for(int k_a = 1;k_a < L;++k_a)
-      for(int k_b = k_a;k_b < L;++k_b)
-         for(int k_c = 1;k_c < L;++k_c){
+   for(int k_a = 1;k_a < Tools::gL();++k_a)
+      for(int k_b = k_a;k_b < Tools::gL();++k_b)
+         for(int k_c = 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L){// no % !
+            if(k_a + k_b + k_c == Tools::gL()){// no % !
 
                v[0] = 0;
                v[1] = k_a;
@@ -186,19 +173,19 @@ void PPHM::init(int L_in,int N_in){
    //first one that has only positive parity:
    v[0] = 1;
    v[1] = 0;
-   v[2] = L/2;
-   v[3] = L/2;
+   v[2] = Tools::gL()/2;
+   v[3] = Tools::gL()/2;
 
    pph2s[block].push_back(v);
 
-   s2pph[block][1][0][L/2][L/2] = pph;
+   s2pph[block][1][0][Tools::gL()/2][Tools::gL()/2] = pph;
 
    ++pph;
 
    //then those terms with a k = 0
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 1;
       v[1] = 0;
@@ -214,11 +201,11 @@ void PPHM::init(int L_in,int N_in){
    }
 
    //then the rest:
-   for(int k_a = 1;k_a < L;++k_a)
-      for(int k_b = k_a + 1;k_b < L;++k_b)
-         for(int k_c = 1;k_c < L;++k_c){
+   for(int k_a = 1;k_a < Tools::gL();++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+         for(int k_c = 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L){// no % !
+            if(k_a + k_b + k_c == Tools::gL()){// no % !
 
                v[0] = 1;
                v[1] = k_a;
@@ -238,59 +225,59 @@ void PPHM::init(int L_in,int N_in){
    pph = 0;
 
    //S = 3/2
-   block_char[block + L/2 + 3][0] = 1;//S
-   block_char[block + L/2 + 3][1] = 0;//K
-   block_char[block + L/2 + 3][2] = 0;//p
+   block_char[block + Tools::gL()/2 + 3][0] = 1;//S
+   block_char[block + Tools::gL()/2 + 3][1] = 0;//K
+   block_char[block + Tools::gL()/2 + 3][2] = 0;//p
 
-   char_block[1][0][0] = block + L/2 + 3;
+   char_block[1][0][0] = block + Tools::gL()/2 + 3;
 
    //only S_ab = 1 for S = 3/2 of course
 
    //first one that has only positive parity:
    v[0] = 1;
    v[1] = 0;
-   v[2] = L/2;
-   v[3] = L/2;
+   v[2] = Tools::gL()/2;
+   v[3] = Tools::gL()/2;
 
-   pph2s[block + L/2 + 3].push_back(v);
+   pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-   s2pph[block + L/2 + 3][1][0][L/2][L/2] = pph;
+   s2pph[block + Tools::gL()/2 + 3][1][0][Tools::gL()/2][Tools::gL()/2] = pph;
 
    ++pph;
 
    //then those terms with a k = 0
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 1;
       v[1] = 0;
       v[2] = k_a;
       v[3] = k_b;
 
-      pph2s[block + L/2 + 3].push_back(v);
+      pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-      s2pph[block + L/2 + 3][1][0][k_a][k_b] = pph;
+      s2pph[block + Tools::gL()/2 + 3][1][0][k_a][k_b] = pph;
 
       ++pph;
 
    }
 
    //then the rest:
-   for(int k_a = 1;k_a < L;++k_a)
-      for(int k_b = k_a + 1;k_b < L;++k_b)
-         for(int k_c = 1;k_c < L;++k_c){
+   for(int k_a = 1;k_a < Tools::gL();++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+         for(int k_c = 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L){// no % !
+            if(k_a + k_b + k_c == Tools::gL()){// no % !
 
                v[0] = 1;
                v[1] = k_a;
                v[2] = k_b;
                v[3] = k_c;
 
-               pph2s[block + L/2 + 3].push_back(v);
+               pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2pph[block + L/2 + 3][1][k_a][k_b][k_c] = pph;
+               s2pph[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = pph;
 
                ++pph;
 
@@ -312,9 +299,9 @@ void PPHM::init(int L_in,int N_in){
    char_block[0][0][1] = block;
 
    //S_ab = 0: terms that have a zero
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 0;
       v[1] = 0;
@@ -330,11 +317,11 @@ void PPHM::init(int L_in,int N_in){
    }
 
    //then the rest:
-   for(int k_a = 1;k_a < L;++k_a)
-      for(int k_b = k_a;k_b < L;++k_b)
-         for(int k_c = 1;k_c < L;++k_c){
+   for(int k_a = 1;k_a < Tools::gL();++k_a)
+      for(int k_b = k_a;k_b < Tools::gL();++k_b)
+         for(int k_c = 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L){// no % !
+            if(k_a + k_b + k_c == Tools::gL()){// no % !
 
                v[0] = 0;
                v[1] = k_a;
@@ -352,9 +339,9 @@ void PPHM::init(int L_in,int N_in){
          }
 
    //S_ab = 1: terms that have a zero
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 1;
       v[1] = k_a;
@@ -381,11 +368,11 @@ void PPHM::init(int L_in,int N_in){
    }
 
    //then the rest:
-   for(int k_a = 1;k_a < L;++k_a)
-      for(int k_b = k_a + 1;k_b < L;++k_b)
-         for(int k_c = 1;k_c < L;++k_c){
+   for(int k_a = 1;k_a < Tools::gL();++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+         for(int k_c = 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L){// no % !
+            if(k_a + k_b + k_c == Tools::gL()){// no % !
 
                v[0] = 1;
                v[1] = k_a;
@@ -405,25 +392,25 @@ void PPHM::init(int L_in,int N_in){
    pph = 0;
 
    //S = 3/2 K = 0 negative parity
-   block_char[block + L/2 + 3][0] = 1;//S
-   block_char[block + L/2 + 3][1] = 0;//K
-   block_char[block + L/2 + 3][2] = 1;//p
+   block_char[block + Tools::gL()/2 + 3][0] = 1;//S
+   block_char[block + Tools::gL()/2 + 3][1] = 0;//K
+   block_char[block + Tools::gL()/2 + 3][2] = 1;//p
 
-   char_block[1][0][1] = block + L/2 + 3;
+   char_block[1][0][1] = block + Tools::gL()/2 + 3;
 
    //terms with a zero
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 1;
       v[1] = k_a;
       v[2] = k_b;
       v[3] = 0;
 
-      pph2s[block + L/2 + 3].push_back(v);
+      pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-      s2pph[block + L/2 + 3][1][k_a][k_b][0] = pph;
+      s2pph[block + Tools::gL()/2 + 3][1][k_a][k_b][0] = pph;
 
       ++pph;
 
@@ -432,29 +419,29 @@ void PPHM::init(int L_in,int N_in){
       v[2] = k_a;
       v[3] = k_b;
 
-      pph2s[block + L/2 + 3].push_back(v);
+      pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-      s2pph[block + L/2 + 3][1][0][k_a][k_b] = pph;
+      s2pph[block + Tools::gL()/2 + 3][1][0][k_a][k_b] = pph;
 
       ++pph;
 
    }
 
    //then the rest:
-   for(int k_a = 1;k_a < L;++k_a)
-      for(int k_b = k_a + 1;k_b < L;++k_b)
-         for(int k_c = 1;k_c < L;++k_c){
+   for(int k_a = 1;k_a < Tools::gL();++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+         for(int k_c = 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L){// no % !
+            if(k_a + k_b + k_c == Tools::gL()){// no % !
 
                v[0] = 1;
                v[1] = k_a;
                v[2] = k_b;
                v[3] = k_c;
 
-               pph2s[block + L/2 + 3].push_back(v);
+               pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2pph[block + L/2 + 3][1][k_a][k_b][k_c] = pph;
+               s2pph[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = pph;
 
                ++pph;
 
@@ -464,8 +451,8 @@ void PPHM::init(int L_in,int N_in){
 
    ++block;
 
-   //now for 0 < K < L/2, it should be easier
-   for(int K = 1;K < L/2;++K){
+   //now for 0 < K < Tools::gL()/2, it should be easier
+   for(int K = 1;K < Tools::gL()/2;++K){
 
       pph = 0;
 
@@ -480,11 +467,11 @@ void PPHM::init(int L_in,int N_in){
 
       for(int S_ab = 0;S_ab < 2;++S_ab){
 
-         for(int k_a = 0;k_a < L;++k_a)
-            for(int k_b = k_a + S_ab;k_b < L;++k_b)
-               for(int k_c = 0;k_c < L;++k_c){
+         for(int k_a = 0;k_a < Tools::gL();++k_a)
+            for(int k_b = k_a + S_ab;k_b < Tools::gL();++k_b)
+               for(int k_c = 0;k_c < Tools::gL();++k_c){
 
-                  if( (k_a + k_b + k_c)%L == K ){
+                  if( (k_a + k_b + k_c)%Tools::gL() == K ){
 
                      v[0] = S_ab;
                      v[1] = k_a;
@@ -506,29 +493,29 @@ void PPHM::init(int L_in,int N_in){
       pph = 0;
 
       //then S = 3/2
-      block_char[block + L/2 + 3][0] = 1;//S
-      block_char[block + L/2 + 3][1] = K;//K
-      block_char[block + L/2 + 3][2] = 0;//p
+      block_char[block + Tools::gL()/2 + 3][0] = 1;//S
+      block_char[block + Tools::gL()/2 + 3][1] = K;//K
+      block_char[block + Tools::gL()/2 + 3][2] = 0;//p
 
       //both positive and negative parity refer to the same block
-      char_block[1][K][0] = block + L/2 + 3;
-      char_block[1][K][1] = block + L/2 + 3;
+      char_block[1][K][0] = block + Tools::gL()/2 + 3;
+      char_block[1][K][1] = block + Tools::gL()/2 + 3;
 
       //only S_ab = 1 possible here
-      for(int k_a = 0;k_a < L;++k_a)
-         for(int k_b = k_a + 1;k_b < L;++k_b)
-            for(int k_c = 0;k_c < L;++k_c){
+      for(int k_a = 0;k_a < Tools::gL();++k_a)
+         for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+            for(int k_c = 0;k_c < Tools::gL();++k_c){
 
-               if( (k_a + k_b + k_c)%L == K ){
+               if( (k_a + k_b + k_c)%Tools::gL() == K ){
 
                   v[0] = 1;
                   v[1] = k_a;
                   v[2] = k_b;
                   v[3] = k_c;
 
-                  pph2s[block + L/2 + 3].push_back(v);
+                  pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-                  s2pph[block + L/2 + 3][1][k_a][k_b][k_c] = pph;
+                  s2pph[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = pph;
 
                   ++pph;
 
@@ -542,14 +529,14 @@ void PPHM::init(int L_in,int N_in){
 
    pph = 0;
 
-   //finally the K = L/2 blocks, first positive parity
+   //finally the K = Tools::gL()/2 blocks, first positive parity
 
    //S = 1/2
    block_char[block][0] = 0;//S
-   block_char[block][1] = L/2;//K
+   block_char[block][1] = Tools::gL()/2;//K
    block_char[block][2] = 0;//p
 
-   char_block[0][L/2][0] = block;
+   char_block[0][Tools::gL()/2][0] = block;
 
    //S_ab = 0: first three terms that only have positive parity
 
@@ -557,75 +544,75 @@ void PPHM::init(int L_in,int N_in){
    v[0] = 0;//S_ab
    v[1] = 0;
    v[2] = 0;
-   v[3] = L/2;
+   v[3] = Tools::gL()/2;
 
    pph2s[block].push_back(v);
 
-   s2pph[block][0][0][0][L/2] = pph;
+   s2pph[block][0][0][0][Tools::gL()/2] = pph;
 
    ++pph;
 
    //2)
    v[0] = 0;//S_ab
    v[1] = 0;
-   v[2] = L/2;
+   v[2] = Tools::gL()/2;
    v[3] = 0;
 
    pph2s[block].push_back(v);
 
-   s2pph[block][0][0][L/2][0] = pph;
+   s2pph[block][0][0][Tools::gL()/2][0] = pph;
 
    ++pph;
 
    //3)
    v[0] = 0;//S_ab
-   v[1] = L/2;
-   v[2] = L/2;
-   v[3] = L/2;
+   v[1] = Tools::gL()/2;
+   v[2] = Tools::gL()/2;
+   v[3] = Tools::gL()/2;
 
    pph2s[block].push_back(v);
 
-   s2pph[block][0][L/2][L/2][L/2] = pph;
+   s2pph[block][0][Tools::gL()/2][Tools::gL()/2][Tools::gL()/2] = pph;
 
    ++pph;
 
-   //then the states containing k = L/2
-   for(int k_a = 1;k_a < L/2;++k_a){
+   //then the states containing k = Tools::gL()/2
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 0;
       v[1] = k_a;
       v[2] = k_b;
-      v[3] = L/2;
+      v[3] = Tools::gL()/2;
 
       pph2s[block].push_back(v);
 
-      s2pph[block][0][k_a][k_b][L/2] = pph;
+      s2pph[block][0][k_a][k_b][Tools::gL()/2] = pph;
 
       ++pph;
 
       v[0] = 0;
       v[1] = k_a;
-      v[2] = L/2;
+      v[2] = Tools::gL()/2;
       v[3] = k_b;
 
       pph2s[block].push_back(v);
 
-      s2pph[block][0][k_a][L/2][k_b] = pph;
+      s2pph[block][0][k_a][Tools::gL()/2][k_b] = pph;
 
       ++pph;
 
    }
 
-   //the states not containing k = L/2 can be split up in two groups:
+   //the states not containing k = Tools::gL()/2 can be split up in two groups:
 
-   //first k_a,k_b,k_c < L/2
-   for(int k_a = 0;k_a < L/2;++k_a)
-      for(int k_b = k_a;k_b < L/2;++k_b)
-         for(int k_c = 0;k_c < L/2;++k_c){
+   //first k_a,k_b,k_c < Tools::gL()/2
+   for(int k_a = 0;k_a < Tools::gL()/2;++k_a)
+      for(int k_b = k_a;k_b < Tools::gL()/2;++k_b)
+         for(int k_c = 0;k_c < Tools::gL()/2;++k_c){
 
-            if(k_a + k_b + k_c == L/2){
+            if(k_a + k_b + k_c == Tools::gL()/2){
 
                v[0] = 0;
                v[1] = k_a;
@@ -642,20 +629,20 @@ void PPHM::init(int L_in,int N_in){
 
          }
 
-   //second k_a <= k_b and k_c > L/2 with sum = L + L/2
-   for(int k_a = 1;k_a < L;++k_a){
+   //second k_a <= k_b and k_c > Tools::gL()/2 with sum = Tools::gL() + Tools::gL()/2
+   for(int k_a = 1;k_a < Tools::gL();++k_a){
 
-      if(k_a == L/2)
+      if(k_a == Tools::gL()/2)
          k_a++;
 
-      for(int k_b = k_a;k_b < L;++k_b){
+      for(int k_b = k_a;k_b < Tools::gL();++k_b){
 
-         if(k_b == L/2)
+         if(k_b == Tools::gL()/2)
             k_b++;
 
-         for(int k_c = L/2 + 1;k_c < L;++k_c){
+         for(int k_c = Tools::gL()/2 + 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L + L/2){
+            if(k_a + k_b + k_c == Tools::gL() + Tools::gL()/2){
 
                v[0] = 0;
                v[1] = k_a;
@@ -678,41 +665,41 @@ void PPHM::init(int L_in,int N_in){
 
    v[0] = 1;//S_ab
    v[1] = 0;
-   v[2] = L/2;
+   v[2] = Tools::gL()/2;
    v[3] = 0;
 
    pph2s[block].push_back(v);
 
-   s2pph[block][1][0][L/2][0] = pph;
+   s2pph[block][1][0][Tools::gL()/2][0] = pph;
 
    ++pph;
 
-   //then the states containing k = L/2: only |k_a L/2 k_b> because for S_ab = 1 |k_a k_b L/2> has negative parity automatically
-   for(int k_a = 1;k_a < L/2;++k_a){
+   //then the states containing k = Tools::gL()/2: only |k_a Tools::gL()/2 k_b> because for S_ab = 1 |k_a k_b Tools::gL()/2> has negative parity automatically
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 1;
       v[1] = k_a;
-      v[2] = L/2;
+      v[2] = Tools::gL()/2;
       v[3] = k_b;
 
       pph2s[block].push_back(v);
 
-      s2pph[block][1][k_a][L/2][k_b] = pph;
+      s2pph[block][1][k_a][Tools::gL()/2][k_b] = pph;
 
       ++pph;
 
    }
 
-   //the states not containing k = L/2 can be split up in two groups:
+   //the states not containing k = Tools::gL()/2 can be split up in two groups:
 
-   //first k_a,k_b,k_c < L/2
-   for(int k_a = 0;k_a < L/2;++k_a)
-      for(int k_b = k_a + 1;k_b < L/2;++k_b)
-         for(int k_c = 0;k_c < L/2;++k_c){
+   //first k_a,k_b,k_c < Tools::gL()/2
+   for(int k_a = 0;k_a < Tools::gL()/2;++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL()/2;++k_b)
+         for(int k_c = 0;k_c < Tools::gL()/2;++k_c){
 
-            if(k_a + k_b + k_c == L/2){
+            if(k_a + k_b + k_c == Tools::gL()/2){
 
                v[0] = 1;
                v[1] = k_a;
@@ -729,20 +716,20 @@ void PPHM::init(int L_in,int N_in){
 
          }
 
-   //second k_a < k_b and k_c > L/2 with sum = L + L/2
-   for(int k_a = 1;k_a < L;++k_a){
+   //second k_a < k_b and k_c > Tools::gL()/2 with sum = Tools::gL() + Tools::gL()/2
+   for(int k_a = 1;k_a < Tools::gL();++k_a){
 
-      if(k_a == L/2)
+      if(k_a == Tools::gL()/2)
          k_a++;
 
-      for(int k_b = k_a + 1;k_b < L;++k_b){
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b){
 
-         if(k_b == L/2)
+         if(k_b == Tools::gL()/2)
             k_b++;
 
-         for(int k_c = L/2 + 1;k_c < L;++k_c){
+         for(int k_c = Tools::gL()/2 + 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L + L/2){
+            if(k_a + k_b + k_c == Tools::gL() + Tools::gL()/2){
 
                v[0] = 1;
                v[1] = k_a;
@@ -763,59 +750,59 @@ void PPHM::init(int L_in,int N_in){
 
    pph = 0;
 
-   //now S = 3/2 with positive parity and K = L/2
-   block_char[block + L/2 + 3][0] = 1;//S
-   block_char[block + L/2 + 3][1] = L/2;//K
-   block_char[block + L/2 + 3][2] = 0;//p
+   //now S = 3/2 with positive parity and K = Tools::gL()/2
+   block_char[block + Tools::gL()/2 + 3][0] = 1;//S
+   block_char[block + Tools::gL()/2 + 3][1] = Tools::gL()/2;//K
+   block_char[block + Tools::gL()/2 + 3][2] = 0;//p
 
-   char_block[1][L/2][0] = block + L/2 + 3;
+   char_block[1][Tools::gL()/2][0] = block + Tools::gL()/2 + 3;
 
    v[0] = 1;//S_ab
    v[1] = 0;
-   v[2] = L/2;
+   v[2] = Tools::gL()/2;
    v[3] = 0;
 
-   pph2s[block + L/2 + 3].push_back(v);
+   pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-   s2pph[block + L/2 + 3][1][0][L/2][0] = pph;
+   s2pph[block + Tools::gL()/2 + 3][1][0][Tools::gL()/2][0] = pph;
 
    ++pph;
 
-   //then the states containing k = L/2: only |k_a L/2 k_b> because for S_ab = 1 |k_a k_b L/2> has negative parity automatically
-   for(int k_a = 1;k_a < L/2;++k_a){
+   //then the states containing k = Tools::gL()/2: only |k_a Tools::gL()/2 k_b> because for S_ab = 1 |k_a k_b Tools::gL()/2> has negative parity automatically
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 1;
       v[1] = k_a;
-      v[2] = L/2;
+      v[2] = Tools::gL()/2;
       v[3] = k_b;
 
-      pph2s[block + L/2 + 3].push_back(v);
+      pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-      s2pph[block + L/2 + 3][1][k_a][L/2][k_b] = pph;
+      s2pph[block + Tools::gL()/2 + 3][1][k_a][Tools::gL()/2][k_b] = pph;
 
       ++pph;
 
    }
 
-   //the states not containing k = L/2 can be split up in two groups:
+   //the states not containing k = Tools::gL()/2 can be split up in two groups:
 
-   //first k_a,k_b,k_c < L/2
-   for(int k_a = 0;k_a < L/2;++k_a)
-      for(int k_b = k_a + 1;k_b < L/2;++k_b)
-         for(int k_c = 0;k_c < L/2;++k_c){
+   //first k_a,k_b,k_c < Tools::gL()/2
+   for(int k_a = 0;k_a < Tools::gL()/2;++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL()/2;++k_b)
+         for(int k_c = 0;k_c < Tools::gL()/2;++k_c){
 
-            if(k_a + k_b + k_c == L/2){
+            if(k_a + k_b + k_c == Tools::gL()/2){
 
                v[0] = 1;
                v[1] = k_a;
                v[2] = k_b;
                v[3] = k_c;
 
-               pph2s[block + L/2 + 3].push_back(v);
+               pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2pph[block + L/2 + 3][1][k_a][k_b][k_c] = pph;
+               s2pph[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = pph;
 
                ++pph;
 
@@ -823,29 +810,29 @@ void PPHM::init(int L_in,int N_in){
 
          }
 
-   //second k_a < k_b and k_c > L/2 with sum = L + L/2
-   for(int k_a = 1;k_a < L;++k_a){
+   //second k_a < k_b and k_c > Tools::gL()/2 with sum = Tools::gL() + Tools::gL()/2
+   for(int k_a = 1;k_a < Tools::gL();++k_a){
 
-      if(k_a == L/2)
+      if(k_a == Tools::gL()/2)
          k_a++;
 
-      for(int k_b = k_a + 1;k_b < L;++k_b){
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b){
 
-         if(k_b == L/2)
+         if(k_b == Tools::gL()/2)
             k_b++;
 
-         for(int k_c = L/2 + 1;k_c < L;++k_c){
+         for(int k_c = Tools::gL()/2 + 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L + L/2){
+            if(k_a + k_b + k_c == Tools::gL() + Tools::gL()/2){
 
                v[0] = 1;
                v[1] = k_a;
                v[2] = k_b;
                v[3] = k_c;
 
-               pph2s[block + L/2 + 3].push_back(v);
+               pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2pph[block + L/2 + 3][1][k_a][k_b][k_c] = pph;
+               s2pph[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = pph;
 
                ++pph;
 
@@ -859,43 +846,43 @@ void PPHM::init(int L_in,int N_in){
 
    pph = 0;
 
-   //now negative parity, K = L/2
+   //now negative parity, K = Tools::gL()/2
 
    //S = 1/2
    block_char[block][0] = 0;//S
-   block_char[block][1] = L/2;//K
+   block_char[block][1] = Tools::gL()/2;//K
    block_char[block][2] = 1;//p
 
-   char_block[0][L/2][1] = block;
+   char_block[0][Tools::gL()/2][1] = block;
 
    //S_ab = 0:
 
-   //for terms with k = L/2: only |k_a L/2 k_b> remains, |k_a k_b L/2> only has positive parity with S_ab = 0
-   for(int k_a = 1;k_a < L/2;++k_a){
+   //for terms with k = Tools::gL()/2: only |k_a Tools::gL()/2 k_b> remains, |k_a k_b Tools::gL()/2> only has positive parity with S_ab = 0
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 0;
       v[1] = k_a;
-      v[2] = L/2;
+      v[2] = Tools::gL()/2;
       v[3] = k_b;
 
       pph2s[block].push_back(v);
 
-      s2pph[block][0][k_a][L/2][k_b] = pph;
+      s2pph[block][0][k_a][Tools::gL()/2][k_b] = pph;
 
       ++pph;
 
    }
 
-   //the states not containing k = L/2 can be split up in two groups:
+   //the states not containing k = Tools::gL()/2 can be split up in two groups:
 
-   //first k_a,k_b,k_c < L/2
-   for(int k_a = 0;k_a < L/2;++k_a)
-      for(int k_b = k_a;k_b < L/2;++k_b)
-         for(int k_c = 0;k_c < L/2;++k_c){
+   //first k_a,k_b,k_c < Tools::gL()/2
+   for(int k_a = 0;k_a < Tools::gL()/2;++k_a)
+      for(int k_b = k_a;k_b < Tools::gL()/2;++k_b)
+         for(int k_c = 0;k_c < Tools::gL()/2;++k_c){
 
-            if(k_a + k_b + k_c == L/2){
+            if(k_a + k_b + k_c == Tools::gL()/2){
 
                v[0] = 0;
                v[1] = k_a;
@@ -912,20 +899,20 @@ void PPHM::init(int L_in,int N_in){
 
          }
 
-   //second k_a < k_b and k_c > L/2 with sum = L + L/2
-   for(int k_a = 1;k_a < L;++k_a){
+   //second k_a < k_b and k_c > Tools::gL()/2 with sum = Tools::gL() + Tools::gL()/2
+   for(int k_a = 1;k_a < Tools::gL();++k_a){
 
-      if(k_a == L/2)
+      if(k_a == Tools::gL()/2)
          k_a++;
 
-      for(int k_b = k_a;k_b < L;++k_b){
+      for(int k_b = k_a;k_b < Tools::gL();++k_b){
 
-         if(k_b == L/2)
+         if(k_b == Tools::gL()/2)
             k_b++;
 
-         for(int k_c = L/2 + 1;k_c < L;++k_c){
+         for(int k_c = Tools::gL()/2 + 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L + L/2){
+            if(k_a + k_b + k_c == Tools::gL() + Tools::gL()/2){
 
                v[0] = 0;
                v[1] = k_a;
@@ -946,43 +933,43 @@ void PPHM::init(int L_in,int N_in){
 
    //S_ab = 1:
 
-   //for terms with k = L/2: two terms now
-   for(int k_a = 1;k_a < L/2;++k_a){
+   //for terms with k = Tools::gL()/2: two terms now
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 1;
       v[1] = k_a;
       v[2] = k_b;
-      v[3] = L/2;
+      v[3] = Tools::gL()/2;
 
       pph2s[block].push_back(v);
 
-      s2pph[block][1][k_a][k_b][L/2] = pph;
+      s2pph[block][1][k_a][k_b][Tools::gL()/2] = pph;
 
       ++pph;
 
       v[0] = 1;
       v[1] = k_a;
-      v[2] = L/2;
+      v[2] = Tools::gL()/2;
       v[3] = k_b;
 
       pph2s[block].push_back(v);
 
-      s2pph[block][1][k_a][L/2][k_b] = pph;
+      s2pph[block][1][k_a][Tools::gL()/2][k_b] = pph;
 
       ++pph;
 
    }
 
-   //the states not containing k = L/2 can be split up in two groups:
+   //the states not containing k = Tools::gL()/2 can be split up in two groups:
 
-   //first k_a,k_b,k_c < L/2
-   for(int k_a = 0;k_a < L/2;++k_a)
-      for(int k_b = k_a + 1;k_b < L/2;++k_b)
-         for(int k_c = 0;k_c < L/2;++k_c){
+   //first k_a,k_b,k_c < Tools::gL()/2
+   for(int k_a = 0;k_a < Tools::gL()/2;++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL()/2;++k_b)
+         for(int k_c = 0;k_c < Tools::gL()/2;++k_c){
 
-            if(k_a + k_b + k_c == L/2){
+            if(k_a + k_b + k_c == Tools::gL()/2){
 
                v[0] = 1;
                v[1] = k_a;
@@ -999,20 +986,20 @@ void PPHM::init(int L_in,int N_in){
 
          }
 
-   //second k_a < k_b and k_c > L/2 with sum = L + L/2
-   for(int k_a = 1;k_a < L;++k_a){
+   //second k_a < k_b and k_c > Tools::gL()/2 with sum = Tools::gL() + Tools::gL()/2
+   for(int k_a = 1;k_a < Tools::gL();++k_a){
 
-      if(k_a == L/2)
+      if(k_a == Tools::gL()/2)
          k_a++;
 
-      for(int k_b = k_a + 1;k_b < L;++k_b){
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b){
 
-         if(k_b == L/2)
+         if(k_b == Tools::gL()/2)
             k_b++;
 
-         for(int k_c = L/2 + 1;k_c < L;++k_c){
+         for(int k_c = Tools::gL()/2 + 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L + L/2){
+            if(k_a + k_b + k_c == Tools::gL() + Tools::gL()/2){
 
                v[0] = 1;
                v[1] = k_a;
@@ -1033,61 +1020,61 @@ void PPHM::init(int L_in,int N_in){
 
    pph = 0;
 
-   //S = 3/2, negative parity, K = L/2
-   block_char[block + L/2 + 3][0] = 1;//S
-   block_char[block + L/2 + 3][1] = L/2;//K
-   block_char[block + L/2 + 3][2] = 1;//p
+   //S = 3/2, negative parity, K = Tools::gL()/2
+   block_char[block + Tools::gL()/2 + 3][0] = 1;//S
+   block_char[block + Tools::gL()/2 + 3][1] = Tools::gL()/2;//K
+   block_char[block + Tools::gL()/2 + 3][2] = 1;//p
 
-   char_block[1][L/2][1] = block + L/2 + 3;
+   char_block[1][Tools::gL()/2][1] = block + Tools::gL()/2 + 3;
 
    //only S_ab = 1:
 
-   //for terms with k = L/2: the two terms can occur
-   for(int k_a = 1;k_a < L/2;++k_a){
+   //for terms with k = Tools::gL()/2: the two terms can occur
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 1;
       v[1] = k_a;
       v[2] = k_b;
-      v[3] = L/2;
+      v[3] = Tools::gL()/2;
 
-      pph2s[block + L/2 + 3].push_back(v);
+      pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-      s2pph[block + L/2 + 3][1][k_a][k_b][L/2] = pph;
+      s2pph[block + Tools::gL()/2 + 3][1][k_a][k_b][Tools::gL()/2] = pph;
 
       ++pph;
 
       v[0] = 1;
       v[1] = k_a;
-      v[2] = L/2;
+      v[2] = Tools::gL()/2;
       v[3] = k_b;
 
-      pph2s[block + L/2 + 3].push_back(v);
+      pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-      s2pph[block + L/2 + 3][1][k_a][L/2][k_b] = pph;
+      s2pph[block + Tools::gL()/2 + 3][1][k_a][Tools::gL()/2][k_b] = pph;
 
       ++pph;
 
    }
 
-   //the states not containing k = L/2 can be split up in two groups:
+   //the states not containing k = Tools::gL()/2 can be split up in two groups:
 
-   //first k_a,k_b,k_c < L/2
-   for(int k_a = 0;k_a < L/2;++k_a)
-      for(int k_b = k_a + 1;k_b < L/2;++k_b)
-         for(int k_c = 0;k_c < L/2;++k_c){
+   //first k_a,k_b,k_c < Tools::gL()/2
+   for(int k_a = 0;k_a < Tools::gL()/2;++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL()/2;++k_b)
+         for(int k_c = 0;k_c < Tools::gL()/2;++k_c){
 
-            if(k_a + k_b + k_c == L/2){
+            if(k_a + k_b + k_c == Tools::gL()/2){
 
                v[0] = 1;
                v[1] = k_a;
                v[2] = k_b;
                v[3] = k_c;
 
-               pph2s[block + L/2 + 3].push_back(v);
+               pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2pph[block + L/2 + 3][1][k_a][k_b][k_c] = pph;
+               s2pph[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = pph;
 
                ++pph;
 
@@ -1095,29 +1082,29 @@ void PPHM::init(int L_in,int N_in){
 
          }
 
-   //second k_a < k_b and k_c > L/2 with sum = L + L/2
-   for(int k_a = 1;k_a < L;++k_a){
+   //second k_a < k_b and k_c > Tools::gL()/2 with sum = Tools::gL() + Tools::gL()/2
+   for(int k_a = 1;k_a < Tools::gL();++k_a){
 
-      if(k_a == L/2)
+      if(k_a == Tools::gL()/2)
          k_a++;
 
-      for(int k_b = k_a + 1;k_b < L;++k_b){
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b){
 
-         if(k_b == L/2)
+         if(k_b == Tools::gL()/2)
             k_b++;
 
-         for(int k_c = L/2 + 1;k_c < L;++k_c){
+         for(int k_c = Tools::gL()/2 + 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L + L/2){
+            if(k_a + k_b + k_c == Tools::gL() + Tools::gL()/2){
 
                v[0] = 1;
                v[1] = k_a;
                v[2] = k_b;
                v[3] = k_c;
 
-               pph2s[block + L/2 + 3].push_back(v);
+               pph2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2pph[block + L/2 + 3][1][k_a][k_b][k_c] = pph;
+               s2pph[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = pph;
 
                ++pph;
 
@@ -1126,18 +1113,6 @@ void PPHM::init(int L_in,int N_in){
          }
       }
    }
-
-   //allocate
-   _6j = new double * [2];
-
-   for(int S = 0;S < 2;++S)
-      _6j[S] = new double [2];
-
-   //initialize
-   _6j[0][0] = -0.5;
-   _6j[0][1] = 0.5;
-   _6j[1][0] = 0.5;
-   _6j[1][1] = 1.0/6.0;
 
 }
 
@@ -1148,13 +1123,13 @@ void PPHM::clear(){
 
    delete [] pph2s;
 
-   for(int B = 0;B < L + 6;++B){
+   for(int B = 0;B < Tools::gL() + 6;++B){
 
       for(int S_ab = 0;S_ab < 2;++S_ab){
 
-         for(int k_a = 0;k_a < L;++k_a){
+         for(int k_a = 0;k_a < Tools::gL();++k_a){
 
-            for(int k_b = 0;k_b < L;++k_b)
+            for(int k_b = 0;k_b < Tools::gL();++k_b)
                delete [] s2pph[B][S_ab][k_a][k_b];
 
             delete [] s2pph[B][S_ab][k_a];
@@ -1171,14 +1146,14 @@ void PPHM::clear(){
 
    delete [] s2pph;
 
-   for(int B = 0;B < L + 6;++B)
+   for(int B = 0;B < Tools::gL() + 6;++B)
       delete [] block_char[B];
 
    delete [] block_char;
 
    for(int S = 0;S < 2;++S){
 
-      for(int K = 0;K <= L/2;++K)
+      for(int K = 0;K <= Tools::gL()/2;++K)
          delete [] char_block[S][K];
 
       delete [] char_block[S];
@@ -1187,42 +1162,38 @@ void PPHM::clear(){
 
    delete [] char_block;
 
-   for(int S = 0;S < 2;++S)
-      delete [] _6j[S];
-
-   delete [] _6j;
 }
 
 /**
  * standard constructor
  */
-PPHM::PPHM() : BlockMatrix(L + 6) {
+PPHM::PPHM() : BlockMatrix(Tools::gL() + 6) {
 
    //first K = 0: 4 blocks
 
    //positive parity
    this->setMatrixDim(0,pph2s[0].size(),2);//S = 1/2
-   this->setMatrixDim(L/2 + 3,pph2s[L/2 + 3].size(),4);//S = 3/2
+   this->setMatrixDim(Tools::gL()/2 + 3,pph2s[Tools::gL()/2 + 3].size(),4);//S = 3/2
 
    //negative parity
    this->setMatrixDim(1,pph2s[1].size(),2);//S = 1/2
-   this->setMatrixDim(L/2 + 4,pph2s[L/2 + 4].size(),4);//S = 3/2
+   this->setMatrixDim(Tools::gL()/2 + 4,pph2s[Tools::gL()/2 + 4].size(),4);//S = 3/2
 
-   //then for 0 < K < L/2
-   for(int K = 1;K < L/2;++K){
+   //then for 0 < K < Tools::gL()/2
+   for(int K = 1;K < Tools::gL()/2;++K){
 
       this->setMatrixDim(K + 1,pph2s[K + 1].size(),4);//S = 1/2
-      this->setMatrixDim(L/2 + K + 4,pph2s[L/2 + K + 4].size(),8);//S = 3/2
+      this->setMatrixDim(Tools::gL()/2 + K + 4,pph2s[Tools::gL()/2 + K + 4].size(),8);//S = 3/2
 
    }
 
-   //and last for K = L/2: parity positive
-   this->setMatrixDim(L/2 + 1,pph2s[L/2 + 1].size(),2);//S = 1/2
-   this->setMatrixDim(L + 4,pph2s[L + 4].size(),4);//S = 3/2
+   //and last for K = Tools::gL()/2: parity positive
+   this->setMatrixDim(Tools::gL()/2 + 1,pph2s[Tools::gL()/2 + 1].size(),2);//S = 1/2
+   this->setMatrixDim(Tools::gL() + 4,pph2s[Tools::gL() + 4].size(),4);//S = 3/2
 
    //negative parity
-   this->setMatrixDim(L/2 + 2,pph2s[L/2 + 2].size(),2);//S = 1/2
-   this->setMatrixDim(L + 5,pph2s[L + 5].size(),4);//S = 3/2
+   this->setMatrixDim(Tools::gL()/2 + 2,pph2s[Tools::gL()/2 + 2].size(),2);//S = 1/2
+   this->setMatrixDim(Tools::gL() + 5,pph2s[Tools::gL() + 5].size(),4);//S = 3/2
 
 }
 
@@ -1236,33 +1207,6 @@ PPHM::PPHM(const PPHM &pphm_c) : BlockMatrix(pphm_c) { }
  * Destructor
  */
 PPHM::~PPHM(){ }
-
-/** 
- * @return nr of particles
- */
-int PPHM::gN() const{
-
-   return N;
-
-}
-
-/**
- * @return nr of sp orbitals
- */
-int PPHM::gM() const{
-
-   return M;
-
-}
-
-/**
- * @return nr of sites
- */
-int PPHM::gL() const{
-
-   return L;
-
-}
 
 /**
  * @param block block index
@@ -1335,10 +1279,10 @@ double PPHM::operator()(int B,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,
 double PPHM::operator()(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const {
 
    //check the momentum
-   if( (k_a + k_b + k_c)%L != K)
+   if( (k_a + k_b + k_c)%Tools::gL() != K)
       return 0;
 
-   if( (k_d + k_e + k_z)%L != K)
+   if( (k_d + k_e + k_z)%Tools::gL() != K)
       return 0;
 
    int K_copy = K;
@@ -1390,7 +1334,7 @@ int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_
 
          if(k_c == 0){
 
-            if(k_a == 0 || k_a == L/2){//only positive parity allowed
+            if(k_a == 0 || k_a == Tools::gL()/2){//only positive parity allowed
 
                if(p == 1)
                   return 0;
@@ -1422,7 +1366,7 @@ int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_
          }
          else{//k_a or k_b are 0
 
-            if(k_c == L/2){//only positive parity
+            if(k_c == Tools::gL()/2){//only positive parity
 
                if(p == 1)
                   return 0;
@@ -1430,7 +1374,7 @@ int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_
                   return 1;
 
             }
-            else{//k_c != L/2
+            else{//k_c != Tools::gL()/2
 
                if(k_a == 0){
 
@@ -1472,11 +1416,11 @@ int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_
       }
       else{//no zeros
 
-         if(k_a + k_b + k_c == 2*L){
+         if(k_a + k_b + k_c == 2*Tools::gL()){
 
-            k_a = L - k_a;
-            k_b = L - k_b;
-            k_c = L - k_c;
+            k_a = Tools::gL() - k_a;
+            k_b = Tools::gL() - k_b;
+            k_c = Tools::gL() - k_c;
 
             return (1 - 2*p);
 
@@ -1487,13 +1431,13 @@ int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_
       }
 
    }
-   else if(K == L/2){
+   else if(K == Tools::gL()/2){
 
-      if(k_a == L/2 || k_b == L/2 || k_c == L/2){
+      if(k_a == Tools::gL()/2 || k_b == Tools::gL()/2 || k_c == Tools::gL()/2){
 
-         if(k_c == L/2){
+         if(k_c == Tools::gL()/2){
 
-            if(k_a == 0 || k_a == L/2){//only positive parity states
+            if(k_a == 0 || k_a == Tools::gL()/2){//only positive parity states
 
                if(p == 1)
                   return 0;
@@ -1523,7 +1467,7 @@ int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_
             }
 
          }
-         else{//k_a or k_b == L/2
+         else{//k_a or k_b == Tools::gL()/2
 
             if(k_c == 0){//only positive parity
 
@@ -1535,14 +1479,14 @@ int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_
             }
             else{
 
-               if(k_a == L/2){
+               if(k_a == Tools::gL()/2){
 
                   if(k_b > k_c){//switch
 
                      k_a = k_b;
                      k_b = k_c;
                      k_c = k_a;
-                     k_a = L/2;
+                     k_a = Tools::gL()/2;
 
                      return (1 - 2*p);
 
@@ -1551,14 +1495,14 @@ int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_
                      return 1;
 
                }
-               else{//k_b == L/2
+               else{//k_b == Tools::gL()/2
 
                   if(k_a > k_c){//switch
 
                      k_b = k_a;
                      k_a = k_c;
                      k_c = k_b;
-                     k_b = L/2;
+                     k_b = Tools::gL()/2;
 
                      return (1 - 2*p);
 
@@ -1575,32 +1519,32 @@ int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_
       }
       else if(k_a == 0 || k_b == 0 || k_c == 0){
 
-         if(k_a + k_b + k_c == L/2)
+         if(k_a + k_b + k_c == Tools::gL()/2)
             return 1;
          else{
 
-            k_a = (L - k_a)%L;
-            k_b = (L - k_b)%L;
-            k_c = (L - k_c)%L;
+            k_a = (Tools::gL() - k_a)%Tools::gL();
+            k_b = (Tools::gL() - k_b)%Tools::gL();
+            k_c = (Tools::gL() - k_c)%Tools::gL();
 
             return (1 - 2*p);
 
          }
 
       }
-      else{//no L/2 or 0 present
+      else{//no Tools::gL()/2 or 0 present
 
-         if(k_a + k_b + k_c == L/2)
+         if(k_a + k_b + k_c == Tools::gL()/2)
             return 1;
-         else if(k_a + k_b + k_c == L + L/2){
+         else if(k_a + k_b + k_c == Tools::gL() + Tools::gL()/2){
 
-            if(k_c > L/2)
+            if(k_c > Tools::gL()/2)
                return 1;
             else{
 
-               k_a = (L - k_a)%L;
-               k_b = (L - k_b)%L;
-               k_c = (L - k_c)%L;
+               k_a = (Tools::gL() - k_a)%Tools::gL();
+               k_b = (Tools::gL() - k_b)%Tools::gL();
+               k_c = (Tools::gL() - k_c)%Tools::gL();
 
                return (1 - 2*p);
 
@@ -1609,9 +1553,9 @@ int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_
          }
          else{
 
-            k_a = (L - k_a)%L;
-            k_b = (L - k_b)%L;
-            k_c = (L - k_c)%L;
+            k_a = (Tools::gL() - k_a)%Tools::gL();
+            k_b = (Tools::gL() - k_b)%Tools::gL();
+            k_c = (Tools::gL() - k_c)%Tools::gL();
 
             return (1 - 2*p);
 
@@ -1620,13 +1564,13 @@ int PPHM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_
       }
 
    }
-   else if(K > L/2){
+   else if(K > Tools::gL()/2){
 
-      K = L - K;
+      K = Tools::gL() - K;
 
-      k_a = (L - k_a)%L;
-      k_b = (L - k_b)%L;
-      k_c = (L - k_c)%L;
+      k_a = (Tools::gL() - k_a)%Tools::gL();
+      k_b = (Tools::gL() - k_b)%Tools::gL();
+      k_c = (Tools::gL() - k_c)%Tools::gL();
 
       return (1 - 2*p);
 
@@ -1718,10 +1662,10 @@ int PPHM::get_inco(int B,int S,int S_ab,int k_a,int k_b,int k_c,int &i) const{
  */
 void PPHM::T(const TPM &tpm){
 
-   SPM spm(1.0/(N - 1.0),tpm);
+   SPM spm(1.0/(Tools::gN() - 1.0),tpm);
 
    int k_a,k_b,k_c,k_d,k_e,k_z;
-   int k_a_,k_b_,k_c_,k_d_,k_e_,k_z_;
+   int k_a_,k_b_,k_c_,k_z_;
    int S_ab,S_de;
 
    int K,p;
@@ -1733,7 +1677,7 @@ void PPHM::T(const TPM &tpm){
    int sign_ab,sign_de;
 
    //first the S = 1/2 blocks, these should be the most difficult ones.
-   for(int B = 0;B < L/2 + 3;++B){
+   for(int B = 0;B < Tools::gL()/2 + 3;++B){
 
       K = block_char[B][1];
       p = block_char[B][2];
@@ -1748,9 +1692,9 @@ void PPHM::T(const TPM &tpm){
          k_b = pph2s[B][i][2];
          k_c = pph2s[B][i][3];
 
-         k_a_ = (L - k_a)%L;
-         k_b_ = (L - k_b)%L;
-         k_c_ = (L - k_c)%L;
+         k_a_ = (Tools::gL() - k_a)%Tools::gL();
+         k_b_ = (Tools::gL() - k_b)%Tools::gL();
+         k_c_ = (Tools::gL() - k_c)%Tools::gL();
 
          sign_ab = 1 - 2*S_ab;
 
@@ -1767,9 +1711,7 @@ void PPHM::T(const TPM &tpm){
             k_e = pph2s[B][j][2];
             k_z = pph2s[B][j][3];
 
-            k_d_ = (L - k_d)%L;
-            k_e_ = (L - k_e)%L;
-            k_z_ = (L - k_z)%L;
+            k_z_ = (Tools::gL() - k_z)%Tools::gL();
 
             sign_de = 1 - 2*S_de;
 
@@ -1787,7 +1729,7 @@ void PPHM::T(const TPM &tpm){
 
             ward = 0.0;
 
-            if(K == 0 || K == L/2){//parity exchange terms
+            if(K == 0 || K == Tools::gL()/2){//parity exchange terms
 
                //tp(1)
                if(S_ab == S_de)
@@ -1795,7 +1737,7 @@ void PPHM::T(const TPM &tpm){
 
                      hard = 0.0;
 
-                     int K_ab = (k_a_ + k_b_)%L;
+                     int K_ab = (k_a_ + k_b_)%Tools::gL();
 
                      for(int pi = 0;pi < 2;++pi)
                         hard += tpm(S_ab,K_ab,pi,k_a_,k_b_,k_d,k_e);
@@ -1809,12 +1751,11 @@ void PPHM::T(const TPM &tpm){
 
                   hard = 0.0;
 
-                  int K_ce = (k_c + k_e)%L;
+                  int K_ce = (k_c + k_e)%Tools::gL();
 
-                  for(int J = 0;J < 2;++J)
-                     for(int Z = 0;Z < 2;++Z)
-                        for(int pi = 0;pi < 2;++pi)
-                           hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_b_);
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_b_);
 
                   hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1833,12 +1774,11 @@ void PPHM::T(const TPM &tpm){
 
                   hard = 0.0;
 
-                  int K_ce = (k_c + k_e)%L;
+                  int K_ce = (k_c + k_e)%Tools::gL();
 
-                  for(int J = 0;J < 2;++J)
-                     for(int Z = 0;Z < 2;++Z)
-                        for(int pi = 0;pi < 2;++pi)
-                           hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_a_);
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard +=  (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_a_);
 
                   hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1855,14 +1795,13 @@ void PPHM::T(const TPM &tpm){
                //tp(4)
                if(k_a_ == k_e){
 
-                  int K_cd = (k_c + k_d)%L;
+                  int K_cd = (k_c + k_d)%Tools::gL();
 
                   hard = 0.0;
 
-                  for(int J = 0;J < 2;++J)
-                     for(int Z = 0;Z < 2;++Z)
-                        for(int pi = 0;pi < 2;++pi)
-                           hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_b_);
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_b_);
 
                   hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1881,12 +1820,11 @@ void PPHM::T(const TPM &tpm){
 
                   hard = 0.0;
 
-                  int K_cd = (k_c + k_d)%L;
+                  int K_cd = (k_c + k_d)%Tools::gL();
 
-                  for(int J = 0;J < 2;++J)
-                     for(int Z = 0;Z < 2;++Z)
-                        for(int pi = 0;pi < 2;++pi)
-                           hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_a_);
+                  for(int Z = 0;Z < 2;++Z)
+                     for(int pi = 0;pi < 2;++pi)
+                        hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_a_);
 
                   hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1908,7 +1846,7 @@ void PPHM::T(const TPM &tpm){
 
                   hard = 0.0;
 
-                  int K_ab = (k_a + k_b)%L;
+                  int K_ab = (k_a + k_b)%Tools::gL();
 
                   for(int pi = 0;pi < 2;++pi)
                      hard += tpm(S_ab,K_ab,pi,k_a,k_b,k_d,k_e);
@@ -1922,12 +1860,11 @@ void PPHM::T(const TPM &tpm){
 
                hard = 0.0;
 
-               int K_ce = (k_c_ + k_e)%L;
+               int K_ce = (k_c_ + k_e)%Tools::gL();
 
-               for(int J = 0;J < 2;++J)
-                  for(int Z = 0;Z < 2;++Z)
-                     for(int pi = 0;pi < 2;++pi)
-                        hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_b);
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_b);
 
                hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1946,12 +1883,11 @@ void PPHM::T(const TPM &tpm){
 
                hard = 0.0;
 
-               int K_ce = (k_c_ + k_e)%L;
+               int K_ce = (k_c_ + k_e)%Tools::gL();
 
-               for(int J = 0;J < 2;++J)
-                  for(int Z = 0;Z < 2;++Z)
-                     for(int pi = 0;pi < 2;++pi)
-                        hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_a);
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_a);
 
                hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1968,14 +1904,13 @@ void PPHM::T(const TPM &tpm){
             //tp(4)
             if(k_a == k_e){
 
-               int K_cd = (k_c_ + k_d)%L;
+               int K_cd = (k_c_ + k_d)%Tools::gL();
 
                hard = 0.0;
 
-               for(int J = 0;J < 2;++J)
-                  for(int Z = 0;Z < 2;++Z)
-                     for(int pi = 0;pi < 2;++pi)
-                        hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_b);
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_b);
 
                hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1994,12 +1929,11 @@ void PPHM::T(const TPM &tpm){
 
                hard = 0.0;
 
-               int K_cd = (k_c_ + k_d)%L;
+               int K_cd = (k_c_ + k_d)%Tools::gL();
 
-               for(int J = 0;J < 2;++J)
-                  for(int Z = 0;Z < 2;++Z)
-                     for(int pi = 0;pi < 2;++pi)
-                        hard += (2*J + 1.0) * (2*Z + 1.0) * _6j[J][S_ab] * _6j[J][S_de] * _6j[J][Z] * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_a);
+               for(int Z = 0;Z < 2;++Z)
+                  for(int pi = 0;pi < 2;++pi)
+                     hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_a);
 
                hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -2022,7 +1956,7 @@ void PPHM::T(const TPM &tpm){
    }
 
    //the easier S = 3/2 part:
-   for(int B = L/2 + 3;B < gnr();++B){
+   for(int B = Tools::gL()/2 + 3;B < gnr();++B){
 
       K = block_char[B][1];
       p = block_char[B][2];
@@ -2035,9 +1969,9 @@ void PPHM::T(const TPM &tpm){
          k_b = pph2s[B][i][2];
          k_c = pph2s[B][i][3];
 
-         k_a_ = (L - k_a)%L;
-         k_b_ = (L - k_b)%L;
-         k_c_ = (L - k_c)%L;
+         k_a_ = (Tools::gL() - k_a)%Tools::gL();
+         k_b_ = (Tools::gL() - k_b)%Tools::gL();
+         k_c_ = (Tools::gL() - k_c)%Tools::gL();
 
          for(int j = i;j < gdim(B);++j){
 
@@ -2045,9 +1979,7 @@ void PPHM::T(const TPM &tpm){
             k_e = pph2s[B][j][2];
             k_z = pph2s[B][j][3];
 
-            k_d_ = (L - k_d)%L;
-            k_e_ = (L - k_e)%L;
-            k_z_ = (L - k_z)%L;
+            k_z_ = (Tools::gL() - k_z)%Tools::gL();
 
             //init
             (*this)(B,i,j) = 0.0;
@@ -2058,14 +1990,14 @@ void PPHM::T(const TPM &tpm){
 
             ward = 0.0;
 
-            if(K == 0 || K == L/2){//parity exchange terms
+            if(K == 0 || K == Tools::gL()/2){//parity exchange terms
 
                //tp(1)
                if(k_c_ == k_z){
 
                   hard = 0.0;
 
-                  int K_ab = (k_a_ + k_b_)%L;
+                  int K_ab = (k_a_ + k_b_)%Tools::gL();
 
                   for(int pi = 0;pi < 2;++pi)
                      hard += tpm(1,K_ab,pi,k_a_,k_b_,k_d,k_e);
@@ -2079,11 +2011,11 @@ void PPHM::T(const TPM &tpm){
 
                   hard = 0.0;
 
-                  int K_ce = (k_c + k_e)%L;
+                  int K_ce = (k_c + k_e)%Tools::gL();
 
                   for(int Z = 0;Z < 2;++Z)
                      for(int pi = 0;pi < 2;++pi)
-                        hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_b_);
+                        hard += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_b_);
 
                   if(k_c == k_e)
                      hard *= std::sqrt(2.0);
@@ -2100,11 +2032,11 @@ void PPHM::T(const TPM &tpm){
 
                   hard = 0.0;
 
-                  int K_ce = (k_c + k_e)%L;
+                  int K_ce = (k_c + k_e)%Tools::gL();
 
                   for(int Z = 0;Z < 2;++Z)
                      for(int pi = 0;pi < 2;++pi)
-                        hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_a_);
+                        hard += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_a_);
 
                   if(k_c == k_e)
                      hard *= std::sqrt(2.0);
@@ -2121,11 +2053,11 @@ void PPHM::T(const TPM &tpm){
 
                   hard = 0.0;
 
-                  int K_cd = (k_c + k_d)%L;
+                  int K_cd = (k_c + k_d)%Tools::gL();
 
                   for(int Z = 0;Z < 2;++Z)
                      for(int pi = 0;pi < 2;++pi)
-                        hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_b_);
+                        hard += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_b_);
 
                   if(k_c == k_d)
                      hard *= std::sqrt(2.0);
@@ -2142,11 +2074,11 @@ void PPHM::T(const TPM &tpm){
 
                   hard = 0.0;
 
-                  int K_cd = (k_c + k_d)%L;
+                  int K_cd = (k_c + k_d)%Tools::gL();
 
                   for(int Z = 0;Z < 2;++Z)
                      for(int pi = 0;pi < 2;++pi)
-                        hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_a_);
+                        hard += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,K_cd,pi,k_c,k_d,k_z_,k_a_);
 
                   if(k_c == k_d)
                      hard *= std::sqrt(2.0);
@@ -2165,7 +2097,7 @@ void PPHM::T(const TPM &tpm){
 
                hard = 0.0;
 
-               int K_ab = (k_a + k_b)%L;
+               int K_ab = (k_a + k_b)%Tools::gL();
 
                for(int pi = 0;pi < 2;++pi)
                   hard += tpm(1,K_ab,pi,k_a,k_b,k_d,k_e);
@@ -2179,11 +2111,11 @@ void PPHM::T(const TPM &tpm){
 
                hard = 0.0;
 
-               int K_ce = (k_c_ + k_e)%L;
+               int K_ce = (k_c_ + k_e)%Tools::gL();
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_b);
+                     hard += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_b);
 
                if(k_c_ == k_e)
                   hard *= std::sqrt(2.0);
@@ -2200,11 +2132,11 @@ void PPHM::T(const TPM &tpm){
 
                hard = 0.0;
 
-               int K_ce = (k_c_ + k_e)%L;
+               int K_ce = (k_c_ + k_e)%Tools::gL();
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_a);
+                     hard += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,K_ce,pi,k_c_,k_e,k_z_,k_a);
 
                if(k_c_ == k_e)
                   hard *= std::sqrt(2.0);
@@ -2221,11 +2153,11 @@ void PPHM::T(const TPM &tpm){
 
                hard = 0.0;
 
-               int K_cd = (k_c_ + k_d)%L;
+               int K_cd = (k_c_ + k_d)%Tools::gL();
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_b);
+                     hard += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_b);
 
                if(k_c_ == k_d)
                   hard *= std::sqrt(2.0);
@@ -2242,11 +2174,11 @@ void PPHM::T(const TPM &tpm){
 
                hard = 0.0;
 
-               int K_cd = (k_c_ + k_d)%L;
+               int K_cd = (k_c_ + k_d)%Tools::gL();
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     hard += (2*Z + 1.0) * _6j[1][Z] * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_a);
+                     hard += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,K_cd,pi,k_c_,k_d,k_z_,k_a);
 
                if(k_c_ == k_d)
                   hard *= std::sqrt(2.0);
@@ -2303,7 +2235,7 @@ ostream &operator<<(ostream &output,const PPHM &pphm_p){
  */
 void PPHM::print_basis(){
 
-   for(int B = 0;B < L + 6;++B){
+   for(int B = 0;B < Tools::gL() + 6;++B){
 
       cout << endl;
       cout << B << "\t" << gdim(B) << "\t" << gdeg(B) << "\t(" << block_char[B][0] << "," << block_char[B][1] << "," << 1 - 2*block_char[B][2] << ")\t" << endl;
@@ -2350,7 +2282,7 @@ double PPHM::norm(int K,int k_a,int k_b,int k_c){
             return 0.5;
          else{//k_c != 0: k_a or k_b == 0
 
-            if(k_c == L/2)
+            if(k_c == Tools::gL()/2)
                return 0.5;
             else
                return 1.0/std::sqrt(2.0);
@@ -2362,13 +2294,13 @@ double PPHM::norm(int K,int k_a,int k_b,int k_c){
          return 1.0/std::sqrt(2.0);
 
    }
-   else if(K == L/2){
+   else if(K == Tools::gL()/2){
 
-      if(k_a == L/2 || k_b == L/2 || k_c == L/2){
+      if(k_a == Tools::gL()/2 || k_b == Tools::gL()/2 || k_c == Tools::gL()/2){
 
-         if(k_c == L/2)
+         if(k_c == Tools::gL()/2)
             return 0.5;
-         else{//k_c != L/2: k_a or k_b == L/2
+         else{//k_c != Tools::gL()/2: k_a or k_b == Tools::gL()/2
 
             if(k_c == 0)
                return 0.5;

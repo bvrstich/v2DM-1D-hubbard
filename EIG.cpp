@@ -7,39 +7,6 @@ using std::endl;
 
 #include "include.h"
 
-int EIG::M;
-int EIG::N;
-int EIG::L;
-int EIG::dim;
-
-/**
- * initialize the statics
- * @param L_in the nr of sites
- * @param N_in the nr of particles
- */
-void EIG::init(int L_in,int N_in){
-
-   L = L_in;
-   N = N_in;
-
-   M = 2*L;
-
-   dim = M*(M - 1);
-
-#ifdef __G_CON
-   dim += M*M;
-#endif
-
-#ifdef __T1_CON
-   dim += M*(M - 1)*(M - 2)/6;
-#endif
-
-#ifdef __T2_CON
-   dim += M*M*(M - 1)/2;
-#endif
-
-}
-
 /**
  * standard constructor with initialization on the eigenvalues of a SUP object.
  * @param SZ input SUP object that will be destroyed after this function is called. The eigenvectors
@@ -209,33 +176,6 @@ ostream &operator<<(ostream &output,const EIG &eig_p){
 
 }
 
-/**
- * @return nr of particles
- */
-int EIG::gN() const{
-
-   return N;
-
-}
-
-/**
- * @return dimension of sp space
- */
-int EIG::gM() const{
-
-   return M;
-
-}
-
-/**
- * @return nr of sites
- */
-int EIG::gL() const{
-
-   return L;
-
-}
-
 /** 
  * get the BlockVector<TPM> object containing the eigenvalues of the TPM blocks P and Q
  * @param i == 0, the eigenvalues of the P block will be returned, i == 1, the eigenvalues of the Q block will be returned
@@ -330,16 +270,6 @@ const BlockVector<PPHM> &EIG::pphv() const{
 }
 
 #endif
-
-/**
- * @return total dimension of the EIG object
- */
-int EIG::gdim() const{
-
-   return dim;
-
-}
-
 
 /**
  * @return the minimal element present in this EIG object.
@@ -457,7 +387,7 @@ double EIG::center_dev() const{
 
 #endif
 
-   return dim*log(sum/(double)dim) - log_product;
+   return Tools::gdim()*log(sum/(double)Tools::gdim()) - log_product;
 
 }
 
@@ -472,7 +402,7 @@ double EIG::center_dev() const{
  */
 double EIG::centerpot(double alpha,const EIG &eigen_Z,double c_S,double c_Z) const{
 
-   double ward = dim*log(1.0 + alpha*(c_S + c_Z));
+   double ward = Tools::gdim()*log(1.0 + alpha*(c_S + c_Z));
 
    for(int i = 0;i < 2;++i)
       ward -= v_tp[i]->centerpot(alpha) + (eigen_Z.tpv(i)).centerpot(alpha);

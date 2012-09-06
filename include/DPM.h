@@ -14,7 +14,8 @@ using std::ostream;
  * This class, DPM, is a class written for spinsymmetrical, translationally invariant three-particle matrices 
  * (name comes from drie-particle matrix). It is written specially for the T_1 condition. 
  * It inherits all the functions from its mother class BlockMatrix, some special member functions and two lists that
- * give the relationship between the dp (three-particle) and the sp basis. This matrix falls apart in M blocks: S = 1/2 with degeneracy 2 and S = 3/2 with degeneracy 4,
+ * give the relationship between the dp (three-particle) and the sp basis.
+ * This matrix falls apart in M blocks: S = 1/2 with degeneracy 2 and S = 3/2 with degeneracy 4,
  * both have a blockstructure of (k_a + k_b + k_b) % M == K. The basis is determined by the dp-momentum K, the sp-momenuntum qn's k_a,k_b,k_c,
  * an intermediate spincoupling quantumnumber S_ab = 0 or 1, and the total spin S.
  */
@@ -50,15 +51,6 @@ class DPM : public BlockMatrix {
 
       static int get_inco(int S,int K,int p,int S_ab,int a,int b,int c,int *i,double *coef);
 
-      //geef N terug
-      int gN() const;
-
-      //geef M terug
-      int gM() const;
-
-      //geef L terug
-      int gL() const;
-
       int gS(int block) const;
 
       int gK(int block) const;
@@ -77,7 +69,7 @@ class DPM : public BlockMatrix {
       //output to file
       void out_sp(const char *) const;
 
-      static void init(int,int);
+      static void init();
 
       static void clear();
 
@@ -98,18 +90,6 @@ class DPM : public BlockMatrix {
 
       //!static list that takes in the block properties S,K,p and returns the blockindex B
       static int ***char_block;
-
-      //!list of 6j symbols needed.
-      static double **_6j;
-
-      //!nr of particles
-      static int N;
-
-      //!dimension of sp hilbert space
-      static int M;
-
-      //!nr of sites
-      static int L;
 
 };
 

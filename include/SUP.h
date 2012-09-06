@@ -93,14 +93,6 @@ class SUP{
       //initialiseer Z
       void init_Z(double alpha,const TPM &ham,const SUP &u_0);
 
-      int gN() const;
-
-      int gM() const;
-
-      int gL() const;
-
-      int gdim() const;
-
       double ddot(const SUP &) const;
 
       void invert();
@@ -167,24 +159,10 @@ class SUP{
 
 #endif
 
-      static void init(int,int);
-
    private:
 
       //!double pointer of TPM's, will contain the P and Q block of the SUP in the first and second block.
       TPM **SZ_tp;
-
-      //!number of sp orbitals
-      static int M;
-
-      //!nr of particles
-      static int N;
-
-      //!nr of sites
-      static int L;
-
-      //!total dimension of the SUP matrix
-      static int dim;
 
 #ifdef __G_CON
 

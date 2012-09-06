@@ -43,23 +43,22 @@ int main(int argc,char *argv[]){
 
    double U = atof(argv[3]);//onsite repulsion
 
-   TPM::init(L,N);
-   SPM::init(L,N);
+   Tools::init(L,N);
+
+   TPM::init();
+   SPM::init();
 
 #ifdef __G_CON
-   PHM::init(L,N);
+   PHM::init();
 #endif
 
 #ifdef __T1_CON
-   DPM::init(L,N);
+   DPM::init();
 #endif
 
 #ifdef __T2_CON
-   PPHM::init(L,N);
+   PPHM::init();
 #endif
-
-   SUP::init(L,N);
-   EIG::init(L,N);
 
    TPM ham;
    ham.hubbard(U);
@@ -69,8 +68,6 @@ int main(int argc,char *argv[]){
 
    SUP Z;
    Z.init_Z(10000.0,ham,S);
-
-   int dim = Z.gdim();
 
    //eerste primal dual gap:
    double pd_gap = S.ddot(Z);
@@ -112,7 +109,7 @@ int main(int argc,char *argv[]){
       B.invert();
 
       //schalen met 
-      B.dscal(gamma*pd_gap/dim);
+      B.dscal(gamma*pd_gap/(double)Tools::gdim());
 
       B -= Z;
 
@@ -149,7 +146,7 @@ int main(int argc,char *argv[]){
 
       B.invert();
 
-      B.dscal(gamma*pd_gap/dim);
+      B.dscal(gamma*pd_gap/(double)Tools::gdim());
 
       B -= S;
 

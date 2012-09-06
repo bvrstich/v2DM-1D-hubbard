@@ -46,12 +46,6 @@ class SPM {
 
       double &operator[](int);
 
-      int gN() const;
-
-      int gM() const;
-
-      int gL() const;
-
       const double *gspm() const;
 
       void bar(double,const TPM &);
@@ -60,20 +54,11 @@ class SPM {
 
       void bar(double,const PPHM &);
 
-      static void init(int,int);
+      static void init();
 
       static void clear();
 
    private:
-
-      //!dimension of single particle space
-      static int M;
-
-      //!nr of particles
-      static int N;
-
-      //!nr of sites
-      static int L;
 
       //!dimension of the vector
       static int dim;

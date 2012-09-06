@@ -58,14 +58,6 @@ class TPM : public BlockMatrix {
 
       static int get_phase_order(int S,int &K,int p,int &a,int &b);
 
-      //geef N terug
-      int gN() const;
-
-      //geef M terug
-      int gM() const;
-
-      int gL() const;
-
       void hubbard(double U);
 
       //Q afbeelding en zijn inverse
@@ -100,7 +92,7 @@ class TPM : public BlockMatrix {
       //input from file
       void in(ifstream &);
 
-      static void init(int,int);
+      static void init();
 
       static void clear();
 
