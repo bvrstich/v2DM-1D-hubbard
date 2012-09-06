@@ -43,23 +43,22 @@ int main(int argc,char *argv[]){
 
    double U = atof(argv[3]);//onsite repulsion
 
-   TPM::init(L,N);
-   SPM::init(L,N);
+   Tools::init(L,N);
+
+   TPM::init();
+   SPM::init();
 
 #ifdef __G_CON
-   PHM::init(L,N);
+   PHM::init();
 #endif
 
 #ifdef __T1_CON
-   DPM::init(L,N);
+   DPM::init();
 #endif
 
 #ifdef __T2_CON
-   PPHM::init(L,N);
+   PPHM::init();
 #endif
-
-   SUP::init(L,N);
-   EIG::init(L,N);
 
    //hamiltoniaan
    TPM ham;
@@ -97,7 +96,7 @@ int main(int argc,char *argv[]){
    //what does this do?
    double sigma = 1.0;
 
-   double tolerance = 1.0e-4;
+   double tolerance = 1.0e-5;
 
    double D_conv(1.0),P_conv(1.0),convergence(1.0);
 
@@ -205,6 +204,8 @@ int main(int argc,char *argv[]){
 
    SPM::clear();
    TPM::clear();
+
+   Tools::clear();
 
    return 0;
 

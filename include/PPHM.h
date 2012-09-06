@@ -11,7 +11,8 @@ using std::ostream;
 /**
  * @author Brecht Verstichel
  * @date 03-06-2010\n\n
- * This class, PPHM, is a class written for spinsymmetrical, translationally invaraint two-particle-one-hole matrices. It is written specially for the T_2 condition. 
+ * This class, PPHM, is a class written for spinsymmetrical, translationally invariant two-particle-one-hole matrices.
+ * It is written specially for the T_2 condition. 
  * It inherits all the functions from its mother class BlockMatrix, some special member functions and two lists that give
  * the relationship between the pph (two-particle one hole) and the sp basis. This matrix has M blocks, M/2 for S = 1/2 block with degeneracy 2
  * and M/2 for S = 3/2 block with degeneracy 4.
@@ -50,14 +51,6 @@ class PPHM : public BlockMatrix {
 
       static int get_phase_order(int S,int &K,int p,int &S_ab,int &a,int &b,int &c);
 
-      //geef N terug
-      int gN() const;
-
-      //geef M terug
-      int gM() const;
-
-      int gL() const;
-
       //get spin of block
       int gS(int block) const;
 
@@ -72,7 +65,7 @@ class PPHM : public BlockMatrix {
 
       void print_basis();
 
-      static void init(int L_in,int N_in);
+      static void init();
        
       static void clear();
 
@@ -88,23 +81,11 @@ class PPHM : public BlockMatrix {
       //!static list that takes three momentum sp indices k_a, k_b and k_c, a blockindex B and an intermediate spinindex S_ab, and returns a pph index i:
       static int *****s2pph;
 
-      //!list of 6j symbols needed.
-      static double **_6j;
-
       //!list of block characteristics: takes in a block and return pph spin, momentum and parity
       static int **block_char;
 
       //!list that takes in pph spin, momentum and parity and returns the blockindex
       static int ***char_block;
-
-      //!nr of particles
-      static int N;
-
-      //!dimension of sp hilbert space
-      static int M;
-
-      //!dimension of the lattice
-      static int L;
 
 };
 

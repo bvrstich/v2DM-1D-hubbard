@@ -58,14 +58,6 @@ class TPM : public BlockMatrix {
 
       static int get_phase_order(int S,int &K,int p,int &a,int &b);
 
-      //geef N terug
-      int gN() const;
-
-      //geef M terug
-      int gM() const;
-
-      int gL() const;
-
       void hubbard(double U);
 
       //Q afbeelding en zijn inverse
@@ -81,12 +73,6 @@ class TPM : public BlockMatrix {
 
       void proj_Tr();
 
-      //de hessiaan afbeelding:
-      void H(const TPM &b,const SUP &D);
-
-      //los het stelsel op
-      int solve(TPM &b,const SUP &D);
-
       void min_unit(double scale);
 
       void collaps(int option,const SUP &);
@@ -100,7 +86,7 @@ class TPM : public BlockMatrix {
       //input from file
       void in(ifstream &);
 
-      static void init(int,int);
+      static void init();
 
       static void clear();
 
@@ -138,18 +124,6 @@ class TPM : public BlockMatrix {
 
       //!overlapmatrix parameters
       static double Sa,Sc;
-
-      //!list of 6j symbols needed.
-      static double **_6j;
-
-      //!nr of particles
-      static int N;
-
-      //!nr of sites
-      static int L;
-
-      //!dimension of sp hilbert space
-      static int M;
 
 };
 

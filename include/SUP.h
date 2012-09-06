@@ -87,32 +87,11 @@ class SUP{
 
       const TPM &tpm(int i) const;
 
-      //initialiseer S
-      void init_S();
-
-      //initialiseer Z
-      void init_Z(double alpha,const TPM &ham,const SUP &u_0);
-
-      int gN() const;
-
-      int gM() const;
-
-      int gL() const;
-
-      int gdim() const;
-
       double ddot(const SUP &) const;
 
       void invert();
 
       void dscal(double alpha);
-
-      void proj_U();
-
-      void proj_C(const TPM &);
-
-      //maak de matrix D, nodig voor de hessiaan van het stelsel
-      void D(const SUP &S,const SUP &Z);
 
       //positieve of negatieve vierkantswortel uit een supermatrix
       void sqrt(int option);
@@ -121,21 +100,11 @@ class SUP{
 
       void daxpy(double alpha,const SUP &);
 
-      void proj_C();
-
       SUP &mprod(const SUP &,const SUP &);
 
       void fill(const TPM &);
 
       void fill();
-
-      int solve(SUP &B,const SUP &D);
-
-      void H(const SUP &B,const SUP &D);
-
-      double center_dev(const SUP &Z) const;
-
-      double line_search(const SUP &DZ,const SUP &S,const SUP &Z,double max_dev) const;
 
       void fill_Random();
 
@@ -144,69 +113,43 @@ class SUP{
       void in(ifstream &);
 
 #ifdef __G_CON
-
       PHM &phm();
 
       const PHM &phm() const;
-
 #endif
 
 #ifdef __T1_CON
-      
       DPM &dpm();
 
       const DPM &dpm() const;
-
 #endif
 
 #ifdef __T2_CON
-
       PPHM &pphm();
 
       const PPHM &pphm() const;
-
 #endif
 
       void sep_pm(SUP &,SUP &);
-
-      static void init(int,int);
 
    private:
 
       //!double pointer of TPM's, will contain the P and Q block of the SUP in the first and second block.
       TPM **SZ_tp;
 
-      //!number of sp orbitals
-      static int M;
-
-      //!nr of particles
-      static int N;
-
-      //!nr of sites
-      static int L;
-
-      //!total dimension of the SUP matrix
-      static int dim;
-
 #ifdef __G_CON
-
       //!pointer to the particle hole matrix
       PHM *SZ_ph;
-
 #endif
 
 #ifdef __T1_CON
-      
       //!pointer tot he three particles matrix DPM
       DPM *SZ_dp;
-
 #endif
 
 #ifdef __T2_CON
-
       //!pointer tot he three particles matrix DPM
       PPHM *SZ_pph;
-
 #endif
 
 };

@@ -15,63 +15,50 @@ using std::endl;
 vector< vector<int> > *DPM::dp2s;
 int *****DPM::s2dp;
 
-double **DPM::_6j;
-
 int **DPM::block_char;
 int ***DPM::char_block;
 
-int DPM::M;
-int DPM::N;
-int DPM::L;
-
 /**
  * allocate and initialize the static lists and variables
- * @param L_in nr of sites
- * @param N_in nr of particles
  */
-void DPM::init(int L_in,int N_in){
-
-   L = L_in;
-   N = N_in;
-
-   M = 2*L;
+void DPM::init(){
 
    //allocate the lists
-   dp2s = new vector< vector<int> > [L + 6];
+   dp2s = new vector< vector<int> > [Tools::gL() + 6];
 
-   s2dp = new int **** [L + 6];
+   s2dp = new int **** [Tools::gL() + 6];
 
-   for(int B = 0;B < L + 6;++B){
+   for(int B = 0;B < Tools::gL() + 6;++B){
 
       s2dp[B] = new int *** [2];
 
       for(int S_ab = 0;S_ab < 2;++S_ab){
 
-         s2dp[B][S_ab] = new int ** [L];
+         s2dp[B][S_ab] = new int ** [Tools::gL()];
 
-         for(int k_a = 0;k_a < L;++k_a){
+         for(int k_a = 0;k_a < Tools::gL();++k_a){
 
-            s2dp[B][S_ab][k_a] = new int * [L];
+            s2dp[B][S_ab][k_a] = new int * [Tools::gL()];
 
-            for(int k_b = 0;k_b < L;++k_b)
-               s2dp[B][S_ab][k_a][k_b] = new int [L];
+            for(int k_b = 0;k_b < Tools::gL();++k_b)
+               s2dp[B][S_ab][k_a][k_b] = new int [Tools::gL()];
 
          }
       }
    }
 
-   block_char = new int * [L + 6];
+   block_char = new int * [Tools::gL() + 6];
 
-   for(int B = 0;B < L + 6;++B)
+   for(int B = 0;B < Tools::gL() + 6;++B)
       block_char[B] = new int [3];
 
    char_block = new int ** [2];
 
    for(int S = 0;S < 2;++S){
 
-      char_block[S] = new int * [L/2 + 1];
+      char_block[S] = new int * [Tools::gL()/2 + 1];
 
-      for(int K = 0;K <= L/2;++K)
+      for(int K = 0;K <= Tools::gL()/2;++K)
          char_block[S][K] = new int [2];
 
    }
@@ -94,11 +81,11 @@ void DPM::init(int L_in,int N_in){
 
    char_block[0][0][0] = block;
 
-   for(int k_a = 1;k_a <= L/2;++k_a){
+   for(int k_a = 1;k_a <= Tools::gL()/2;++k_a){
 
       for(int k_c = 0;k_c < k_a;++k_c){
 
-         if( (2*k_a + k_c)%L == 0 ){
+         if( (2*k_a + k_c)%Tools::gL() == 0 ){
 
             v[0] = 0;//S_ab
             v[1] = k_a;
@@ -115,9 +102,9 @@ void DPM::init(int L_in,int N_in){
 
       }
 
-      for(int k_c = k_a + 1;k_c < L;++k_c){
+      for(int k_c = k_a + 1;k_c < Tools::gL();++k_c){
 
-         if( (2*k_a + k_c)%L == 0 ){
+         if( (2*k_a + k_c)%Tools::gL() == 0 ){
 
             v[0] = 0;//S_ab
             v[1] = k_a;
@@ -137,9 +124,9 @@ void DPM::init(int L_in,int N_in){
    }
 
    //now S_ab = 0, k_a != k_b != k_c (transitive) , but with k_c == 0: only positive parity contribution!
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 0;//S_ab
       v[1] = k_a;
@@ -157,11 +144,11 @@ void DPM::init(int L_in,int N_in){
    //then, for both S_ab = 0/1, k_a < k_b < k_c: no zero momentum
    for(int S_ab = 0;S_ab < 2;++S_ab){
 
-      for(int k_a = 1;k_a < L;++k_a)
-         for(int k_b = k_a + 1;k_b < L;++k_b)
-            for(int k_c = k_b + 1;k_c < L;++k_c){
+      for(int k_a = 1;k_a < Tools::gL();++k_a)
+         for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+            for(int k_c = k_b + 1;k_c < Tools::gL();++k_c){
 
-               if(k_a + k_b + k_c == L){//not modulo! special case
+               if(k_a + k_b + k_c == Tools::gL()){//not modulo! special case
 
                   v[0] = S_ab;
                   v[1] = k_a;
@@ -183,27 +170,27 @@ void DPM::init(int L_in,int N_in){
    //now S = 3/2: only witouth k_a = 0 in positive parity
    dp = 0;
 
-   block_char[block + L/2 + 3][0] = 1;//S = 3/2
-   block_char[block + L/2 + 3][1] = 0;//K = 0
-   block_char[block + L/2 + 3][2] = 0;//p = positive,
+   block_char[block + Tools::gL()/2 + 3][0] = 1;//S = 3/2
+   block_char[block + Tools::gL()/2 + 3][1] = 0;//K = 0
+   block_char[block + Tools::gL()/2 + 3][2] = 0;//p = positive,
 
-   char_block[1][0][0] = block + L/2 + 3;
+   char_block[1][0][0] = block + Tools::gL()/2 + 3;
 
    //only S_ab == 1!
-   for(int k_a = 1;k_a < L;++k_a)
-      for(int k_b = k_a + 1;k_b < L;++k_b)
-         for(int k_c = k_b + 1;k_c < L;++k_c){
+   for(int k_a = 1;k_a < Tools::gL();++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+         for(int k_c = k_b + 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L){//not modulo! special case
+            if(k_a + k_b + k_c == Tools::gL()){//not modulo! special case
 
                v[0] = 1;
                v[1] = k_a;
                v[2] = k_b;
                v[3] = k_c;
 
-               dp2s[block + L/2 + 3].push_back(v);
+               dp2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+               s2dp[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = dp;
 
                ++dp;
 
@@ -223,11 +210,11 @@ void DPM::init(int L_in,int N_in){
    char_block[0][0][1] = block;
 
    //start again with S_ab = 0 and k_a == k_b != k_c
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
       for(int k_c = 0;k_c < k_a;++k_c){
 
-         if( (2*k_a + k_c)%L == 0 ){
+         if( (2*k_a + k_c)%Tools::gL() == 0 ){
 
             v[0] = 0;
             v[1] = k_a;
@@ -244,9 +231,9 @@ void DPM::init(int L_in,int N_in){
 
       }
 
-      for(int k_c = k_a + 1;k_c < L;++k_c){
+      for(int k_c = k_a + 1;k_c < Tools::gL();++k_c){
 
-         if( (2*k_a + k_c)%L == 0 ){
+         if( (2*k_a + k_c)%Tools::gL() == 0 ){
 
             v[0] = 0;
             v[1] = k_a;
@@ -266,11 +253,11 @@ void DPM::init(int L_in,int N_in){
    }
 
    //then S_ab == 0 k_a < k_b < k_c, without 0
-   for(int k_a = 1;k_a < L;++k_a)
-      for(int k_b = k_a + 1;k_b < L;++k_b)
-         for(int k_c = k_b + 1;k_c < L;++k_c){
+   for(int k_a = 1;k_a < Tools::gL();++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+         for(int k_c = k_b + 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L){//not modulo! special case
+            if(k_a + k_b + k_c == Tools::gL()){//not modulo! special case
 
                v[0] = 0;
                v[1] = k_a;
@@ -288,9 +275,9 @@ void DPM::init(int L_in,int N_in){
          }
 
    //then the negative parity with 0, which are S_ab = 1 states!
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 1;
       v[1] = k_a;
@@ -306,11 +293,11 @@ void DPM::init(int L_in,int N_in){
    }
 
    //then the rest with S_ab == 1: k_a < k_b < k_c without 0
-   for(int k_a = 1;k_a < L;++k_a)
-      for(int k_b = k_a + 1;k_b < L;++k_b)
-         for(int k_c = k_b + 1;k_c < L;++k_c){
+   for(int k_a = 1;k_a < Tools::gL();++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+         for(int k_c = k_b + 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L){//not modulo! special case
+            if(k_a + k_b + k_c == Tools::gL()){//not modulo! special case
 
                v[0] = 1;
                v[1] = k_a;
@@ -330,45 +317,45 @@ void DPM::init(int L_in,int N_in){
    //Now S = 3/2 , K = 0 , with negative parity
    dp = 0;
 
-   block_char[block + L/2 + 3][0] = 1;//S = 3/2
-   block_char[block + L/2 + 3][1] = 0;//K = 0
-   block_char[block + L/2 + 3][2] = 1;//p = negative,
+   block_char[block + Tools::gL()/2 + 3][0] = 1;//S = 3/2
+   block_char[block + Tools::gL()/2 + 3][1] = 0;//K = 0
+   block_char[block + Tools::gL()/2 + 3][2] = 1;//p = negative,
 
-   char_block[1][0][1] = block + L/2 + 3;
+   char_block[1][0][1] = block + Tools::gL()/2 + 3;
 
    //first with a k=0: 
-   for(int k_b = 1;k_b < L/2;++k_b){
+   for(int k_b = 1;k_b < Tools::gL()/2;++k_b){
 
-      int k_c = L - k_b;
+      int k_c = Tools::gL() - k_b;
 
       v[0] = 1;
       v[1] = 0;
       v[2] = k_b;
       v[3] = k_c;
 
-      dp2s[block + L/2 + 3].push_back(v);
+      dp2s[block + Tools::gL()/2 + 3].push_back(v);
 
-      s2dp[block + L/2 + 3][1][0][k_b][k_c] = dp;
+      s2dp[block + Tools::gL()/2 + 3][1][0][k_b][k_c] = dp;
 
       ++dp;
 
    }
 
    //then the rest k_a < k_b < k_c
-   for(int k_a = 1;k_a < L;++k_a)
-      for(int k_b = k_a + 1;k_b < L;++k_b)
-         for(int k_c = k_b + 1;k_c < L;++k_c){
+   for(int k_a = 1;k_a < Tools::gL();++k_a)
+      for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+         for(int k_c = k_b + 1;k_c < Tools::gL();++k_c){
 
-            if(k_a + k_b + k_c == L){//not modulo! special case
+            if(k_a + k_b + k_c == Tools::gL()){//not modulo! special case
 
                v[0] = 1;
                v[1] = k_a;
                v[2] = k_b;
                v[3] = k_c;
 
-               dp2s[block + L/2 + 3].push_back(v);
+               dp2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+               s2dp[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = dp;
 
                ++dp;
 
@@ -378,9 +365,9 @@ void DPM::init(int L_in,int N_in){
 
    ++block;
 
-   //Now 0 < K < L/2: degeneracy between parity + and -
+   //Now 0 < K < Tools::gL()/2: degeneracy between parity + and -
 
-   for(int K = 1;K < L/2;++K){
+   for(int K = 1;K < Tools::gL()/2;++K){
 
       //first S = 1/2:
       dp = 0;
@@ -393,11 +380,11 @@ void DPM::init(int L_in,int N_in){
       char_block[0][K][1] = block;
 
       //first S_ab = 0 and k_a = k_b != k_c
-      for(int k_a = 0;k_a < L;++k_a){
+      for(int k_a = 0;k_a < Tools::gL();++k_a){
 
          for(int k_c = 0;k_c < k_a;++k_c){
 
-            if( (2*k_a + k_c)%L == K ){
+            if( (2*k_a + k_c)%Tools::gL() == K ){
 
                v[0] = 0;
                v[1] = k_a;
@@ -414,9 +401,9 @@ void DPM::init(int L_in,int N_in){
 
          }
 
-         for(int k_c = k_a + 1;k_c < L;++k_c){
+         for(int k_c = k_a + 1;k_c < Tools::gL();++k_c){
 
-            if( (2*k_a + k_c)%L == K ){
+            if( (2*k_a + k_c)%Tools::gL() == K ){
 
                v[0] = 0;
                v[1] = k_a;
@@ -438,11 +425,11 @@ void DPM::init(int L_in,int N_in){
       //then, for S_ab = 0/1, k_a < k_b < k_c
       for(int S_ab = 0;S_ab < 2;++S_ab){
 
-         for(int k_a = 0;k_a < L;++k_a)
-            for(int k_b = k_a + 1;k_b < L;++k_b)
-               for(int k_c = k_b + 1;k_c < L;++k_c){
+         for(int k_a = 0;k_a < Tools::gL();++k_a)
+            for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+               for(int k_c = k_b + 1;k_c < Tools::gL();++k_c){
 
-                  if( (k_a + k_b + k_c)%L == K ){
+                  if( (k_a + k_b + k_c)%Tools::gL() == K ){
 
                      v[0] = S_ab;
                      v[1] = k_a;
@@ -464,27 +451,27 @@ void DPM::init(int L_in,int N_in){
       //now S = 3/2
       dp = 0;
 
-      block_char[block + L/2 + 3][0] = 1;//S = 3/2
-      block_char[block + L/2 + 3][1] = K;
-      block_char[block + L/2 + 3][2] = 0;
+      block_char[block + Tools::gL()/2 + 3][0] = 1;//S = 3/2
+      block_char[block + Tools::gL()/2 + 3][1] = K;
+      block_char[block + Tools::gL()/2 + 3][2] = 0;
 
-      char_block[1][K][0] = block + L/2 + 3;
-      char_block[1][K][1] = block + L/2 + 3;
+      char_block[1][K][0] = block + Tools::gL()/2 + 3;
+      char_block[1][K][1] = block + Tools::gL()/2 + 3;
 
-      for(int k_a = 0;k_a < L;++k_a)
-         for(int k_b = k_a + 1;k_b < L;++k_b)
-            for(int k_c = k_b + 1;k_c < L;++k_c){
+      for(int k_a = 0;k_a < Tools::gL();++k_a)
+         for(int k_b = k_a + 1;k_b < Tools::gL();++k_b)
+            for(int k_c = k_b + 1;k_c < Tools::gL();++k_c){
 
-               if( (k_a + k_b + k_c)%L == K ){
+               if( (k_a + k_b + k_c)%Tools::gL() == K ){
 
                   v[0] = 1;
                   v[1] = k_a;
                   v[2] = k_b;
                   v[3] = k_c;
 
-                  dp2s[block + L/2 + 3].push_back(v);
+                  dp2s[block + Tools::gL()/2 + 3].push_back(v);
 
-                  s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+                  s2dp[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = dp;
 
                   ++dp;
 
@@ -496,34 +483,34 @@ void DPM::init(int L_in,int N_in){
 
    }
 
-   //now the last ones: K = L/2 positive parity
+   //now the last ones: K = Tools::gL()/2 positive parity
    dp = 0;
 
    block_char[block][0] = 0;//S = 1/2
-   block_char[block][1] = L/2;
+   block_char[block][1] = Tools::gL()/2;
    block_char[block][2] = 0;
 
-   char_block[0][L/2][0] = block;
+   char_block[0][Tools::gL()/2][0] = block;
 
    //again first S_ab = 0, k_a == k_b != k_c
 
-   //for positive parity one extra state: |0 0 L/2>
+   //for positive parity one extra state: |0 0 Tools::gL()/2>
    v[0] = 0;//S_ab
    v[1] = 0;//k_a
    v[2] = 0;//k_b
-   v[3] = L/2;//k_c
+   v[3] = Tools::gL()/2;//k_c
 
    dp2s[block].push_back(v);
 
-   s2dp[block][0][0][0][L/2] = dp;
+   s2dp[block][0][0][0][Tools::gL()/2] = dp;
 
    ++dp;
 
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
       for(int k_c = 0;k_c < k_a;++k_c){
 
-         if( (2*k_a + k_c)%L == L/2 ){
+         if( (2*k_a + k_c)%Tools::gL() == Tools::gL()/2 ){
 
             v[0] = 0;//S_ab
             v[1] = k_a;//k_a
@@ -540,9 +527,9 @@ void DPM::init(int L_in,int N_in){
 
       }
 
-      for(int k_c = k_a + 1;k_c < L;++k_c){
+      for(int k_c = k_a + 1;k_c < Tools::gL();++k_c){
 
-         if( (2*k_a + k_c)%L == L/2 ){
+         if( (2*k_a + k_c)%Tools::gL() == Tools::gL()/2 ){
 
             v[0] = 0;//S_ab
             v[1] = k_a;//k_a
@@ -561,19 +548,19 @@ void DPM::init(int L_in,int N_in){
 
    }
 
-   //then, for S_ab == 0 and positive parity, terms for which k_c = L/2
-   for(int k_a = 1;k_a < L/2;++k_a){
+   //then, for S_ab == 0 and positive parity, terms for which k_c = Tools::gL()/2
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      int k_b = L - k_a;
+      int k_b = Tools::gL() - k_a;
 
       v[0] = 0;
       v[1] = k_a;
       v[2] = k_b;
-      v[3] = L/2;
+      v[3] = Tools::gL()/2;
 
       dp2s[block].push_back(v);
 
-      s2dp[block][0][k_a][k_b][L/2] = dp;
+      s2dp[block][0][k_a][k_b][Tools::gL()/2] = dp;
 
       ++dp;
 
@@ -582,11 +569,11 @@ void DPM::init(int L_in,int N_in){
    //for both S_ab = 0 and 1: k_a < k_b < k_c: this is quite involved.
    for(int S_ab = 0;S_ab < 2;++S_ab){
 
-      //first with k_a = 0, k_b < k_c < L/2
-      for(int k_b = 1;k_b < L/2;++k_b)
-         for(int k_c = k_b + 1;k_c < L/2;++k_c){
+      //first with k_a = 0, k_b < k_c < Tools::gL()/2
+      for(int k_b = 1;k_b < Tools::gL()/2;++k_b)
+         for(int k_c = k_b + 1;k_c < Tools::gL()/2;++k_c){
 
-            if( (k_b + k_c) == L/2 ){
+            if( (k_b + k_c) == Tools::gL()/2 ){
 
                v[0] = S_ab;//S_ab
                v[1] = 0;//k_a
@@ -604,12 +591,12 @@ void DPM::init(int L_in,int N_in){
          }
 
       //then k_a < k_b < k_c with no zero's
-      for(int k_a = 1;k_a < L/2;++k_a){
+      for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-         for(int k_b = k_a + 1;k_b < L/2;++k_b)
-            for(int k_c = k_b + 1;k_c < L/2;++k_c){
+         for(int k_b = k_a + 1;k_b < Tools::gL()/2;++k_b)
+            for(int k_c = k_b + 1;k_c < Tools::gL()/2;++k_c){
 
-               if( (k_a + k_b + k_c) == L/2){
+               if( (k_a + k_b + k_c) == Tools::gL()/2){
 
                   v[0] = S_ab;//S_ab
                   v[1] = k_a;//k_a
@@ -626,10 +613,10 @@ void DPM::init(int L_in,int N_in){
 
             }
 
-         for(int k_b = L/2 + 1;k_b < L;++k_b)
-            for(int k_c = k_b + 1;k_c < L;++k_c){
+         for(int k_b = Tools::gL()/2 + 1;k_b < Tools::gL();++k_b)
+            for(int k_c = k_b + 1;k_c < Tools::gL();++k_c){
 
-               if( (k_a + k_b + k_c)%L == L/2 ){
+               if( (k_a + k_b + k_c)%Tools::gL() == Tools::gL()/2 ){
 
                   v[0] = S_ab;//S_ab
                   v[1] = k_a;//k_a
@@ -650,29 +637,29 @@ void DPM::init(int L_in,int N_in){
 
    }
 
-   //then K = L/2, S = 3/2 positive parity:
+   //then K = Tools::gL()/2, S = 3/2 positive parity:
    dp = 0;
 
-   block_char[block + L/2 + 3][0] = 1;//S = 3/2
-   block_char[block + L/2 + 3][1] = L/2;
-   block_char[block + L/2 + 3][2] = 0;
+   block_char[block + Tools::gL()/2 + 3][0] = 1;//S = 3/2
+   block_char[block + Tools::gL()/2 + 3][1] = Tools::gL()/2;
+   block_char[block + Tools::gL()/2 + 3][2] = 0;
 
-   char_block[1][L/2][0] = block + L/2 + 3;
+   char_block[1][Tools::gL()/2][0] = block + Tools::gL()/2 + 3;
 
-   //first with k_a = 0, k_b < k_c < L/2
-   for(int k_b = 1;k_b < L/2;++k_b)
-      for(int k_c = k_b + 1;k_c < L/2;++k_c){
+   //first with k_a = 0, k_b < k_c < Tools::gL()/2
+   for(int k_b = 1;k_b < Tools::gL()/2;++k_b)
+      for(int k_c = k_b + 1;k_c < Tools::gL()/2;++k_c){
 
-         if( (k_b + k_c) == L/2 ){
+         if( (k_b + k_c) == Tools::gL()/2 ){
 
             v[0] = 1;//S_ab
             v[1] = 0;//k_a
             v[2] = k_b;//k_b
             v[3] = k_c;//k_c
 
-            dp2s[block + L/2 + 3].push_back(v);
+            dp2s[block + Tools::gL()/2 + 3].push_back(v);
 
-            s2dp[block + L/2 + 3][1][0][k_b][k_c] = dp;
+            s2dp[block + Tools::gL()/2 + 3][1][0][k_b][k_c] = dp;
 
             ++dp;
 
@@ -681,21 +668,21 @@ void DPM::init(int L_in,int N_in){
       }
 
    //then k_a < k_b < k_c
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      for(int k_b = k_a + 1;k_b < L/2;++k_b)
-         for(int k_c = k_b + 1;k_c < L/2;++k_c){
+      for(int k_b = k_a + 1;k_b < Tools::gL()/2;++k_b)
+         for(int k_c = k_b + 1;k_c < Tools::gL()/2;++k_c){
 
-            if( (k_a + k_b + k_c) == L/2){
+            if( (k_a + k_b + k_c) == Tools::gL()/2){
 
                v[0] = 1;//S_ab
                v[1] = k_a;//k_a
                v[2] = k_b;//k_b
                v[3] = k_c;//k_c
 
-               dp2s[block + L/2 + 3].push_back(v);
+               dp2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+               s2dp[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = dp;
 
                ++dp;
 
@@ -703,20 +690,20 @@ void DPM::init(int L_in,int N_in){
 
          }
 
-      //only negative parity has k's equal to L/2
-      for(int k_b = L/2 + 1;k_b < L;++k_b)
-         for(int k_c = k_b + 1;k_c < L;++k_c){
+      //only negative parity has k's equal to Tools::gL()/2
+      for(int k_b = Tools::gL()/2 + 1;k_b < Tools::gL();++k_b)
+         for(int k_c = k_b + 1;k_c < Tools::gL();++k_c){
 
-            if( (k_a + k_b + k_c)%L == L/2 ){
+            if( (k_a + k_b + k_c)%Tools::gL() == Tools::gL()/2 ){
 
                v[0] = 1;//S_ab
                v[1] = k_a;//k_a
                v[2] = k_b;//k_b
                v[3] = k_c;//k_c
 
-               dp2s[block + L/2 + 3].push_back(v);
+               dp2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+               s2dp[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = dp;
 
                ++dp;
 
@@ -728,21 +715,21 @@ void DPM::init(int L_in,int N_in){
 
    block++;
 
-   //K = L/2, negative parity, start with S = 1/2
+   //K = Tools::gL()/2, negative parity, start with S = 1/2
    dp = 0;
 
    block_char[block][0] = 0;//S = 1/2
-   block_char[block][1] = L/2;
+   block_char[block][1] = Tools::gL()/2;
    block_char[block][2] = 1;//negative parity
 
-   char_block[0][L/2][1] = block;
+   char_block[0][Tools::gL()/2][1] = block;
 
    //again first S_ab = 0, k_a == k_b != k_c
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
       for(int k_c = 0;k_c < k_a;++k_c){
 
-         if( (2*k_a + k_c)%L == L/2 ){
+         if( (2*k_a + k_c)%Tools::gL() == Tools::gL()/2 ){
 
             v[0] = 0;//S_ab
             v[1] = k_a;//k_a
@@ -759,9 +746,9 @@ void DPM::init(int L_in,int N_in){
 
       }
 
-      for(int k_c = k_a + 1;k_c < L;++k_c){
+      for(int k_c = k_a + 1;k_c < Tools::gL();++k_c){
 
-         if( (2*k_a + k_c)%L == L/2 ){
+         if( (2*k_a + k_c)%Tools::gL() == Tools::gL()/2 ){
 
             v[0] = 0;//S_ab
             v[1] = k_a;//k_a
@@ -783,11 +770,11 @@ void DPM::init(int L_in,int N_in){
    //then k_a < k_b < k_c:
    for(int S_ab = 0;S_ab < 2;++S_ab){
 
-      //first with k_a = 0, k_b < k_c < L/2
-      for(int k_b = 1;k_b < L/2;++k_b)
-         for(int k_c = k_b + 1;k_c < L/2;++k_c){
+      //first with k_a = 0, k_b < k_c < Tools::gL()/2
+      for(int k_b = 1;k_b < Tools::gL()/2;++k_b)
+         for(int k_c = k_b + 1;k_c < Tools::gL()/2;++k_c){
 
-            if( (k_b + k_c) == L/2 ){
+            if( (k_b + k_c) == Tools::gL()/2 ){
 
                v[0] = S_ab;//S_ab
                v[1] = 0;//k_a
@@ -805,12 +792,12 @@ void DPM::init(int L_in,int N_in){
          }
 
       //then k_a < k_b < k_c
-      for(int k_a = 1;k_a < L/2;++k_a){
+      for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-         for(int k_b = k_a + 1;k_b < L/2;++k_b)
-            for(int k_c = k_b + 1;k_c < L/2;++k_c){
+         for(int k_b = k_a + 1;k_b < Tools::gL()/2;++k_b)
+            for(int k_c = k_b + 1;k_c < Tools::gL()/2;++k_c){
 
-               if( (k_a + k_b + k_c) == L/2){
+               if( (k_a + k_b + k_c) == Tools::gL()/2){
 
                   v[0] = S_ab;//S_ab
                   v[1] = k_a;//k_a
@@ -827,28 +814,28 @@ void DPM::init(int L_in,int N_in){
 
             }
 
-         //only S_ab == 1 has k's equal to L/2 for negative parity
+         //only S_ab == 1 has k's equal to Tools::gL()/2 for negative parity
          if(S_ab == 1){
 
-            int k_b = L - k_a;
+            int k_b = Tools::gL() - k_a;
 
             v[0] = 1;
             v[1] = k_a;
             v[2] = k_b;
-            v[3] = L/2;
+            v[3] = Tools::gL()/2;
 
             dp2s[block].push_back(v);
 
-            s2dp[block][1][k_a][k_b][L/2] = dp;
+            s2dp[block][1][k_a][k_b][Tools::gL()/2] = dp;
 
             ++dp;
 
          }
 
-         for(int k_b = L/2 + 1;k_b < L;++k_b)
-            for(int k_c = k_b + 1;k_c < L;++k_c){
+         for(int k_b = Tools::gL()/2 + 1;k_b < Tools::gL();++k_b)
+            for(int k_c = k_b + 1;k_c < Tools::gL();++k_c){
 
-               if( (k_a + k_b + k_c)%L == L/2 ){
+               if( (k_a + k_b + k_c)%Tools::gL() == Tools::gL()/2 ){
 
                   v[0] = S_ab;//S_ab
                   v[1] = k_a;//k_a
@@ -869,29 +856,29 @@ void DPM::init(int L_in,int N_in){
 
    }
 
-   //at last we have the last block, K = L/2, S = 3/2, negative parity
+   //at last we have the last block, K = Tools::gL()/2, S = 3/2, negative parity
    dp = 0;
 
-   block_char[block + L/2 + 3][0] = 1;//S = 3/2
-   block_char[block + L/2 + 3][1] = L/2;
-   block_char[block + L/2 + 3][2] = 1;
+   block_char[block + Tools::gL()/2 + 3][0] = 1;//S = 3/2
+   block_char[block + Tools::gL()/2 + 3][1] = Tools::gL()/2;
+   block_char[block + Tools::gL()/2 + 3][2] = 1;
 
-   char_block[1][L/2][1] = block + L/2 + 3;
+   char_block[1][Tools::gL()/2][1] = block + Tools::gL()/2 + 3;
 
-   //first with k_a = 0, k_b < k_c < L/2
-   for(int k_b = 1;k_b < L/2;++k_b)
-      for(int k_c = k_b + 1;k_c < L/2;++k_c){
+   //first with k_a = 0, k_b < k_c < Tools::gL()/2
+   for(int k_b = 1;k_b < Tools::gL()/2;++k_b)
+      for(int k_c = k_b + 1;k_c < Tools::gL()/2;++k_c){
 
-         if( (k_b + k_c) == L/2 ){
+         if( (k_b + k_c) == Tools::gL()/2 ){
 
             v[0] = 1;//S_ab
             v[1] = 0;//k_a
             v[2] = k_b;//k_b
             v[3] = k_c;//k_c
 
-            dp2s[block + L/2 + 3].push_back(v);
+            dp2s[block + Tools::gL()/2 + 3].push_back(v);
 
-            s2dp[block + L/2 + 3][1][0][k_b][k_c] = dp;
+            s2dp[block + Tools::gL()/2 + 3][1][0][k_b][k_c] = dp;
 
             ++dp;
 
@@ -900,21 +887,21 @@ void DPM::init(int L_in,int N_in){
       }
 
    //then k_a < k_b < k_c
-   for(int k_a = 1;k_a < L/2;++k_a){
+   for(int k_a = 1;k_a < Tools::gL()/2;++k_a){
 
-      for(int k_b = k_a + 1;k_b < L/2;++k_b)
-         for(int k_c = k_b + 1;k_c < L/2;++k_c){
+      for(int k_b = k_a + 1;k_b < Tools::gL()/2;++k_b)
+         for(int k_c = k_b + 1;k_c < Tools::gL()/2;++k_c){
 
-            if( (k_a + k_b + k_c) == L/2){
+            if( (k_a + k_b + k_c) == Tools::gL()/2){
 
                v[0] = 1;//S_ab
                v[1] = k_a;//k_a
                v[2] = k_b;//k_b
                v[3] = k_c;//k_c
 
-               dp2s[block + L/2 + 3].push_back(v);
+               dp2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+               s2dp[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = dp;
 
                ++dp;
 
@@ -922,20 +909,20 @@ void DPM::init(int L_in,int N_in){
 
          }
 
-      //only negative parity has k's equal to L/2
-      for(int k_b = L/2;k_b < L;++k_b)
-         for(int k_c = k_b + 1;k_c < L;++k_c){
+      //only negative parity has k's equal to Tools::gL()/2
+      for(int k_b = Tools::gL()/2;k_b < Tools::gL();++k_b)
+         for(int k_c = k_b + 1;k_c < Tools::gL();++k_c){
 
-            if( (k_a + k_b + k_c)%L == L/2 ){
+            if( (k_a + k_b + k_c)%Tools::gL() == Tools::gL()/2 ){
 
                v[0] = 1;//S_ab
                v[1] = k_a;//k_a
                v[2] = k_b;//k_b
                v[3] = k_c;//k_c
 
-               dp2s[block + L/2 + 3].push_back(v);
+               dp2s[block + Tools::gL()/2 + 3].push_back(v);
 
-               s2dp[block + L/2 + 3][1][k_a][k_b][k_c] = dp;
+               s2dp[block + Tools::gL()/2 + 3][1][k_a][k_b][k_c] = dp;
 
                ++dp;
 
@@ -944,19 +931,6 @@ void DPM::init(int L_in,int N_in){
          }
 
    }
-
-   //allocate
-   _6j = new double * [2];
-
-   for(int S = 0;S < 2;++S)
-      _6j[S] = new double [2];
-
-   //initialize
-   _6j[0][0] = -0.5;
-   _6j[0][1] = 0.5;
-   _6j[1][0] = 0.5;
-   _6j[1][1] = 1.0/6.0;
-
 
 }
 
@@ -967,13 +941,13 @@ void DPM::clear(){
 
    delete [] dp2s;
 
-   for(int B = 0;B < L + 6;++B){
+   for(int B = 0;B < Tools::gL() + 6;++B){
 
       for(int S_ab = 0;S_ab < 2;++S_ab){
 
-         for(int k_a = 0;k_a < L;++k_a){
+         for(int k_a = 0;k_a < Tools::gL();++k_a){
 
-            for(int k_b = 0;k_b < L;++k_b)
+            for(int k_b = 0;k_b < Tools::gL();++k_b)
                delete [] s2dp[B][S_ab][k_a][k_b];
 
             delete [] s2dp[B][S_ab][k_a];
@@ -990,14 +964,14 @@ void DPM::clear(){
 
    delete [] s2dp;
 
-   for(int B = 0;B < L + 6;++B)
+   for(int B = 0;B < Tools::gL() + 6;++B)
       delete [] block_char[B];
 
    delete [] block_char;
 
    for(int S = 0;S < 2;++S){
 
-      for(int K = 0;K <= L/2;++K)
+      for(int K = 0;K <= Tools::gL()/2;++K)
          delete [] char_block[S][K];
 
       delete [] char_block[S];
@@ -1006,43 +980,38 @@ void DPM::clear(){
 
    delete [] char_block;
 
-   for(int S = 0;S < 2;++S)
-      delete [] _6j[S];
-
-   delete [] _6j;
-
 }
 
 /**
  * standard constructor: constructs BlockMatrix object with 
  */
-DPM::DPM() : BlockMatrix(L + 6) {
+DPM::DPM() : BlockMatrix(Tools::gL() + 6) {
 
    //first K = 0: 4 blocks
 
    //positive parity
    this->setMatrixDim(0,dp2s[0].size(),2);//S = 1/2
-   this->setMatrixDim(L/2 + 3,dp2s[L/2 + 3].size(),4);//S = 3/2
+   this->setMatrixDim(Tools::gL()/2 + 3,dp2s[Tools::gL()/2 + 3].size(),4);//S = 3/2
 
    //negative parity
    this->setMatrixDim(1,dp2s[1].size(),2);//S = 1/2
-   this->setMatrixDim(L/2 + 4,dp2s[L/2 + 4].size(),4);//S = 3/2
+   this->setMatrixDim(Tools::gL()/2 + 4,dp2s[Tools::gL()/2 + 4].size(),4);//S = 3/2
 
-   //then for 0 < K < L/2
-   for(int K = 1;K < L/2;++K){
+   //then for 0 < K < Tools::gL()/2
+   for(int K = 1;K < Tools::gL()/2;++K){
 
       this->setMatrixDim(K + 1,dp2s[K + 1].size(),4);//S = 1/2
-      this->setMatrixDim(L/2 + K + 4,dp2s[L/2 + K + 4].size(),8);//S = 3/2
+      this->setMatrixDim(Tools::gL()/2 + K + 4,dp2s[Tools::gL()/2 + K + 4].size(),8);//S = 3/2
 
    }
 
-   //and last for K = L/2: parity positive
-   this->setMatrixDim(L/2 + 1,dp2s[L/2 + 1].size(),2);//S = 1/2
-   this->setMatrixDim(L + 4,dp2s[L + 4].size(),4);//S = 3/2
+   //and last for K = Tools::gL()/2: parity positive
+   this->setMatrixDim(Tools::gL()/2 + 1,dp2s[Tools::gL()/2 + 1].size(),2);//S = 1/2
+   this->setMatrixDim(Tools::gL() + 4,dp2s[Tools::gL() + 4].size(),4);//S = 3/2
 
    //negative parity
-   this->setMatrixDim(L/2 + 2,dp2s[L/2 + 2].size(),2);//S = 1/2
-   this->setMatrixDim(L + 5,dp2s[L + 5].size(),4);//S = 3/2
+   this->setMatrixDim(Tools::gL()/2 + 2,dp2s[Tools::gL()/2 + 2].size(),2);//S = 1/2
+   this->setMatrixDim(Tools::gL() + 5,dp2s[Tools::gL() + 5].size(),4);//S = 3/2
 
 }
 
@@ -1056,34 +1025,6 @@ DPM::DPM(const DPM &dpm_c) : BlockMatrix(dpm_c) { }
  * destructor 
  */
 DPM::~DPM(){ }
-
-
-/**
- * @return number of particles
- */
-int DPM::gN() const {
-
-   return N;
-
-}
-
-/**
- * @return number of single particle oribals
- */
-int DPM::gM() const{
-
-   return M;
-
-}
-
-/**
- * @return number of sites
- */
-int DPM::gL() const{
-
-   return L;
-
-}
 
 /**
  * @param block the blockindex
@@ -1147,7 +1088,7 @@ ostream &operator<<(ostream &output,const DPM &dpm_p){
  */
 void DPM::print_basis(){
 
-   for(int B = 0;B < L + 6;++B){
+   for(int B = 0;B < Tools::gL() + 6;++B){
 
       cout << endl;
       cout << B << "\t(" << block_char[B][0] << "," << block_char[B][1] << "," << 1 - 2*block_char[B][2] << ")\t" << endl;
@@ -1199,10 +1140,10 @@ double DPM::operator()(int B,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,i
 double DPM::operator()(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const {
 
    //check if the momentum is correct:
-   if( (k_a + k_b + k_c)%(M/2) != K)
+   if( (k_a + k_b + k_c)%Tools::gL() != K)
       return 0.0;
 
-   if( (k_d + k_e + k_z)%(M/2) != K)
+   if( (k_d + k_e + k_z)%Tools::gL() != K)
       return 0.0;
 
    //they cannot all be equal
@@ -1280,7 +1221,7 @@ double DPM::operator()(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int S_
 }
 
 /**
- * function that transforms the sp momenta, en dp momentum, if they or not correct (i.e > L/2)
+ * function that transforms the sp momenta, en dp momentum, if they or not correct (i.e > Tools::gL()/2)
  * @param S dp spin
  * @param K dp momentum
  * @param p dp parity
@@ -1320,16 +1261,16 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
          if(flag == 1){//there are two equal, with index as the double momentum
 
-            if(index > L/2){//transform!
+            if(index > Tools::gL()/2){//transform!
 
-               k_a = (L-k_a)%L;
-               k_b = (L-k_b)%L;
-               k_c = (L-k_c)%L;
+               k_a = (Tools::gL()-k_a)%Tools::gL();
+               k_b = (Tools::gL()-k_b)%Tools::gL();
+               k_c = (Tools::gL()-k_c)%Tools::gL();
 
                return (1 - 2*p);
 
             }
-            else if(index == L/2){//only positive parity!
+            else if(index == Tools::gL()/2){//only positive parity!
 
                if(p == 0)
                   return 1;
@@ -1601,11 +1542,11 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
             }
             else{//none of them are zero
 
-               if(k_a + k_b + k_c == 2*L){//transform!
+               if(k_a + k_b + k_c == 2*Tools::gL()){//transform!
 
-                  k_a = L - k_a;
-                  k_b = L - k_b;
-                  k_c = L - k_c;
+                  k_a = Tools::gL() - k_a;
+                  k_b = Tools::gL() - k_b;
+                  k_c = Tools::gL() - k_c;
 
                   return (1 - 2*p);
 
@@ -1618,7 +1559,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
          }
 
       }
-      else if(K == L/2){
+      else if(K == Tools::gL()/2){
 
          //check if there are two equal
          int flag = 0;
@@ -1645,11 +1586,11 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
          if(flag == 1){//there are two equal, with index as the double momentum
 
-            if(index > L/2){
+            if(index > Tools::gL()/2){
 
-               k_a = (L - k_a)%L;
-               k_b = (L - k_b)%L;
-               k_c = (L - k_c)%L;
+               k_a = (Tools::gL() - k_a)%Tools::gL();
+               k_b = (Tools::gL() - k_b)%Tools::gL();
+               k_c = (Tools::gL() - k_c)%Tools::gL();
 
                return 1 - 2*p;
 
@@ -1668,7 +1609,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
          }
          else{//all different
 
-            if(k_a == L/2){
+            if(k_a == Tools::gL()/2){
 
                if(p == 0){//positive parity
 
@@ -1677,7 +1618,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      if(k_c < k_b){
 
                         k_a = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         return -1;
 
@@ -1686,7 +1627,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                         k_a = k_b;
                         k_b = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         return -1;
 
@@ -1698,7 +1639,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      if(k_c < k_b){
 
                         k_a = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         S_ab = 0;
 
@@ -1709,7 +1650,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                         k_a = k_b;
                         k_b = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         S_ab = 0;
 
@@ -1727,7 +1668,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      if(k_c < k_b){
 
                         k_a = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         S_ab = 1;
 
@@ -1738,7 +1679,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                         k_a = k_b;
                         k_b = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         S_ab = 1;
 
@@ -1752,7 +1693,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      if(k_c < k_b){
 
                         k_a = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         return 1;
 
@@ -1761,7 +1702,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                         k_a = k_b;
                         k_b = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         return -1;
 
@@ -1772,7 +1713,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                }
 
             }
-            else if(k_b == L/2){
+            else if(k_b == Tools::gL()/2){
 
                if(p == 0){//positive parity
 
@@ -1782,7 +1723,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                         k_b = k_a;
                         k_a = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         return -1;
 
@@ -1790,7 +1731,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      else{
 
                         k_b = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         return -1;
 
@@ -1803,7 +1744,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                         k_b = k_a;
                         k_a = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         S_ab = 0;
 
@@ -1813,7 +1754,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      else{
 
                         k_b = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         S_ab = 0;
 
@@ -1832,7 +1773,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                         k_b = k_a;
                         k_a = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         S_ab = 1;
 
@@ -1842,7 +1783,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      else{
 
                         k_b = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         S_ab = 1;
 
@@ -1857,7 +1798,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
 
                         k_b = k_a;
                         k_a = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         return -1;
 
@@ -1865,7 +1806,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      else{
 
                         k_b = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         return 1;
 
@@ -1876,7 +1817,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                }
 
             }
-            else if(k_c == L/2){
+            else if(k_c == Tools::gL()/2){
 
                if(p == 0){//positive parity
 
@@ -1887,7 +1828,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                         k_c = k_a;
                         k_a = k_b;
                         k_b = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         return 1;
 
@@ -1912,7 +1853,7 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                         k_c = k_a;
                         k_a = k_b;
                         k_b = k_c;
-                        k_c = L/2;
+                        k_c = Tools::gL()/2;
 
                         return -1;
 
@@ -1925,17 +1866,17 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                }
 
             }
-            else{//none of the indices equals L/2
+            else{//none of the indices equals Tools::gL()/2
 
                if(k_a == 0 || k_b == 0 || k_c == 0){
 
-                  if(k_a + k_b + k_c == L/2)
+                  if(k_a + k_b + k_c == Tools::gL()/2)
                      return 1;
                   else{//parity conversed states
 
-                     k_a = (L - k_a)%L;
-                     k_b = (L - k_b)%L;
-                     k_c = (L - k_c)%L;
+                     k_a = (Tools::gL() - k_a)%Tools::gL();
+                     k_b = (Tools::gL() - k_b)%Tools::gL();
+                     k_c = (Tools::gL() - k_c)%Tools::gL();
 
                      return 1 - 2*p;
 
@@ -1944,16 +1885,16 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                }
                else{//none of the indices equals 0: 
 
-                  if(k_a + k_b + k_c == L/2)
+                  if(k_a + k_b + k_c == Tools::gL()/2)
                      return 1;
-                  else if(k_a + k_b + k_c == L + L/2){
+                  else if(k_a + k_b + k_c == Tools::gL() + Tools::gL()/2){
 
-                     //if there are two momenta < L/2, its a parity conversed state
-                     if( (k_a < L/2 && k_b < L/2) || (k_a < L/2 && k_c < L/2) || (k_b < L/2 && k_c < L/2) ){
+                     //if there are two momenta < Tools::gL()/2, its a parity conversed state
+                     if( (k_a < Tools::gL()/2 && k_b < Tools::gL()/2) || (k_a < Tools::gL()/2 && k_c < Tools::gL()/2) || (k_b < Tools::gL()/2 && k_c < Tools::gL()/2) ){
 
-                        k_a = L - k_a;
-                        k_b = L - k_b;
-                        k_c = L - k_c;
+                        k_a = Tools::gL() - k_a;
+                        k_b = Tools::gL() - k_b;
+                        k_c = Tools::gL() - k_c;
 
                         return 1 - 2*p;
 
@@ -1962,11 +1903,11 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                         return 1;
 
                   }
-                  else{//k_a + k_b + k_c = 2*L + L/2: conversed state
+                  else{//k_a + k_b + k_c = 2*Tools::gL() + Tools::gL()/2: conversed state
 
-                     k_a = L - k_a;
-                     k_b = L - k_b;
-                     k_c = L - k_c;
+                     k_a = Tools::gL() - k_a;
+                     k_b = Tools::gL() - k_b;
+                     k_c = Tools::gL() - k_c;
 
                      return 1 - 2*p;
 
@@ -1979,13 +1920,13 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
          }
 
       }
-      else if (K > L/2){
+      else if (K > Tools::gL()/2){
 
-         K = L - K;
+         K = Tools::gL() - K;
 
-         k_a = (L - k_a)%L;
-         k_b = (L - k_b)%L;
-         k_c = (L - k_c)%L;
+         k_a = (Tools::gL() - k_a)%Tools::gL();
+         k_b = (Tools::gL() - k_b)%Tools::gL();
+         k_c = (Tools::gL() - k_c)%Tools::gL();
 
          return (1 - 2*p);
 
@@ -2008,11 +1949,11 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
          }
          else{//no zero's
 
-            if(k_a + k_b + k_c == 2*L){//transform!
+            if(k_a + k_b + k_c == 2*Tools::gL()){//transform!
 
-               k_a = L - k_a;
-               k_b = L - k_b;
-               k_c = L - k_c;
+               k_a = Tools::gL() - k_a;
+               k_b = Tools::gL() - k_b;
+               k_c = Tools::gL() - k_c;
 
                return 1 - 2*p;
 
@@ -2023,9 +1964,9 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
          }
 
       }
-      else if(K == L/2){
+      else if(K == Tools::gL()/2){
 
-         if(k_a == L/2 || k_b == L/2 || k_c == L/2){
+         if(k_a == Tools::gL()/2 || k_b == Tools::gL()/2 || k_c == Tools::gL()/2){
 
             if(p == 0)//no positive parity possible due to antisymmetry
                return 0;
@@ -2033,17 +1974,17 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                return 1;
 
          }
-         else{//no L/2's
+         else{//no Tools::gL()/2's
 
             if(k_a == 0 || k_b == 0 || k_c == 0){
 
-               if(k_a + k_b + k_c == L/2)
+               if(k_a + k_b + k_c == Tools::gL()/2)
                   return 1;
                else{//parity conversed states
 
-                  k_a = (L - k_a)%L;
-                  k_b = (L - k_b)%L;
-                  k_c = (L - k_c)%L;
+                  k_a = (Tools::gL() - k_a)%Tools::gL();
+                  k_b = (Tools::gL() - k_b)%Tools::gL();
+                  k_c = (Tools::gL() - k_c)%Tools::gL();
 
                   return 1 - 2*p;
 
@@ -2052,16 +1993,16 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
             }
             else{//none of the indices equals 0: 
 
-               if(k_a + k_b + k_c == L/2)
+               if(k_a + k_b + k_c == Tools::gL()/2)
                   return 1;
-               else if(k_a + k_b + k_c == L + L/2){
+               else if(k_a + k_b + k_c == Tools::gL() + Tools::gL()/2){
 
-                  //if there are two momenta < L/2, its a parity conversed state
-                  if( (k_a < L/2 && k_b < L/2) || (k_a < L/2 && k_c < L/2) || (k_b < L/2 && k_c < L/2) ){
+                  //if there are two momenta < Tools::gL()/2, its a parity conversed state
+                  if( (k_a < Tools::gL()/2 && k_b < Tools::gL()/2) || (k_a < Tools::gL()/2 && k_c < Tools::gL()/2) || (k_b < Tools::gL()/2 && k_c < Tools::gL()/2) ){
 
-                     k_a = L - k_a;
-                     k_b = L - k_b;
-                     k_c = L - k_c;
+                     k_a = Tools::gL() - k_a;
+                     k_b = Tools::gL() - k_b;
+                     k_c = Tools::gL() - k_c;
 
                      return 1 - 2*p;
 
@@ -2070,11 +2011,11 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
                      return 1;
 
                }
-               else{//k_a + k_b + k_c = 2*L + L/2: conversed state
+               else{//k_a + k_b + k_c = 2*Tools::gL() + Tools::gL()/2: conversed state
 
-                  k_a = L - k_a;
-                  k_b = L - k_b;
-                  k_c = L - k_c;
+                  k_a = Tools::gL() - k_a;
+                  k_b = Tools::gL() - k_b;
+                  k_c = Tools::gL() - k_c;
 
                   return 1 - 2*p;
 
@@ -2085,13 +2026,13 @@ int DPM::get_phase_order(int S,int &K,int p,int &S_ab,int &k_a,int &k_b,int &k_c
          }
 
       }
-      else if(K > L/2){
+      else if(K > Tools::gL()/2){
 
-         K = L - K;
+         K = Tools::gL() - K;
 
-         k_a = (L - k_a)%L;
-         k_b = (L - k_b)%L;
-         k_c = (L - k_c)%L;
+         k_a = (Tools::gL() - k_a)%Tools::gL();
+         k_b = (Tools::gL() - k_b)%Tools::gL();
+         k_c = (Tools::gL() - k_c)%Tools::gL();
 
          return 1 - 2*p;
 
@@ -2133,7 +2074,7 @@ int DPM::get_inco(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int *i,doub
 
       }
 
-      if(K == L/2 && k_c == L/2){
+      if(K == Tools::gL()/2 && k_c == Tools::gL()/2){
 
          i[0] = s2dp[char_block[S][K][p]][S_ab][k_a][k_b][k_c];
          coef[0] = 1;
@@ -2202,11 +2143,11 @@ int DPM::get_inco(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int *i,doub
 
             //the S_ca == 0 part:
             i[0] = s2dp[B][0][k_c][min][max];
-            coef[0] = phase * std::sqrt(2.0*S_ab + 1) * (1 - 2*S_ab) * _6j[0][S_ab];
+            coef[0] = phase * std::sqrt(2.0*S_ab + 1) * (1 - 2*S_ab) * Tools::g6j(0,0,0,S_ab);
 
             //the S_ca == 1 part:
             i[1] = s2dp[B][1][k_c][min][max];
-            coef[1] = phase * std::sqrt(2.0*S_ab + 1) * (1 - 2*S_ab) * std::sqrt(3.0) * _6j[1][S_ab];
+            coef[1] = phase * std::sqrt(2.0*S_ab + 1) * (1 - 2*S_ab) * std::sqrt(3.0) * Tools::g6j(0,0,1,S_ab);
 
             return 2;
 
@@ -2214,7 +2155,7 @@ int DPM::get_inco(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int *i,doub
          else if(k_c == min){//k_c == min < max: this will also be a 1 dim list, because S_ac can only be 0 if k_a == k_c.
 
             i[0] = s2dp[B][0][k_c][min][max];
-            coef[0] = std::sqrt(2.0) * phase * std::sqrt(2.0*S_ab + 1) * (1 - 2*S_ab) * _6j[0][S_ab];
+            coef[0] = std::sqrt(2.0) * phase * std::sqrt(2.0*S_ab + 1) * (1 - 2*S_ab) * Tools::g6j(0,0,0,S_ab);
 
             return 1;
 
@@ -2223,11 +2164,11 @@ int DPM::get_inco(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int *i,doub
 
             //S_ac == 0 part:
             i[0] = s2dp[B][0][min][k_c][max];
-            coef[0] = phase * std::sqrt(2.0*S_ab + 1.0) * (1 - 2*S_ab) * _6j[0][S_ab];
+            coef[0] = phase * std::sqrt(2.0*S_ab + 1.0) * (1 - 2*S_ab) * Tools::g6j(0,0,0,S_ab);
 
             //S_ac == 1 part:
             i[1] = s2dp[B][1][min][k_c][max];
-            coef[1] = - phase * std::sqrt(2.0*S_ab + 1.0) * (1 - 2*S_ab) * std::sqrt(3.0) * _6j[1][S_ab];
+            coef[1] = - phase * std::sqrt(2.0*S_ab + 1.0) * (1 - 2*S_ab) * std::sqrt(3.0) * Tools::g6j(0,0,1,S_ab);
 
             return 2;
 
@@ -2235,7 +2176,7 @@ int DPM::get_inco(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int *i,doub
          else{// min < k_c == max: also a 1 dim list, S_bc can only be 0 if k_b == k_c
 
             i[0] = s2dp[B][0][max][k_c][min];
-            coef[0] = phase * std::sqrt(2.0) * std::sqrt(2.0*S_ab + 1.0) *_6j[0][S_ab];
+            coef[0] = phase * std::sqrt(2.0) * std::sqrt(2.0*S_ab + 1.0) *Tools::g6j(0,0,0,S_ab);
 
             return 1;
 
@@ -2322,7 +2263,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
    int k_a,k_b,k_c,k_d,k_e,k_z;
    int S_ab,S_de;
 
-   int k_a_,k_b_,k_c_,k_d_,k_e_,k_z_;
+   int k_d_,k_e_,k_z_;
 
    int K,p;
 
@@ -2337,7 +2278,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
    double hard,tard,kard;
 
    //start with the S = 1/2 blocks, these are the most difficult:
-   for(int B = 0;B < L/2 + 3;++B){
+   for(int B = 0;B < Tools::gL()/2 + 3;++B){
 
       K = block_char[B][1];
       p = block_char[B][2];
@@ -2351,10 +2292,6 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
          k_a = dp2s[B][i][1];
          k_b = dp2s[B][i][2];
          k_c = dp2s[B][i][3];
-
-         k_a_ = (L - k_a)%L;
-         k_b_ = (L - k_b)%L;
-         k_c_ = (L - k_c)%L;
 
          sign_ab = 1 - 2*S_ab;
 
@@ -2371,9 +2308,9 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             k_e = dp2s[B][j][2];
             k_z = dp2s[B][j][3];
 
-            k_d_ = (L - k_d)%L;
-            k_e_ = (L - k_e)%L;
-            k_z_ = (L - k_z)%L;
+            k_d_ = (Tools::gL() - k_d)%Tools::gL();
+            k_e_ = (Tools::gL() - k_e)%Tools::gL();
+            k_z_ = (Tools::gL() - k_z)%Tools::gL();
 
             sign_de = 1 - 2*S_de;
 
@@ -2382,7 +2319,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             if(k_d == k_e)
                norm_de /= std::sqrt(2.0);
 
-            hard = std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * _6j[S_ab][S_de];
+            hard = std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * Tools::g6j(0,0,S_ab,S_de);
 
             //init
             (*this)(B,i,j) = 0.0;
@@ -2393,14 +2330,14 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
             kard = 0.0;
 
-            if(K == 0 || K == L/2){//difference between parity + and - blocks: the exchange terms
+            if(K == 0 || K == Tools::gL()/2){//difference between parity + and - blocks: the exchange terms
 
                //tp(1)
                if(S_ab == S_de){
 
                   if(k_c == k_z_){
 
-                     K_tp = (k_a + k_b)%L;
+                     K_tp = (k_a + k_b)%Tools::gL();
 
                      tard = 0.0;
 
@@ -2416,7 +2353,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(2)
                if(k_b == k_z_){
 
-                  K_tp = (k_a + k_c)%L;
+                  K_tp = (k_a + k_c)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2433,7 +2370,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(3)
                if(k_a == k_z_){
 
-                  K_tp = (k_b + k_c)%L;
+                  K_tp = (k_b + k_c)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2450,7 +2387,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(4)
                if(k_c == k_e_){
 
-                  K_tp = (k_a + k_b)%L;
+                  K_tp = (k_a + k_b)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2467,14 +2404,14 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(5)
                if(k_b == k_e_){
 
-                  K_tp = (k_a + k_c)%L;
+                  K_tp = (k_a + k_c)%Tools::gL();
 
                   tard = 0.0;
 
                   //sum over intermediate spin
                   for(int pi = 0;pi < 2;++pi)
                      for(int Z = 0;Z < 2;++Z)
-                        tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_a,k_c,k_d_,k_z_);
+                        tard += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,K_tp,pi,k_a,k_c,k_d_,k_z_);
 
                   //correct for norms of the tpm
                   if(k_a == k_c)
@@ -2494,12 +2431,12 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
                   tard = 0.0;
 
-                  K_tp = (k_b + k_c)%L;
+                  K_tp = (k_b + k_c)%Tools::gL();
 
                   //sum over intermediate spin
                   for(int pi = 0;pi < 2;++pi)
                      for(int Z = 0;Z < 2;++Z)
-                        tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_b,k_c,k_d_,k_z_);
+                        tard += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,K_tp,pi,k_b,k_c,k_d_,k_z_);
 
                   if(k_b == k_c)
                      tard *= std::sqrt(2.0);
@@ -2518,7 +2455,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
                   tard = 0.0;
 
-                  K_tp = (k_a + k_b)%L;
+                  K_tp = (k_a + k_b)%Tools::gL();
 
                   for(int pi = 0;pi < 2;++pi)
                      tard += tpm(S_ab,K_tp,pi,k_a,k_b,k_e_,k_z_);
@@ -2535,12 +2472,12 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
                   tard = 0.0;
 
-                  K_tp = (k_a + k_c)%L;
+                  K_tp = (k_a + k_c)%Tools::gL();
 
                   //sum over intermediate spin
                   for(int pi = 0;pi < 2;++pi)
                      for(int Z = 0;Z < 2;++Z)
-                        tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_a,k_c,k_e_,k_z_);
+                        tard += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,K_tp,pi,k_a,k_c,k_e_,k_z_);
 
                   if(k_a == k_c)
                      tard *= std::sqrt(2.0);
@@ -2559,12 +2496,12 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
                   tard = 0.0;
 
-                  K_tp = (k_b + k_c)%L;
+                  K_tp = (k_b + k_c)%Tools::gL();
 
                   //sum over intermediate spin
                   for(int pi = 0;pi < 2;++pi)
                      for(int Z = 0;Z < 2;++Z)
-                        tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_b,k_c,k_e_,k_z_);
+                        tard += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,K_tp,pi,k_b,k_c,k_e_,k_z_);
 
                   if(k_b == k_c)
                      tard *= std::sqrt(2.0);
@@ -2584,7 +2521,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             if(k_c == k_z)
                if(S_ab == S_de){
 
-                  K_tp = (k_a + k_b)%L;
+                  K_tp = (k_a + k_b)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2598,7 +2535,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             //tp(2)
             if(k_b == k_z){
 
-               K_tp = (k_a + k_c)%L;
+               K_tp = (k_a + k_c)%Tools::gL();
 
                tard = 0.0;
 
@@ -2615,7 +2552,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             //tp(3)
             if(k_a == k_z){
 
-               K_tp = (k_b + k_c)%L;
+               K_tp = (k_b + k_c)%Tools::gL();
 
                tard = 0.0;
 
@@ -2632,7 +2569,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             //tp(4)
             if(k_c == k_e){
 
-               K_tp = (k_a + k_b)%L;
+               K_tp = (k_a + k_b)%Tools::gL();
 
                tard = 0.0;
 
@@ -2649,14 +2586,14 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             //tp(5)
             if(k_b == k_e){
 
-               K_tp = (k_a + k_c)%L;
+               K_tp = (k_a + k_c)%Tools::gL();
 
                tard = 0.0;
 
                //sum over intermediate spin
                for(int pi = 0;pi < 2;++pi)
                   for(int Z = 0;Z < 2;++Z)
-                     tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_a,k_c,k_d,k_z);
+                     tard += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,K_tp,pi,k_a,k_c,k_d,k_z);
 
                //correct for norms of the tpm
                if(k_a == k_c)
@@ -2676,12 +2613,12 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
                tard = 0.0;
 
-               K_tp = (k_b + k_c)%L;
+               K_tp = (k_b + k_c)%Tools::gL();
 
                //sum over intermediate spin
                for(int pi = 0;pi < 2;++pi)
                   for(int Z = 0;Z < 2;++Z)
-                     tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_b,k_c,k_d,k_z);
+                     tard += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,K_tp,pi,k_b,k_c,k_d,k_z);
 
                if(k_b == k_c)
                   tard *= std::sqrt(2.0);
@@ -2700,7 +2637,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
                tard = 0.0;
 
-               K_tp = (k_a + k_b)%L;
+               K_tp = (k_a + k_b)%Tools::gL();
 
                for(int pi = 0;pi < 2;++pi)
                   tard += tpm(S_ab,K_tp,pi,k_a,k_b,k_e,k_z);
@@ -2717,12 +2654,12 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
                tard = 0.0;
 
-               K_tp = (k_a + k_c)%L;
+               K_tp = (k_a + k_c)%Tools::gL();
 
                //sum over intermediate spin
                for(int pi = 0;pi < 2;++pi)
                   for(int Z = 0;Z < 2;++Z)
-                     tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_a,k_c,k_e,k_z);
+                     tard += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,K_tp,pi,k_a,k_c,k_e,k_z);
 
                if(k_a == k_c)
                   tard *= std::sqrt(2.0);
@@ -2741,12 +2678,12 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
                tard = 0.0;
 
-               K_tp = (k_b + k_c)%L;
+               K_tp = (k_b + k_c)%Tools::gL();
 
                //sum over intermediate spin
                for(int pi = 0;pi < 2;++pi)
                   for(int Z = 0;Z < 2;++Z)
-                     tard += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_tp,pi,k_b,k_c,k_e,k_z);
+                     tard += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,K_tp,pi,k_b,k_c,k_e,k_z);
 
                if(k_b == k_c)
                   tard *= std::sqrt(2.0);
@@ -2771,7 +2708,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
    }
 
    //then the S = 3/2 blocks, this should be easy, totally antisymmetrical 
-   for(int B = L/2 + 3;B < gnr();++B){
+   for(int B = Tools::gL()/2 + 3;B < gnr();++B){
 
       K = block_char[B][1];
       p = block_char[B][2];
@@ -2784,19 +2721,15 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
          k_b = dp2s[B][i][2];
          k_c = dp2s[B][i][3];
 
-         k_a_ = (L - k_a)%L;
-         k_b_ = (L - k_b)%L;
-         k_c_ = (L - k_c)%L;
-
          for(int j = i;j < gdim(B);++j){
 
             k_d = dp2s[B][j][1];
             k_e = dp2s[B][j][2];
             k_z = dp2s[B][j][3];
 
-            k_d_ = (L - k_d)%L;
-            k_e_ = (L - k_e)%L;
-            k_z_ = (L - k_z)%L;
+            k_d_ = (Tools::gL() - k_d)%Tools::gL();
+            k_e_ = (Tools::gL() - k_e)%Tools::gL();
+            k_z_ = (Tools::gL() - k_z)%Tools::gL();
 
             (*this)(B,i,j) = 0.0;
 
@@ -2806,12 +2739,12 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
             kard = 0.0;
 
-            if(K == 0 || K == L/2){//difference between parity + and - blocks
+            if(K == 0 || K == Tools::gL()/2){//difference between parity + and - blocks
 
                //tp(1)
                if(k_c == k_z_){
 
-                  K_tp = (k_a + k_b)%L;
+                  K_tp = (k_a + k_b)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2825,7 +2758,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(2)
                if(k_b == k_z_){
 
-                  K_tp = (k_a + k_c)%L;
+                  K_tp = (k_a + k_c)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2839,7 +2772,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(3):
                if(k_a == k_z_){
 
-                  K_tp = (k_b + k_c)%L;
+                  K_tp = (k_b + k_c)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2853,7 +2786,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(4)
                if(k_c == k_e_){
 
-                  K_tp = (k_a + k_b)%L;
+                  K_tp = (k_a + k_b)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2867,7 +2800,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(5)
                if(k_b == k_e_){
 
-                  K_tp = (k_a + k_c)%L;
+                  K_tp = (k_a + k_c)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2881,7 +2814,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(6)
                if(k_a == k_e_){
 
-                  K_tp = (k_b + k_c)%L;
+                  K_tp = (k_b + k_c)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2895,7 +2828,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(7)
                if(k_c == k_d_){
 
-                  K_tp = (k_a + k_b)%L;
+                  K_tp = (k_a + k_b)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2909,7 +2842,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(8)
                if(k_b == k_d_){
 
-                  K_tp = (k_a + k_c)%L;
+                  K_tp = (k_a + k_c)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2923,7 +2856,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
                //tp(9)
                if(k_a == k_d_){
 
-                  K_tp = (k_b + k_c)%L;
+                  K_tp = (k_b + k_c)%Tools::gL();
 
                   tard = 0.0;
 
@@ -2939,7 +2872,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             //tp(1)
             if(k_c == k_z){
 
-               K_tp = (k_a + k_b)%L;
+               K_tp = (k_a + k_b)%Tools::gL();
 
                tard = 0.0;
 
@@ -2954,7 +2887,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             //tp(2)
             if(k_b == k_z){
 
-               K_tp = (k_a + k_c)%L;
+               K_tp = (k_a + k_c)%Tools::gL();
 
                tard = 0.0;
 
@@ -2968,7 +2901,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             //tp(4)
             if(k_c == k_e){
 
-               K_tp = (k_a + k_b)%L;
+               K_tp = (k_a + k_b)%Tools::gL();
 
                tard = 0.0;
 
@@ -2982,7 +2915,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             //tp(5)
             if(k_b == k_e){
 
-               K_tp = (k_a + k_c)%L;
+               K_tp = (k_a + k_c)%Tools::gL();
 
                tard = 0.0;
 
@@ -2996,7 +2929,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             //tp(7)
             if(k_c == k_d){
 
-               K_tp = (k_a + k_b)%L;
+               K_tp = (k_a + k_b)%Tools::gL();
 
                tard = 0.0;
 
@@ -3010,7 +2943,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             //tp(8)
             if(k_b == k_d){
 
-               K_tp = (k_a + k_c)%L;
+               K_tp = (k_a + k_c)%Tools::gL();
 
                tard = 0.0;
 
@@ -3024,7 +2957,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
             //tp(9)
             if(k_a == k_d){
 
-               K_tp = (k_b + k_c)%L;
+               K_tp = (k_b + k_c)%Tools::gL();
 
                tard = 0.0;
 
@@ -3056,8 +2989,8 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 void DPM::T(const TPM &tpm){
 
    double a = 1.0;
-   double b = 1.0/(N*(N - 1.0));
-   double c = 1.0/(N - 1.0);
+   double b = 1.0/(Tools::gN()*(Tools::gN() - 1.0));
+   double c = 1.0/(Tools::gN() - 1.0);
 
    this->T(a,b,c,tpm);
 
@@ -3070,9 +3003,9 @@ void DPM::T(const TPM &tpm){
  */
 void DPM::hat(const TPM &tpm){
 
-   double a = 1.0/(M - 4.0);
-   double b = 1.0/((M - 4.0)*(M - 3.0)*(M - 2.0));
-   double c = 1.0/((M - 4.0)*(M - 3.0));
+   double a = 1.0/(2*Tools::gL() - 4.0);
+   double b = 1.0/((2*Tools::gL() - 4.0)*(2*Tools::gL() - 3.0)*(2*Tools::gL() - 2.0));
+   double c = 1.0/((2*Tools::gL() - 4.0)*(2*Tools::gL() - 3.0));
 
    this->T(a,b,c,tpm);
 
@@ -3096,7 +3029,7 @@ double DPM::norm(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c){
 
       if(k_a == 0 || k_b == 0 || k_c == 0){
 
-         if( (k_a == k_b) || (k_b == k_c) || (k_c == k_a))//(L/2 0 L/2) is mapped onto itsself
+         if( (k_a == k_b) || (k_b == k_c) || (k_c == k_a))//(Tools::gL()/2 0 Tools::gL()/2) is mapped onto itsself
             return 0.5;
 
          if(k_c == 0)
@@ -3127,14 +3060,14 @@ double DPM::norm(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c){
          return 1.0/std::sqrt(2.0);
 
    }
-   else if(K == L/2){
+   else if(K == Tools::gL()/2){
 
-      if(k_a == L/2 || k_b == L/2 || k_c == L/2){
+      if(k_a == Tools::gL()/2 || k_b == Tools::gL()/2 || k_c == Tools::gL()/2){
 
-         if( (k_a == k_b) || (k_b == k_c) || (k_c == k_a))//(0 0 L/2) is mapped onto itsself
+         if( (k_a == k_b) || (k_b == k_c) || (k_c == k_a))//(0 0 Tools::gL()/2) is mapped onto itsself
             return 0.5;
 
-         if(k_c == L/2)//normal: mapped onto itsself
+         if(k_c == Tools::gL()/2)//normal: mapped onto itsself
             return 0.5;
          else{//recoupling needed!
 
@@ -3176,9 +3109,9 @@ double DPM::norm(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c){
             return 1.0/std::sqrt(2.0);
 
       }
-      else if (K == L/2){
+      else if (K == Tools::gL()/2){
 
-         if(k_a == L/2 || k_b == L/2 || k_c == L/2)
+         if(k_a == Tools::gL()/2 || k_b == Tools::gL()/2 || k_c == Tools::gL()/2)
             return 0.5;
          else
             return 1.0/std::sqrt(2.0);
