@@ -41,7 +41,9 @@ int main(int argc,char *argv[]){
 
    double U = atof(argv[3]);//onsite repulsion
 
-   TPM::init(L,N);
+   Tools::init(L,N);
+
+   TPM::init();
    SPM::init(L,N);
 
 #ifdef __G_CON
@@ -141,6 +143,8 @@ int main(int argc,char *argv[]){
 
    SPM::clear();
    TPM::clear();
+
+   Tools::clear();
 
    return 0;
 

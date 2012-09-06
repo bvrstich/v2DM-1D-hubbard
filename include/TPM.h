@@ -58,14 +58,6 @@ class TPM : public BlockMatrix {
 
       static int get_phase_order(int S,int &K,int p,int &a,int &b);
 
-      //geef N terug
-      int gN() const;
-
-      //geef M terug
-      int gM() const;
-
-      int gL() const;
-
       void hubbard(double U);
 
       //Q afbeelding en zijn inverse
@@ -73,9 +65,6 @@ class TPM : public BlockMatrix {
 
       //Q like afbeelding Q(A,B,C,tpm_d)
       void Q(int option,double A,double B,double C,const TPM &);
-
-      //overlapmatrix afbeelding en zijn inverse
-      void S(int option,const TPM &);
 
       void unit();
 
@@ -96,11 +85,9 @@ class TPM : public BlockMatrix {
       //input from file
       void in(ifstream &);
 
-      static void init(int,int);
+      static void init();
 
       static void clear();
-
-      static void init_overlap();
 
       static double norm(int,int,int);
 
@@ -145,15 +132,6 @@ class TPM : public BlockMatrix {
 
       //!list of 6j symbols needed.
       static double **_6j;
-
-      //!nr of particles
-      static int N;
-
-      //!nr of sites
-      static int L;
-
-      //!dimension of sp hilbert space
-      static int M;
 
 };
 

@@ -18,7 +18,8 @@ CPPSRC	= 1D_hub.cpp\
             DPM.cpp\
             PPHM.cpp\
             SUP.cpp\
-            EIG.cpp
+            EIG.cpp\
+            Tools.cpp
 
 OBJ	= $(CPPSRC:.cpp=.o)
 
@@ -30,7 +31,7 @@ BRIGHT_ROOT= .
 
 INCLUDE = ./include
 
-LIBS= -llapack -lblas
+LIBS= -llapack -lblas -lgsl
 
 CC	= gcc
 CXX	= g++
