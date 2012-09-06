@@ -18,11 +18,6 @@ int ***TPM::s2t;
 int **TPM::block_char;
 int ***TPM::char_block;
 
-double **TPM::_6j;
-
-double TPM::Sa = 1;
-double TPM::Sc = 0;
-
 /**
  * static function that initializes the static variables and allocates and fill the static lists
  */
@@ -318,18 +313,6 @@ void TPM::init(){
 
       }
 
-   //allocate 6j
-   _6j = new double * [2];
-
-   for(int S = 0;S < 2;++S)
-      _6j[S] = new double [2]; 
-
-   //initialize
-   _6j[0][0] = -0.5;
-   _6j[0][1] = 0.5;
-   _6j[1][0] = 0.5;
-   _6j[1][1] = 1.0/6.0;
-
 }
 
 /**
@@ -366,11 +349,6 @@ void TPM::clear(){
 
    delete [] char_block;
 
-   for(int S = 0;S < 2;++S)
-      delete [] _6j[S];
-
-   delete [] _6j;
-
 }
 
 /**
@@ -405,9 +383,7 @@ TPM::TPM() : BlockMatrix(Tools::gL() + 4) {
  * constructs BlockMatrix object with Tools::gL() + 4 blocks, Tools::gL()/2 + 2 for S = 0 and S = 1,
  * @param tpm_c The TPM object to be copied into (*this)
  */
-TPM::TPM(const TPM &tpm_c) : BlockMatrix(tpm_c){
-
-}
+TPM::TPM(const TPM &tpm_c) : BlockMatrix(tpm_c){ }
 
 /**
  * destructor
@@ -958,7 +934,7 @@ void TPM::G(const PHM &phm){
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_a_,k_d_,k_c,k_b);
+                     ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_a_,k_d_,k_c,k_b);
 
                ward /= 2.0 * PHM::norm(K_ph,k_a_,k_d_) * PHM::norm(K_ph,k_c,k_b);
 
@@ -971,7 +947,7 @@ void TPM::G(const PHM &phm){
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_b_,k_c_,k_d,k_a);
+                     ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_b_,k_c_,k_d,k_a);
 
                ward /= 2.0 * PHM::norm(K_ph,k_b_,k_c_) * PHM::norm(K_ph,k_d,k_a);
 
@@ -984,7 +960,7 @@ void TPM::G(const PHM &phm){
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_b_,k_d_,k_c,k_a);
+                     ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_b_,k_d_,k_c,k_a);
 
                ward /= 2.0 * PHM::norm(K_ph,k_b_,k_d_) * PHM::norm(K_ph,k_c,k_a);
 
@@ -997,7 +973,7 @@ void TPM::G(const PHM &phm){
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_a_,k_c_,k_d,k_b);
+                     ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_a_,k_c_,k_d,k_b);
 
                ward /= 2.0 * PHM::norm(K_ph,k_a_,k_c_) * PHM::norm(K_ph,k_d,k_b);
 
@@ -1013,7 +989,7 @@ void TPM::G(const PHM &phm){
 
             for(int Z = 0;Z < 2;++Z)
                for(int pi = 0;pi < 2;++pi)
-                  ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_a,k_d_,k_c,k_b_);
+                  ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_a,k_d_,k_c,k_b_);
 
             ward /= 2.0 * PHM::norm(K_ph,k_a,k_d_) * PHM::norm(K_ph,k_c,k_b_);
 
@@ -1026,7 +1002,7 @@ void TPM::G(const PHM &phm){
 
             for(int Z = 0;Z < 2;++Z)
                for(int pi = 0;pi < 2;++pi)
-                  ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_b,k_c_,k_d,k_a_);
+                  ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_b,k_c_,k_d,k_a_);
 
             ward /= 2.0 * PHM::norm(K_ph,k_b,k_c_) * PHM::norm(K_ph,k_d,k_a_);
 
@@ -1039,7 +1015,7 @@ void TPM::G(const PHM &phm){
 
             for(int Z = 0;Z < 2;++Z)
                for(int pi = 0;pi < 2;++pi)
-                  ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_b,k_d_,k_c,k_a_);
+                  ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_b,k_d_,k_c,k_a_);
 
             ward /= 2.0 * PHM::norm(K_ph,k_b,k_d_) * PHM::norm(K_ph,k_c,k_a_);
 
@@ -1052,7 +1028,7 @@ void TPM::G(const PHM &phm){
 
             for(int Z = 0;Z < 2;++Z)
                for(int pi = 0;pi < 2;++pi)
-                  ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_a,k_c_,k_d,k_b_);
+                  ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_a,k_c_,k_d,k_b_);
 
             ward /= 2.0 * PHM::norm(K_ph,k_a,k_c_) * PHM::norm(K_ph,k_d,k_b_);
 
@@ -1410,7 +1386,7 @@ void TPM::T(const PPHM &pphm){
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_a_,k_d_,k_c,k_b);
+                     ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_a_,k_d_,k_c,k_b);
 
                ward /= 2.0 * PHM::norm(K_ph,k_a_,k_d_) * PHM::norm(K_ph,k_c,k_b);
 
@@ -1423,7 +1399,7 @@ void TPM::T(const PPHM &pphm){
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_b_,k_c_,k_d,k_a);
+                     ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_b_,k_c_,k_d,k_a);
 
                ward /= 2.0 * PHM::norm(K_ph,k_b_,k_c_) * PHM::norm(K_ph,k_d,k_a);
 
@@ -1436,7 +1412,7 @@ void TPM::T(const PPHM &pphm){
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_b_,k_d_,k_c,k_a);
+                     ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_b_,k_d_,k_c,k_a);
 
                ward /= 2.0 * PHM::norm(K_ph,k_b_,k_d_) * PHM::norm(K_ph,k_c,k_a);
 
@@ -1449,7 +1425,7 @@ void TPM::T(const PPHM &pphm){
 
                for(int Z = 0;Z < 2;++Z)
                   for(int pi = 0;pi < 2;++pi)
-                     ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_a_,k_c_,k_d,k_b);
+                     ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_a_,k_c_,k_d,k_b);
 
                ward /= 2.0 * PHM::norm(K_ph,k_a_,k_c_) * PHM::norm(K_ph,k_d,k_b);
 
@@ -1465,7 +1441,7 @@ void TPM::T(const PPHM &pphm){
 
             for(int Z = 0;Z < 2;++Z)
                for(int pi = 0;pi < 2;++pi)
-                  ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_a,k_d_,k_c,k_b_);
+                  ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_a,k_d_,k_c,k_b_);
 
             ward /= 2.0 * PHM::norm(K_ph,k_a,k_d_) * PHM::norm(K_ph,k_c,k_b_);
 
@@ -1478,7 +1454,7 @@ void TPM::T(const PPHM &pphm){
 
             for(int Z = 0;Z < 2;++Z)
                for(int pi = 0;pi < 2;++pi)
-                  ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_b,k_c_,k_d,k_a_);
+                  ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_b,k_c_,k_d,k_a_);
 
             ward /= 2.0 * PHM::norm(K_ph,k_b,k_c_) * PHM::norm(K_ph,k_d,k_a_);
 
@@ -1491,7 +1467,7 @@ void TPM::T(const PPHM &pphm){
 
             for(int Z = 0;Z < 2;++Z)
                for(int pi = 0;pi < 2;++pi)
-                  ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_b,k_d_,k_c,k_a_);
+                  ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_b,k_d_,k_c,k_a_);
 
             ward /= 2.0 * PHM::norm(K_ph,k_b,k_d_) * PHM::norm(K_ph,k_c,k_a_);
 
@@ -1504,7 +1480,7 @@ void TPM::T(const PPHM &pphm){
 
             for(int Z = 0;Z < 2;++Z)
                for(int pi = 0;pi < 2;++pi)
-                  ward -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_ph,pi,k_a,k_c_,k_d,k_b_);
+                  ward -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * phm(Z,K_ph,pi,k_a,k_c_,k_d,k_b_);
 
             ward /= 2.0 * PHM::norm(K_ph,k_a,k_c_) * PHM::norm(K_ph,k_d,k_b_);
 

@@ -44,18 +44,18 @@ int main(int argc,char *argv[]){
    Tools::init(L,N);
 
    TPM::init();
-   SPM::init(L,N);
+   SPM::init();
 
 #ifdef __G_CON
-   PHM::init(L,N);
+   PHM::init();
 #endif
 
 #ifdef __T1_CON
-   DPM::init(L,N);
+   DPM::init();
 #endif
 
 #ifdef __T2_CON
-   PPHM::init(L,N);
+   PPHM::init();
 #endif
 
    SUP::init(L,N);

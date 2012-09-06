@@ -50,15 +50,6 @@ class DPM : public BlockMatrix {
 
       static int get_inco(int S,int K,int p,int S_ab,int a,int b,int c,int *i,double *coef);
 
-      //geef N terug
-      int gN() const;
-
-      //geef M terug
-      int gM() const;
-
-      //geef L terug
-      int gL() const;
-
       int gS(int block) const;
 
       int gK(int block) const;
@@ -77,7 +68,7 @@ class DPM : public BlockMatrix {
       //output to file
       void out_sp(const char *) const;
 
-      static void init(int,int);
+      static void init();
 
       static void clear();
 
@@ -98,18 +89,6 @@ class DPM : public BlockMatrix {
 
       //!static list that takes in the block properties S,K,p and returns the blockindex B
       static int ***char_block;
-
-      //!list of 6j symbols needed.
-      static double **_6j;
-
-      //!nr of particles
-      static int N;
-
-      //!dimension of sp hilbert space
-      static int M;
-
-      //!nr of sites
-      static int L;
 
 };
 

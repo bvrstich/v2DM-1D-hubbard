@@ -127,12 +127,6 @@ class TPM : public BlockMatrix {
       //!static list that returns the blockindex when given the S, K~ and p.
       static int ***char_block;
 
-      //!overlapmatrix parameters
-      static double Sa,Sc;
-
-      //!list of 6j symbols needed.
-      static double **_6j;
-
 };
 
 #endif

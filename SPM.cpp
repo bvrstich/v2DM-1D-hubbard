@@ -8,32 +8,22 @@ using std::endl;
 
 #include "include.h"
 
-int SPM::M;
-int SPM::N;
-int SPM::L;
 int SPM::dim;
 int *SPM::deg;
 
 /**
  * initializes the statics
- * @param L_in the nr of sites
- * @param N_in nr of particles
  */
-void SPM::init(int L_in,int N_in){
+void SPM::init(){
 
-   L = L_in;
-   N = N_in;
-
-   M = 2*L;
-
-   dim = L/2  + 1;
+   dim = Tools::gL()/2  + 1;
 
    deg = new int [dim];
 
    deg[0] = 1;
-   deg[L/2] = 1;
+   deg[Tools::gL()/2] = 1;
 
-   for(int k = 1;k < L/2;++k)
+   for(int k = 1;k < Tools::gL()/2;++k)
       deg[k] = 2;
 
 }
@@ -48,7 +38,7 @@ void SPM::clear(){
 }
 
 /**
- * constructor, the SPM is completely diagonal in momentum space and two times degenerate in parity, for 0 < k < L/2
+ * constructor, the SPM is completely diagonal in momentum space and two times degenerate in parity, for 0 < k < Tools::gL()/2
  */
 SPM::SPM(){
 
@@ -106,33 +96,6 @@ SPM::~SPM(){
 }
 
 /**
- * @return nr of particles
- */
-int SPM::gN() const{
-
-   return N;
-
-}
-
-/**
- * @return dimension of sp space
- */
-int SPM::gM() const{
-
-   return M;
-
-}
-
-/**
- * @return nr of sites
- */
-int SPM::gL() const{
-
-   return L;
-
-}
-
-/**
  * @return the pointer to the SPM object
  */
 const double *SPM::gspm() const{
@@ -157,8 +120,8 @@ ostream &operator<<(ostream &output,const SPM &spm_p){
  */
 double &SPM::operator[](int i){
 
-   if(i > L/2)
-      return spm[L - i];
+   if(i > Tools::gL()/2)
+      return spm[Tools::gL() - i];
    else
       return spm[i];
 
@@ -171,8 +134,8 @@ double &SPM::operator[](int i){
  */
 double SPM::operator[](int i) const {
 
-   if(i > L/2)
-      return spm[L - i];
+   if(i > Tools::gL()/2)
+      return spm[Tools::gL() - i];
    else
       return spm[i];
 
@@ -188,13 +151,13 @@ void SPM::bar(double scale,const TPM &tpm){
    double ward;
    int K;
 
-   for(int k = 0;k <= L/2;++k){
+   for(int k = 0;k <= Tools::gL()/2;++k){
 
       spm[k] = 0.0;
 
-      for(int k_ = 0;k_ < L;++k_){
+      for(int k_ = 0;k_ < Tools::gL();++k_){
 
-         K = (k + k_)%L;
+         K = (k + k_)%Tools::gL();
 
          ward = 0.0;
 
@@ -227,13 +190,13 @@ void SPM::bar(double scale,const PHM &phm){
    double ward;
    int K;
 
-   for(int k = 0;k <= L/2;++k){
+   for(int k = 0;k <= Tools::gL()/2;++k){
 
       spm[k] = 0.0;
 
-      for(int k_ = 0;k_ < L;++k_){
+      for(int k_ = 0;k_ < Tools::gL();++k_){
 
-         K = (k + k_)%L;
+         K = (k + k_)%Tools::gL();
 
          ward = 0.0;
 
@@ -264,19 +227,19 @@ void SPM::bar(double scale,const PPHM &pphm){
 
    int K_pph;
 
-   for(int k = 0;k <= L/2;++k){
+   for(int k = 0;k <= Tools::gL()/2;++k){
 
       (*this)[k] = 0.0;
 
       //first S = 1/2 part
       for(int S_ab = 0;S_ab < 2;++S_ab){//S_ab can be both 0 and 1
 
-         for(int k_a = 0;k_a < L;++k_a)
-            for(int k_b = 0;k_b < L;++k_b){
+         for(int k_a = 0;k_a < Tools::gL();++k_a)
+            for(int k_b = 0;k_b < Tools::gL();++k_b){
 
                ward = 0.0;
 
-               K_pph = (k_a + k_b + k)%L;
+               K_pph = (k_a + k_b + k)%Tools::gL();
 
                for(int pi = 0;pi < 2;++pi)
                   ward += pphm(0,K_pph,pi,S_ab,k_a,k_b,k,S_ab,k_a,k_b,k);
@@ -291,12 +254,12 @@ void SPM::bar(double scale,const PPHM &pphm){
       }
 
       //then S = 3/2 part:
-      for(int k_a = 0;k_a < L;++k_a)
-         for(int k_b = 0;k_b < L;++k_b){
+      for(int k_a = 0;k_a < Tools::gL();++k_a)
+         for(int k_b = 0;k_b < Tools::gL();++k_b){
 
             ward = 0.0;
 
-            K_pph = (k_a + k_b + k)%L;
+            K_pph = (k_a + k_b + k)%Tools::gL();
 
             for(int pi = 0;pi < 2;++pi)
                ward += pphm(1,K_pph,pi,1,k_a,k_b,k,1,k_a,k_b,k);

@@ -46,15 +46,9 @@ class PHM : public BlockMatrix {
 
       static int get_phase_order(int S,int &K,int p,int &a,int &b);
 
-      int gN() const;
-
-      int gM() const;
-
-      int gL() const;
-
       void G(const TPM &);
 
-      static void init(int,int);
+      static void init();
 
       static void clear();
 
@@ -70,23 +64,11 @@ class PHM : public BlockMatrix {
       //!static list that takes in a blockindex B and two sp indices a,b and returns a ph index i
       static int ***s2ph;
 
-      //!list of 6j symbols needed.
-      static double **_6j;
-
       //!static list that takes a blockindex B and returns the ph spin S, the ph momentum K and ph parity p.
       static int **block_char;
 
       //!static list that takes a the block characteristics S,K,p and returns a blockindex B
       static int ***char_block;
-
-      //!number of particles
-      static int N;
-
-      //!dimension of sp hilbert space
-      static int M;
-
-      //!nr of sites
-      static int L;
 
 };
 
