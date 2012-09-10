@@ -112,7 +112,7 @@ void PHM::init(){
    char_block[1][0][1] = block + Tools::gL()/2 + 3;
 
    //for negative parity: k_a < k_b
-   for(int k_a = 0;k_a < Tools::gL();++k_a)
+   for(int k_a = 1;k_a < Tools::gL();++k_a)
       for(int k_b = k_a + 1;k_b < Tools::gL();++k_b){
 
          if( (k_a + k_b)%Tools::gL() == 0){
@@ -435,8 +435,8 @@ int PHM::get_phase_order(int S,int &K,int p,int &k_a,int &k_b){
       }
       else if(k_a > Tools::gL()/2){//switch
 
-         k_a = (Tools::gL() - k_a)%Tools::gL();
-         k_b = (Tools::gL() - k_b)%Tools::gL();
+         k_a = Tools::gL() - k_a;
+         k_b = Tools::gL() - k_b;
 
          if(p == 1)
             phase *= -1;
@@ -446,7 +446,7 @@ int PHM::get_phase_order(int S,int &K,int p,int &k_a,int &k_b){
    }
    else if(K > Tools::gL()/2){
 
-      K = (Tools::gL() - K)%Tools::gL();
+      K = Tools::gL() - K;
       k_a = (Tools::gL() - k_a)%Tools::gL();
       k_b = (Tools::gL() - k_b)%Tools::gL();
 

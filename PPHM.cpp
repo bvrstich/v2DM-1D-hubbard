@@ -1172,7 +1172,7 @@ PPHM::PPHM() : BlockMatrix(Tools::gL() + 6) {
    //first K = 0: 4 blocks
 
    //positive parity
-   this->setMatrixDim(0,pph2s[0].size(),2);//S = 1/2
+   this->setMatrixDim(0,pph2s[0].size() + 1,2);//S = 1/2
    this->setMatrixDim(Tools::gL()/2 + 3,pph2s[Tools::gL()/2 + 3].size(),4);//S = 3/2
 
    //negative parity
@@ -1182,13 +1182,13 @@ PPHM::PPHM() : BlockMatrix(Tools::gL() + 6) {
    //then for 0 < K < Tools::gL()/2
    for(int K = 1;K < Tools::gL()/2;++K){
 
-      this->setMatrixDim(K + 1,pph2s[K + 1].size(),4);//S = 1/2
+      this->setMatrixDim(K + 1,pph2s[K + 1].size() + 1,4);//S = 1/2
       this->setMatrixDim(Tools::gL()/2 + K + 4,pph2s[Tools::gL()/2 + K + 4].size(),8);//S = 3/2
 
    }
 
    //and last for K = Tools::gL()/2: parity positive
-   this->setMatrixDim(Tools::gL()/2 + 1,pph2s[Tools::gL()/2 + 1].size(),2);//S = 1/2
+   this->setMatrixDim(Tools::gL()/2 + 1,pph2s[Tools::gL()/2 + 1].size() + 1,2);//S = 1/2
    this->setMatrixDim(Tools::gL() + 4,pph2s[Tools::gL() + 4].size(),4);//S = 3/2
 
    //negative parity
@@ -1684,7 +1684,7 @@ void PPHM::T(const TPM &tpm){
 
       psign = 1 - 2*p;
 
-      for(int i = 0;i < gdim(B);++i){
+      for(unsigned int i = 0;i < pph2s[B].size();++i){
 
          S_ab = pph2s[B][i][0];
 
@@ -1703,7 +1703,7 @@ void PPHM::T(const TPM &tpm){
          if(k_a == k_b)
             norm_ab /= std::sqrt(2.0);
 
-         for(int j = i;j < gdim(B);++j){
+         for(unsigned int j = i;j < pph2s[B].size();++j){
 
             S_de = pph2s[B][j][0];
 
@@ -1949,11 +1949,52 @@ void PPHM::T(const TPM &tpm){
 
             (*this)(B,i,j) += PPHM::norm(K,k_a,k_b,k_c) * PPHM::norm(K,k_d,k_e,k_z) * ward;
 
+         }//j
+
+         if(K == 0 || K == Tools::gL()/2){
+
+            if(p == 0){//only positive parity has extra term
+
+               ward = 0.0;
+
+               int K_ab = (k_a + k_b)%Tools::gL();
+
+               for(int pi = 0;pi < 2;++pi)
+                  ward -= tpm(S_ab,K_ab,pi,k_a,k_b,K,k_c_);
+
+               if(K == k_c_){
+
+                  (*this)(B,i,pph2s[B].size()) = sign_ab * std::sqrt(S_ab + 0.5) * 0.5 * PPHM::norm(K,k_a,k_b,k_c) 
+
+                     / TPM::norm(K_ab,k_a,k_b) / TPM::norm(K_ab,K,k_c_) * ward * std::sqrt(2.0);
+
+               }
+               else{
+
+                  (*this)(B,i,pph2s[B].size()) = sign_ab * std::sqrt(S_ab + 0.5) * 0.5 * PPHM::norm(K,k_a,k_b,k_c) 
+
+                     / TPM::norm(K_ab,k_a,k_b) / TPM::norm(K_ab,K,k_c_) * ward;
+
+               }
+
+            }
+
          }
+         else
+            (*this)(B,pph2s[B].size(),pph2s[B].size()) = spm[K];
+
+      }//i
+
+      if(K == 0 || K == Tools::gL()/2){
+
+         if(p == 0)//only positive parity has extra term
+            (*this)(B,pph2s[B].size(),pph2s[B].size()) = spm[K];
 
       }
+      else
+         (*this)(B,pph2s[B].size(),pph2s[B].size()) = spm[K];
 
-   }
+   }//B
 
    //the easier S = 3/2 part:
    for(int B = Tools::gL()/2 + 3;B < gnr();++B){

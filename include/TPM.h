@@ -19,8 +19,9 @@ class PPHM;
 /**
  * @author Brecht Verstichel
  * @date 10-05-2010\n\n
- * This class TPM is a class written for two particle matrices with spinsymmetry, translational symmetry and parity included, it inherits all the functions from its mother 
- * BlockMatrix, some special member functions and two lists that give the relationship between the sp and the tp basis.
+ * This class TPM is a class written for two particle matrices with spinsymmetry, translational symmetry and parity included,
+ * it inherits all the functions from its mother BlockMatrix.
+ * Some special member functions and two lists that give the relationship between the sp and the tp basis.
  */
 class TPM : public BlockMatrix {
 

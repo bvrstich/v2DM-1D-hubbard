@@ -191,8 +191,8 @@ void TPM::init(){
 
    }
 
-   //now only the Tools::gL()/2 pseudo momentum block is left.
-   //The sp-momenta here only go from 0 -> Tools::gL()/2
+   //now only the L/2 pseudo momentum block is left.
+   //The sp-momenta here only go from 0 -> L/2
 
    //first postive parity:
    //first S = 0;
@@ -204,7 +204,7 @@ void TPM::init(){
 
    tp = 0;
 
-   //the momenta only go to Tools::gL()/2!
+   //the momenta only go to L/2
    for(int k_a = 0;k_a <= Tools::gL()/2;++k_a)
       for(int k_b = k_a;k_b <= Tools::gL()/2;++k_b){
 
@@ -254,7 +254,7 @@ void TPM::init(){
 
    ++block;
 
-   //then negative parity: this block hasn't got the |0 Tools::gL()/2> basisvector
+   //then negative parity: this block hasn't got the |0 L/2> basisvector
 
    //first S = 0;
    block_char[block][0] = 0;
@@ -479,7 +479,7 @@ int TPM::get_phase_order(int S,int &K,int p,int &k_a,int &k_b){
       }
 
    }
-   else if(K == Tools::gL()/2){//for K = Tools::gL()/2 and k_ak_b = 0 Tools::gL()/2 , only positive parity is present
+   else if(K == Tools::gL()/2){//for K = L/2 and k_a k_b = 0 L/2 , only positive parity is present
 
       if(k_a == 0 || k_b == 0){
 
@@ -489,8 +489,8 @@ int TPM::get_phase_order(int S,int &K,int p,int &k_a,int &k_b){
       }
       else if(k_a > Tools::gL()/2){
 
-         k_a = (Tools::gL() - k_a)%Tools::gL();
-         k_b = (Tools::gL() - k_b)%Tools::gL();
+         k_a = Tools::gL() - k_a;
+         k_b = Tools::gL() - k_b;
 
          if(p == 1)
             phase *= -1;
@@ -500,7 +500,8 @@ int TPM::get_phase_order(int S,int &K,int p,int &k_a,int &k_b){
    }
    else if(K > Tools::gL()/2){
 
-      K = (Tools::gL() - K)%Tools::gL();
+      K = Tools::gL() - K;
+
       k_a = (Tools::gL() - k_a)%Tools::gL();
       k_b = (Tools::gL() - k_b)%Tools::gL();
 
