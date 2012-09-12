@@ -422,25 +422,24 @@ double TPM::operator()(int B,int k_a,int k_b,int k_c,int k_d) const{
 double TPM::operator()(int S,int K,int p,int k_a,int k_b,int k_c,int k_d) const{
 
    //momentum checks out
-   if( (k_a + k_b)%Tools::gL() != K)
+   if( (k_a + k_b)%Tools::gL() != (k_c + k_d)%Tools::gL() && (k_a + k_b)%Tools::gL() != (Tools::gL() - k_c - k_d)%Tools::gL())
       return 0;
 
-   if( (k_c + k_d)%Tools::gL() != K)
-      return 0;
+   int K_ab = (k_a + k_b)%Tools::gL();
 
-   int copy_K = K;
-
-   int phase_i = get_phase_order(S,K,p,k_a,k_b);
+   int phase_i = get_phase_order(S,K_ab,p,k_a,k_b);
 
    if(phase_i == 0)
       return 0;
 
-   int phase_j = get_phase_order(S,copy_K,p,k_c,k_d);
+   int K_cd = (k_c + k_d)%Tools::gL();
+
+   int phase_j = get_phase_order(S,K_cd,p,k_c,k_d);
 
    if(phase_j == 0)
       return 0;
 
-   int B = char_block[S][K][p];
+   int B = char_block[S][K_ab][p];
 
    int i = s2t[B][k_a][k_b];
    int j = s2t[B][k_c][k_d];
@@ -862,7 +861,7 @@ void TPM::in(ifstream &input){
  * @return the norm of the wavefunction.
  */
 double TPM::norm(int K,int k_a,int k_b){
-
+   
    if(K == 0)
       return 0.5;
    else if(K < Tools::gL()/2)
@@ -1449,7 +1448,7 @@ void TPM::T(const PPHM &pphm){
                (*this)(B,i,j) += psign*sign*ward;
 
                //four w exchange terms:
-/*
+
                //1)
                ward = 0.0;
 
@@ -1481,7 +1480,7 @@ void TPM::T(const PPHM &pphm){
                   ward += pphm.w(k_a,S,pi,k_c_,k_d_,k_b_);
 
                (*this)(B,i,j) -= psign * sign * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / PPHM::norm(k_a,k_c_,k_d_,k_b_);
-*/
+
             }
 
             //four regular ph terms:
@@ -1538,7 +1537,7 @@ void TPM::T(const PPHM &pphm){
             (*this)(B,i,j) += sign*ward;
 
             //four regular w terms:
-/*
+
             //1)
             ward = 0.0;
 
@@ -1570,7 +1569,7 @@ void TPM::T(const PPHM &pphm){
                ward += pphm.w(k_a,S,pi,k_c,k_d,k_b_);
 
             (*this)(B,i,j) -= sign * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / PPHM::norm(k_a,k_c,k_d,k_b_);
-*/
+
             //tp-norm:
             (*this)(B,i,j) *= TPM::norm(K,k_a,k_b) * TPM::norm(K,k_c,k_d);
 

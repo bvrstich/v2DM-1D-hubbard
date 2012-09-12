@@ -2012,7 +2012,7 @@ void PPHM::T(const TPM &tpm){
             (*this)(B,i,j) += PPHM::norm(K,k_a,k_b,k_c) * PPHM::norm(K,k_d,k_e,k_z) * ward;
 
          }//j
-/*
+
          if(K == 0 || K == Tools::gL()/2){
 
             if(p == 0){//only positive parity has extra term
@@ -2026,24 +2026,22 @@ void PPHM::T(const TPM &tpm){
                   ward -= tpm(S_ab,K_ab,pi,k_a,k_b,K,k_c_);
 
                if(K == k_c_)
-                  ward *= std::sqrt(0.5) / ( TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,K,k_c_) );
-               else
-                  ward *= 0.5 / ( TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,K,k_c_) );
+                  ward *= std::sqrt(2.0);
+
+               ward /= TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,K,k_c_);
 
                //then exchange
                hard = 0.0;
 
-               K_ab = (k_a_ + k_b_)%Tools::gL();
-
                for(int pi = 0;pi < 2;++pi)
-                  hard -= tpm(S_ab,K_ab,pi,k_a_,k_b_,K,k_c);
+                  hard -= tpm(S_ab,K_ab,pi,k_a,k_b,K,k_c_);
 
                if(K == k_c)
-                  hard *= std::sqrt(0.5) / ( TPM::norm(K_ab,k_a_,k_b_) * TPM::norm(K_ab,K,k_c) );
-               else
-                  hard *= 0.5 / ( TPM::norm(K_ab,k_a_,k_b_) * TPM::norm(K_ab,K,k_c) );
+                  hard *= std::sqrt(2.0);
 
-               (*this)(B,i,pph2s[B].size()) = std::sqrt(S_ab + 0.5) * sign_ab * PPHM::norm(K,k_a,k_b,k_c) * ( ward + hard );
+               hard /= TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,K,k_c_);
+
+               (*this)(B,i,pph2s[B].size()) = 0.25 * PPHM::norm(K,k_a,k_b,k_c) * std::sqrt(S_ab + 0.5) * sign_ab * (ward + hard);
 
             }
 
@@ -2058,14 +2056,14 @@ void PPHM::T(const TPM &tpm){
                ward -= tpm(S_ab,K_ab,pi,k_a,k_b,K,k_c_);
 
             if(K == k_c_)
-               ward *= std::sqrt(0.5) / ( TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,K,k_c_) );
-            else
-               ward *= 0.5 / ( TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,K,k_c_) );
+               ward *= std::sqrt(2.0);
 
-            (*this)(B,i,pph2s[B].size()) = std::sqrt(S_ab + 0.5) * sign_ab * PPHM::norm(K,k_a,k_b,k_c) * ward;
+            (*this)(B,i,pph2s[B].size()) = std::sqrt(2.0*S_ab + 1.0) * sign_ab * PPHM::norm(K,k_a,k_b,k_c)
+
+               * 0.25 / ( TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,K,k_c_) ) * ward;
 
          }
-*/
+
       }//i
 
       if(K == 0 || K == Tools::gL()/2){
