@@ -242,7 +242,7 @@ void SPM::bar(double scale,const PPHM &pphm){
                K_pph = (k_a + k_b + k)%Tools::gL();
 
                for(int pi = 0;pi < 2;++pi)
-                  ward += pphm(0,K_pph,pi,S_ab,k_a,k_b,k,S_ab,k_a,k_b,k);
+                  ward += pphm.pph(0,K_pph,pi,S_ab,k_a,k_b,k,S_ab,k_a,k_b,k);
 
                if(k_a == k_b)
                   ward *= 2.0;
@@ -262,7 +262,7 @@ void SPM::bar(double scale,const PPHM &pphm){
             K_pph = (k_a + k_b + k)%Tools::gL();
 
             for(int pi = 0;pi < 2;++pi)
-               ward += pphm(1,K_pph,pi,1,k_a,k_b,k,1,k_a,k_b,k);
+               ward += pphm.pph(1,K_pph,pi,1,k_a,k_b,k,1,k_a,k_b,k);
 
             (*this)[k] += 0.5/(PPHM::norm(K_pph,k_a,k_b,k) * PPHM::norm(K_pph,k_a,k_b,k)) * ward;
 
@@ -272,5 +272,18 @@ void SPM::bar(double scale,const PPHM &pphm){
       (*this)[k] *= scale;
 
    }
+
+}
+
+/**
+ * @param k the pseudomomentum of the parity state
+ * @return the norm corresponding to the state with pseudo-momentum k
+ */
+double SPM::norm(int k) {
+
+   if(k == 0 || k == Tools::gL()/2)
+      return 0.5;
+   else
+      return 1.0/std::sqrt(2.0);
 
 }

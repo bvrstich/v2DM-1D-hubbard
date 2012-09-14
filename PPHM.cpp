@@ -1172,7 +1172,7 @@ PPHM::PPHM() : BlockMatrix(Tools::gL() + 6) {
    //first K = 0: 4 blocks
 
    //positive parity
-   this->setMatrixDim(0,pph2s[0].size(),2);//S = 1/2
+   this->setMatrixDim(0,pph2s[0].size() + 1,2);//S = 1/2
    this->setMatrixDim(Tools::gL()/2 + 3,pph2s[Tools::gL()/2 + 3].size(),4);//S = 3/2
 
    //negative parity
@@ -1182,13 +1182,13 @@ PPHM::PPHM() : BlockMatrix(Tools::gL() + 6) {
    //then for 0 < K < Tools::gL()/2
    for(int K = 1;K < Tools::gL()/2;++K){
 
-      this->setMatrixDim(K + 1,pph2s[K + 1].size(),4);//S = 1/2
+      this->setMatrixDim(K + 1,pph2s[K + 1].size() + 1,4);//S = 1/2
       this->setMatrixDim(Tools::gL()/2 + K + 4,pph2s[Tools::gL()/2 + K + 4].size(),8);//S = 3/2
 
    }
 
    //and last for K = Tools::gL()/2: parity positive
-   this->setMatrixDim(Tools::gL()/2 + 1,pph2s[Tools::gL()/2 + 1].size(),2);//S = 1/2
+   this->setMatrixDim(Tools::gL()/2 + 1,pph2s[Tools::gL()/2 + 1].size() + 1,2);//S = 1/2
    this->setMatrixDim(Tools::gL() + 4,pph2s[Tools::gL() + 4].size(),4);//S = 3/2
 
    //negative parity
@@ -1239,7 +1239,7 @@ int PPHM::gp(int block) const{
 }
 
 /**
- * access the elements of the matrix in sp mode, special symmetry and antisymmetry relations are automatically accounted for:\n\n
+ * access the elements of the pph part of the matrix in sp mode, special symmetry and antisymmetry relations are automatically accounted for:\n\n
  * @param B The  blockindex
  * @param S_ab The intermediate spinquantumnumber of k_a and k_b.
  * @param k_a first sp index that forms the pph row index i together with k_b, k_c and S_ab in block B
@@ -1251,18 +1251,18 @@ int PPHM::gp(int block) const{
  * @param k_z third sp index that forms the pph column index j together with k_d, k_e and S_de in block B
  * @return the number on place PPHM(B,i,j) with the right phase.
  */
-double PPHM::operator()(int B,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const {
+double PPHM::pph(int B,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const {
 
    int S = block_char[B][0];
    int K = block_char[B][1];
    int p = block_char[B][2];
 
-   return (*this)(S,K,p,S_ab,k_a,k_b,k_c,S_de,k_d,k_e,k_z);
+   return this->pph(S,K,p,S_ab,k_a,k_b,k_c,S_de,k_d,k_e,k_z);
 
 }
 
 /**
- * access the elements of the matrix in sp mode, special symmetry and antisymmetry relations are automatically accounted for:\n\n
+ * access the elements of the pph part of the matrix in sp mode, special symmetry and antisymmetry relations are automatically accounted for:\n\n
  * @param S The pphm-spin index, when == 0 then access the block S = 1/2, for spinindex == 1 we access the S = 3/2.
  * @param K The pphm-momentum index
  * @param p The pphm-parity index
@@ -1276,7 +1276,7 @@ double PPHM::operator()(int B,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,
  * @param k_z third sp index that forms the pph column index j together with k_d, k_e and S_de in block B
  * @return the number on place PPHM(B,i,j) with the right phase.
  */
-double PPHM::operator()(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const {
+double PPHM::pph(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const {
 
    //check the momentum
    if( (k_a + k_b + k_c)%Tools::gL() != K)
@@ -1656,6 +1656,75 @@ int PPHM::get_inco(int B,int S,int S_ab,int k_a,int k_b,int k_c,int &i) const{
 }
 
 /**
+ * access the elements of the w part of the matrix in sp mode, special symmetry and antisymmetry relations are automatically accounted for:\n\n
+ * @param K The pphm-momentum index
+ * @param p The pphm-parity index
+ * @param S_ab The intermediate spinquantumnumber of k_a and k_b.
+ * @param k_a first sp index that forms the pph row index i together with k_b, k_c and S_ab in block B
+ * @param k_b second sp index that forms the pph row index i together with k_a, k_c and S_ab in block B
+ * @param k_c third sp index that forms the pph row index i together with k_a, k_b and S_ab in block B
+ * @return the number on place PPHM(B,i,j) with the right phase.
+ */
+double PPHM::w(int K,int p,int S_ab,int k_a,int k_b,int k_c) const {
+
+   //check the momentum
+   if( (k_a + k_b + k_c)%Tools::gL() != K)
+      return 0;
+
+   if(K == 0 || K == Tools::gL()/2)
+      if(p == 1)
+         return 0;
+
+   int phase_j;
+
+   if(K > Tools::gL()/2)
+      phase_j = 1 - 2*p;
+   else
+      phase_j = 1;
+
+   int i;
+
+   int phase_i = get_phase_order(0,K,p,S_ab,k_a,k_b,k_c);
+
+   if(phase_i == 0)
+      return 0;
+
+   int B = char_block[0][K][p];
+
+   phase_i *= get_inco(B,0,S_ab,k_a,k_b,k_c,i);
+
+   if(phase_i == 0)
+      return 0;
+
+   return phase_i * phase_j * (*this)(B,i,pph2s[B].size());
+
+}
+
+/**
+ * access the elements of the sp part of the matrix
+ * @param K The pphm-momentum index of the block
+ * @return the number on place PPHM(B,i,j) with the right phase.
+ */
+double PPHM::sp(int K) const {
+
+   if(K > Tools::gL()/2){
+
+      int B = char_block[0][Tools::gL() - K][0];
+
+      return (*this)(B,pph2s[B].size(),pph2s[B].size());
+
+   }
+   else{
+
+      int B = char_block[0][K][0];
+
+      return (*this)(B,pph2s[B].size(),pph2s[B].size());
+
+   }
+
+}
+
+/**
  * The spincoupled, translationally invariant and parity symmetric T2 map, maps a TPM onto a PPHM object. See notes for more info
  * be aware that the k_c and k_z in the T2 notation become -k_c and -k_z in TPM space (remember the G-map)
  * @param tpm input TPM matrix
@@ -1684,7 +1753,7 @@ void PPHM::T(const TPM &tpm){
 
       psign = 1 - 2*p;
 
-      for(int i = 0;i < gdim(B);++i){
+      for(unsigned int i = 0;i < pph2s[B].size();++i){
 
          S_ab = pph2s[B][i][0];
 
@@ -1703,7 +1772,7 @@ void PPHM::T(const TPM &tpm){
          if(k_a == k_b)
             norm_ab /= std::sqrt(2.0);
 
-         for(int j = i;j < gdim(B);++j){
+         for(unsigned int j = i;j < pph2s[B].size();++j){
 
             S_de = pph2s[B][j][0];
 
@@ -1778,7 +1847,7 @@ void PPHM::T(const TPM &tpm){
 
                   for(int Z = 0;Z < 2;++Z)
                      for(int pi = 0;pi < 2;++pi)
-                        hard +=  (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_a_);
+                        hard += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,K_ce,pi,k_c,k_e,k_z_,k_a_);
 
                   hard *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
 
@@ -1949,11 +2018,71 @@ void PPHM::T(const TPM &tpm){
 
             (*this)(B,i,j) += PPHM::norm(K,k_a,k_b,k_c) * PPHM::norm(K,k_d,k_e,k_z) * ward;
 
+         }//j
+
+         if(K == 0 || K == Tools::gL()/2){
+
+            if(p == 0){//only positive parity has extra term
+
+               //first direct
+               ward = 0.0;
+
+               int K_ab = (k_a + k_b)%Tools::gL();
+
+               for(int pi = 0;pi < 2;++pi)
+                  ward -= tpm(S_ab,K_ab,pi,k_a,k_b,K,k_c_);
+
+               if(K == k_c_)
+                  ward *= std::sqrt(2.0);
+
+               ward /= TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,K,k_c_);
+
+               //then exchange
+               hard = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  hard -= tpm(S_ab,K_ab,pi,k_a,k_b,K,k_c_);
+
+               if(K == k_c_)
+                  hard *= std::sqrt(2.0);
+
+               hard /= TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,K,k_c_);
+
+               (*this)(B,i,pph2s[B].size()) = 0.25 * PPHM::norm(K,k_a,k_b,k_c) * std::sqrt(S_ab + 0.5) * sign_ab * (ward + hard);
+
+            }
+
+         }
+         else{//only direct term
+
+            ward = 0.0;
+
+            int K_ab = (k_a + k_b)%Tools::gL();
+
+            for(int pi = 0;pi < 2;++pi)
+               ward -= tpm(S_ab,K_ab,pi,k_a,k_b,K,k_c_);
+
+            if(K == k_c_)
+               ward *= std::sqrt(2.0);
+
+            (*this)(B,i,pph2s[B].size()) = std::sqrt(2.0*S_ab + 1.0) * sign_ab * PPHM::norm(K,k_a,k_b,k_c)
+
+               * 0.25 / ( TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,K,k_c_) ) * ward;
+
          }
 
-      }
+      }//i
 
-   }
+      if(K == 0 || K == Tools::gL()/2){
+
+         if(p == 0)//only positive parity has extra term
+            (*this)(B,pph2s[B].size(),pph2s[B].size()) = spm[K];
+
+      }
+      else
+         (*this)(B,pph2s[B].size(),pph2s[B].size()) = spm[K];
+
+   }//B
 
    //the easier S = 3/2 part:
    for(int B = Tools::gL()/2 + 3;B < gnr();++B){
@@ -2204,13 +2333,114 @@ void PPHM::T(const TPM &tpm){
 
 ostream &operator<<(ostream &output,const PPHM &pphm_p){
 
-   for(int B = 0;B < pphm_p.gnr();++B){
+   //first print S = 1/2 part
+   for(int B = 0;B < Tools::gL()/2 + 3;++B){
 
-      output << "(" << pphm_p.gS(B) << "," << pphm_p.gK(B) << "," << pphm_p.gp(B) << ")\t" << pphm_p.gdim(B) << "\t" << pphm_p.gdeg(B) << std::endl;
+      output << "(" << 1 << "/" << 2 << "," << pphm_p.gK(B) << "," << pphm_p.gp(B) << ")\t" << pphm_p.gdim(B) << "\t" << pphm_p.gdeg(B) << std::endl;
       output << std::endl;
 
-      for(int i = 0;i < pphm_p.gdim(B);++i)
-         for(int j = 0;j < pphm_p.gdim(B);++j){
+      if(pphm_p.gK(B) == 0 || pphm_p.gK(B) == Tools::gL()/2){
+
+         for(int i = 0;i < pphm_p.pph2s[B].size();++i){
+
+            for(int j = 0;j < pphm_p.pph2s[B].size();++j){
+
+               output << i << "\t" << j << "\t|\t" << 
+
+                  pphm_p.pph2s[B][i][0] << "\t" << pphm_p.pph2s[B][i][1] << "\t" << pphm_p.pph2s[B][i][2] << "\t" << pphm_p.pph2s[B][i][3] << 
+
+                  "\t" << pphm_p.pph2s[B][j][0] << "\t" << pphm_p.pph2s[B][j][1] << "\t" << pphm_p.pph2s[B][j][2] << "\t" << pphm_p.pph2s[B][j][3] 
+
+                  << "\t" << pphm_p(B,i,j) << endl;
+
+            }//
+
+            if(pphm_p.gp(B) == 0){//extra terms
+
+               output << i << "\t" << pphm_p.pph2s[B].size() << "\t|\t" << pphm_p.pph2s[B][i][0]
+
+                  << "\t" << pphm_p.pph2s[B][i][1] << "\t" << pphm_p.pph2s[B][i][2] << "\t" << pphm_p.pph2s[B][i][3] << "\t" << pphm_p.gK(B)
+
+                  << "\t" << pphm_p(B,i,pphm_p.pph2s[B].size()) << endl;
+
+            }
+
+         }//i
+
+         if(pphm_p.gp(B) == 0){//extra terms
+
+            for(int j = 0;j < pphm_p.pph2s[B].size();++j){
+
+               output << pphm_p.pph2s[B].size() << "\t" << j << "\t|\t" << pphm_p.gK(B) << 
+
+                  "\t" << pphm_p.pph2s[B][j][0] << "\t" << pphm_p.pph2s[B][j][1] << "\t" << pphm_p.pph2s[B][j][2] << "\t" << pphm_p.pph2s[B][j][3] 
+
+                  << "\t" << pphm_p(B,pphm_p.pph2s[B].size(),j) << endl;
+
+            }
+
+            //last sp term
+            output << pphm_p.pph2s[B].size() << "\t" << pphm_p.pph2s[B].size() << "\t|\t" << pphm_p.gK(B) << "\t" << pphm_p.gK(B)
+
+               << "\t" << pphm_p(B,pphm_p.pph2s[B].size(),pphm_p.pph2s[B].size()) << endl;
+
+         }
+
+      }
+      else{//every block extra term
+
+         for(int i = 0;i < pphm_p.pph2s[B].size();++i){
+
+            for(int j = 0;j < pphm_p.pph2s[B].size();++j){
+
+               output << i << "\t" << j << "\t|\t" << 
+
+                  pphm_p.pph2s[B][i][0] << "\t" << pphm_p.pph2s[B][i][1] << "\t" << pphm_p.pph2s[B][i][2] << "\t" << pphm_p.pph2s[B][i][3] << 
+
+                  "\t" << pphm_p.pph2s[B][j][0] << "\t" << pphm_p.pph2s[B][j][1] << "\t" << pphm_p.pph2s[B][j][2] << "\t" << pphm_p.pph2s[B][j][3] 
+
+                  << "\t" << pphm_p(B,i,j) << endl;
+
+            }//j
+
+            output << i << "\t" << pphm_p.pph2s[B].size() << "\t|\t" << pphm_p.pph2s[B][i][0]
+
+               << "\t" << pphm_p.pph2s[B][i][1] << "\t" << pphm_p.pph2s[B][i][2] << "\t" << pphm_p.pph2s[B][i][3] << "\t" << pphm_p.gK(B) << "\t"
+
+               << pphm_p(B,i,pphm_p.pph2s[B].size()) << endl;
+
+         }//i
+
+         for(int j = 0;j < pphm_p.pph2s[B].size();++j){
+
+            output << pphm_p.pph2s[B].size() << "\t" << j << "\t|\t" << pphm_p.gK(B) << 
+
+               "\t" << pphm_p.pph2s[B][j][0] << "\t" << pphm_p.pph2s[B][j][1] << "\t" << pphm_p.pph2s[B][j][2] << "\t" << pphm_p.pph2s[B][j][3] 
+
+               << "\t" << pphm_p(B,pphm_p.pph2s[B].size(),j) << endl;
+
+         }
+
+         //last sp term
+         output << pphm_p.pph2s[B].size() << "\t" << pphm_p.pph2s[B].size() << "\t|\t" << pphm_p.gK(B) << "\t" << pphm_p.gK(B)
+
+            << "\t" << pphm_p(B,pphm_p.pph2s[B].size(),pphm_p.pph2s[B].size()) << endl;
+
+      }
+
+      output << endl;
+
+   }
+
+   //S = 3/2 part straightforward
+   for(int B = Tools::gL()/2 + 3;B < Tools::gL() + 6;++B){
+
+      output << "(" << 3 << "/" << 2 << "," << pphm_p.gK(B) << "," << pphm_p.gp(B) << ")\t" << pphm_p.gdim(B) << "\t" << pphm_p.gdeg(B) << std::endl;
+      output << std::endl;
+
+      for(int i = 0;i < pphm_p.pph2s[B].size();++i){
+
+         for(int j = 0;j < pphm_p.pph2s[B].size();++j){
 
             output << i << "\t" << j << "\t|\t" << 
 
@@ -2220,11 +2450,11 @@ ostream &operator<<(ostream &output,const PPHM &pphm_p){
 
                << "\t" << pphm_p(B,i,j) << endl;
 
-         }
+         }//j
 
-      output << endl;
+      }//i
 
-   }
+   }//B
 
    return output;
 

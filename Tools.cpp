@@ -55,7 +55,7 @@ void Tools::init(int L_in,int N_in){
 #endif
 
 #ifdef __T2_CON
-   dim += 2*Tools::gL()*2*Tools::gL()*(2*Tools::gL() - 1)/2;
+   dim += 2*Tools::gL()*2*Tools::gL()*(2*Tools::gL() - 1)/2 + 2*Tools::gL();
 #endif
 
 }

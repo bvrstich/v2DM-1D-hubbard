@@ -716,7 +716,7 @@ void PHM::bar(const PPHM &pphm){
                         hard = 0.0;
 
                         for(int pi = 0;pi < 2;++pi)
-                           hard += pphm(0,K_pph,pi,S_ab,k_l,k_a_,k_b_,S_de,k_l,k_c,k_d);
+                           hard += pphm.pph(0,K_pph,pi,S_ab,k_l,k_a_,k_b_,S_de,k_l,k_c,k_d);
 
                         if(k_l == k_a_)
                            hard *= std::sqrt(2.0);
@@ -744,7 +744,7 @@ void PHM::bar(const PPHM &pphm){
                      hard = 0.0;
 
                      for(int pi = 0;pi < 2;++pi)
-                        hard += pphm(1,K_pph,pi,1,k_l,k_a_,k_b_,1,k_l,k_c,k_d);
+                        hard += pphm.pph(1,K_pph,pi,1,k_l,k_a_,k_b_,1,k_l,k_c,k_d);
 
                      ward += 0.5/ ( PPHM::norm(K_pph,k_l,k_a_,k_b_) * PPHM::norm(K_pph,k_l,k_c,k_d) ) * hard;
 
@@ -769,7 +769,7 @@ void PHM::bar(const PPHM &pphm){
                      hard = 0.0;
 
                      for(int pi = 0;pi < 2;++pi)
-                        hard += pphm(0,K_pph,pi,S_ab,k_l,k_a,k_b,S_de,k_l,k_c,k_d);
+                        hard += pphm.pph(0,K_pph,pi,S_ab,k_l,k_a,k_b,S_de,k_l,k_c,k_d);
 
                      if(k_l == k_a)
                         hard *= std::sqrt(2.0);
@@ -797,7 +797,7 @@ void PHM::bar(const PPHM &pphm){
                   hard = 0.0;
 
                   for(int pi = 0;pi < 2;++pi)
-                     hard += pphm(1,K_pph,pi,1,k_l,k_a,k_b,1,k_l,k_c,k_d);
+                     hard += pphm.pph(1,K_pph,pi,1,k_l,k_a,k_b,1,k_l,k_c,k_d);
 
                   ward += 0.5/ ( PPHM::norm(K_pph,k_l,k_a,k_b) * PPHM::norm(K_pph,k_l,k_c,k_d) ) * hard;
 
