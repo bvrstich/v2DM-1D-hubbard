@@ -43,13 +43,25 @@ class PPHM : public BlockMatrix {
 
       using BlockMatrix::operator();
 
-      double operator()(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const;
+      double pph(int S,int K,int p,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const;
 
-      double operator()(int B,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const;
+      double pph(int B,int S_ab,int k_a,int k_b,int k_c,int S_de,int k_d,int k_e,int k_z) const;
+
+      double w(int K,int p,int S_ab,int a,int b,int c) const;
+
+      double sp(int K) const;
 
       int get_inco(int B,int S,int S_ab,int k_a,int k_b,int k_c,int &i) const;
 
       static int get_phase_order(int S,int &K,int p,int &S_ab,int &a,int &b,int &c);
+
+      //geef N terug
+      int gN() const;
+
+      //geef M terug
+      int gM() const;
+
+      int gL() const;
 
       //get spin of block
       int gS(int block) const;

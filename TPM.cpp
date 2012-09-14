@@ -339,8 +339,11 @@ void TPM::init_overlap(){
 #endif
 
 #ifdef __T2_CON
-   Sa += 5.0*2*Tools::gL() - 8.0;
-   Sc += (2.0*Tools::gN()*Tools::gN() + (2*Tools::gL() - 2.0)*(4.0*Tools::gN() - 3.0) - 2*Tools::gL()*2*Tools::gL())/(2.0*(Tools::gN() - 1.0)*(Tools::gN() - 1.0));
+   Sa += 5.0*2*Tools::gL() - 4.0;
+
+   Sc += (2.0*Tools::gN()*Tools::gN() + (2*Tools::gL() - 2.0)*(4.0*Tools::gN() - 3.0) - 2*Tools::gL()*2*Tools::gL() - 2.0)
+   
+      /(2.0*(Tools::gN() - 1.0)*(Tools::gN() - 1.0));
 #endif
 
 }
@@ -1326,7 +1329,7 @@ void TPM::bar(const PPHM &pphm){
                      K_pph = (k_a_ + k_b_ + k_l)%Tools::gL();
 
                      for(int pi = 0;pi < 2;++pi)
-                        hard += pphm(S,K_pph,pi,Z,k_a_,k_b_,k_l,Z,k_c,k_d,k_l);
+                        hard += pphm.pph(S,K_pph,pi,Z,k_a_,k_b_,k_l,Z,k_c,k_d,k_l);
 
                      ward += psign * 0.5/( PPHM::norm(K_pph,k_a_,k_b_,k_l) * PPHM::norm(K_pph,k_c,k_d,k_l) )* hard;
 
@@ -1341,7 +1344,7 @@ void TPM::bar(const PPHM &pphm){
                   K_pph = (k_a + k_b + k_l)%Tools::gL();
 
                   for(int pi = 0;pi < 2;++pi)
-                     hard += pphm(S,K_pph,pi,Z,k_a,k_b,k_l,Z,k_c,k_d,k_l);
+                     hard += pphm.pph(S,K_pph,pi,Z,k_a,k_b,k_l,Z,k_c,k_d,k_l);
 
                   ward += 0.5/( PPHM::norm(K_pph,k_a,k_b,k_l) * PPHM::norm(K_pph,k_c,k_d,k_l) )* hard;
 
@@ -1390,6 +1393,8 @@ void TPM::T(const PPHM &pphm){
    int sign;
    int psign;
 
+   double norm_ab,norm_cd;
+
    int S,K,p;
 
    for(int B = 0;B < gnr();++B){//loop over the blocks
@@ -1419,11 +1424,25 @@ void TPM::T(const PPHM &pphm){
             k_c_ = (Tools::gL() - k_c)%Tools::gL();
             k_d_ = (Tools::gL() - k_d)%Tools::gL();
 
+            //determine the norm for the basisset
+            norm_ab = 1.0;
+            norm_cd = 1.0;
+
+            if(S == 0){
+
+               if(k_a == k_b)
+                  norm_ab /= std::sqrt(2.0);
+
+               if(k_c == k_d)
+                  norm_cd /= std::sqrt(2.0);
+
+            }
+
             (*this)(B,i,j) = 0.0;
 
-            //four ph exchange terms:
             if(K == 0 || K == Tools::gL()/2){
 
+               //four ph exchange terms:
                //1)
                K_ph = (k_a_ + k_d_)%Tools::gL();
 
@@ -1435,7 +1454,7 @@ void TPM::T(const PPHM &pphm){
 
                ward /= 2.0 * PHM::norm(K_ph,k_a_,k_d_) * PHM::norm(K_ph,k_c,k_b);
 
-               (*this)(B,i,j) += psign*ward;
+               (*this)(B,i,j) += norm_ab * norm_cd * psign*ward;
 
                //2)
                K_ph = (k_b_ + k_c_)%Tools::gL();
@@ -1448,7 +1467,7 @@ void TPM::T(const PPHM &pphm){
 
                ward /= 2.0 * PHM::norm(K_ph,k_b_,k_c_) * PHM::norm(K_ph,k_d,k_a);
 
-               (*this)(B,i,j) += psign*ward;
+               (*this)(B,i,j) += norm_ab * norm_cd * psign*ward;
 
                //3)
                K_ph = (k_b_ + k_d_)%Tools::gL();
@@ -1461,7 +1480,7 @@ void TPM::T(const PPHM &pphm){
 
                ward /= 2.0 * PHM::norm(K_ph,k_b_,k_d_) * PHM::norm(K_ph,k_c,k_a);
 
-               (*this)(B,i,j) += psign*sign*ward;
+               (*this)(B,i,j) += norm_ab * norm_cd * psign*sign*ward;
 
                //4)
                K_ph = (k_a_ + k_c_)%Tools::gL();
@@ -1474,7 +1493,41 @@ void TPM::T(const PPHM &pphm){
 
                ward /= 2.0 * PHM::norm(K_ph,k_a_,k_c_) * PHM::norm(K_ph,k_d,k_b);
 
-               (*this)(B,i,j) += psign*sign*ward;
+               (*this)(B,i,j) += norm_ab * norm_cd * psign*sign*ward;
+
+               //four w exchange terms:
+
+               //1)
+               ward = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  ward += pphm.w(k_d,pi,S,k_a_,k_b_,k_c_);
+
+               (*this)(B,i,j) -= 0.5 * psign * std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / ( PPHM::norm(k_d,k_a_,k_b_,k_c_) * SPM::norm(k_d) );
+
+               //2)
+               ward = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  ward += pphm.w(k_c,pi,S,k_a_,k_b_,k_d_);
+
+               (*this)(B,i,j) -= 0.5 * psign * sign * std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / (PPHM::norm(k_c,k_a_,k_b_,k_d_) * SPM::norm(k_c) );
+
+               //3)
+               ward = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  ward += pphm.w(k_b_,pi,S,k_c,k_d,k_a);
+
+               (*this)(B,i,j) -= 0.5 * psign * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / ( PPHM::norm(k_b_,k_c,k_d,k_a) * SPM::norm(k_b_));
+
+               //4)
+               ward = 0.0;
+
+               for(int pi = 0;pi < 2;++pi)
+                  ward += pphm.w(k_a_,pi,S,k_c,k_d,k_b);
+
+               (*this)(B,i,j) -= 0.5 * psign * sign * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / ( PPHM::norm(k_a_,k_c,k_d,k_b) * SPM::norm(k_a_));
 
             }
 
@@ -1490,7 +1543,7 @@ void TPM::T(const PPHM &pphm){
 
             ward /= 2.0 * PHM::norm(K_ph,k_a,k_d_) * PHM::norm(K_ph,k_c,k_b_);
 
-            (*this)(B,i,j) += ward;
+            (*this)(B,i,j) += norm_ab * norm_cd *ward;
 
             //2)
             K_ph = (k_b + k_c_)%Tools::gL();
@@ -1503,7 +1556,7 @@ void TPM::T(const PPHM &pphm){
 
             ward /= 2.0 * PHM::norm(K_ph,k_b,k_c_) * PHM::norm(K_ph,k_d,k_a_);
 
-            (*this)(B,i,j) += ward;
+            (*this)(B,i,j) += norm_ab * norm_cd * ward;
 
             //3)
             K_ph = (k_b + k_d_)%Tools::gL();
@@ -1516,7 +1569,7 @@ void TPM::T(const PPHM &pphm){
 
             ward /= 2.0 * PHM::norm(K_ph,k_b,k_d_) * PHM::norm(K_ph,k_c,k_a_);
 
-            (*this)(B,i,j) += sign*ward;
+            (*this)(B,i,j) += norm_ab * norm_cd * sign*ward;
 
             //4)
             K_ph = (k_a + k_c_)%Tools::gL();
@@ -1529,24 +1582,52 @@ void TPM::T(const PPHM &pphm){
 
             ward /= 2.0 * PHM::norm(K_ph,k_a,k_c_) * PHM::norm(K_ph,k_d,k_b_);
 
-            (*this)(B,i,j) += sign*ward;
+            (*this)(B,i,j) += norm_ab * norm_cd * sign*ward;
+
+            //four regular w terms:
+
+            //1)
+            ward = 0.0;
+
+            for(int pi = 0;pi < 2;++pi)
+               ward += pphm.w(k_d,pi,S,k_a,k_b,k_c_);
+
+            (*this)(B,i,j) -= 0.5 * std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / ( PPHM::norm(k_d,k_a,k_b,k_c_) * SPM::norm(k_d) );
+
+            //2)
+            ward = 0.0;
+
+            for(int pi = 0;pi < 2;++pi)
+               ward += pphm.w(k_c,pi,S,k_a,k_b,k_d_);
+
+            (*this)(B,i,j) -= 0.5 * sign * std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / ( PPHM::norm(k_c,k_a,k_b,k_d_) * SPM::norm(k_c) );
+
+            //3)
+            ward = 0.0;
+
+            for(int pi = 0;pi < 2;++pi)
+               ward += pphm.w(k_b,pi,S,k_c,k_d,k_a_);
+
+            (*this)(B,i,j) -= 0.5 * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / ( PPHM::norm(k_b,k_c,k_d,k_a_) * SPM::norm(k_b) );
+
+            //4)
+            ward = 0.0;
+
+            for(int pi = 0;pi < 2;++pi)
+               ward += pphm.w(k_a,pi,S,k_c,k_d,k_b_);
+
+            (*this)(B,i,j) -= 0.5 * sign * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / ( PPHM::norm(k_a,k_c,k_d,k_b_) * SPM::norm(k_a) );
 
             //tp-norm:
             (*this)(B,i,j) *= TPM::norm(K,k_a,k_b) * TPM::norm(K,k_c,k_d);
 
-            if(k_a == k_b)
-               (*this)(B,i,j) /= std::sqrt(2.0);
-
-            if(k_c == k_d)
-               (*this)(B,i,j) /= std::sqrt(2.0);
-
             //finally the tp part
             (*this)(B,i,j) += tpm(B,i,j);
-           
+
          }
 
          //sp part is diagonal for translationaly invariance
-         (*this)(B,i,i) += spm[k_a] + spm[k_b];
+         (*this)(B,i,i) += spm[k_a] + spm[k_b] + (pphm.sp(k_a) + pphm.sp(k_b))/(Tools::gN() - 1.0);
 
       }
 
