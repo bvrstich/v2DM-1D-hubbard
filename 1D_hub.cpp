@@ -100,6 +100,8 @@ int main(int argc,char *argv[]){
 
    double D_conv(1.0),P_conv(1.0),convergence(1.0);
 
+   double mazzy = 1.6;
+
    int iter;
    int max_iter = 1;
 
@@ -122,13 +124,13 @@ int main(int argc,char *argv[]){
 
          B -= u_0;
 
-         B.daxpy(1.0/sigma,X);
+         B.daxpy(mazzy/sigma,X);
 
          TPM b;
 
          b.collaps(1,B);
 
-         b.daxpy(-1.0/sigma,ham);
+         b.daxpy(-mazzy/sigma,ham);
 
          hulp.S(-1,b);
 
