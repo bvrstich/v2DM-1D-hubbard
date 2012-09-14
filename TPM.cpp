@@ -839,18 +839,14 @@ double TPM::spin() const{
  */
 void TPM::in(ifstream &input){
 
-   double block,dim,deg;
-   int I,J;
+   int b,I,J;
 
-   for(int B = 0;B < gnr();++B){
-
-      input >> block >> dim >> deg;
-
+   for(int B = 0;B < gnr();++B)
       for(int i = 0;i < gdim(B);++i)
-         for(int j = 0;j < gdim(B);++j)
-            input >> I >> J >> (*this)(B,i,j);
+         for(int j = i;j < gdim(B);++j)
+            input >> b >> I >> J >> (*this)(b,I,J);
 
-   }
+   this->symmetrize();
 
 }
 
@@ -1392,9 +1388,9 @@ void TPM::T(const PPHM &pphm){
 
             (*this)(B,i,j) = 0.0;
 
-            //four ph exchange terms:
             if(K == 0 || K == Tools::gL()/2){
 
+               //four ph exchange terms:
                //1)
                K_ph = (k_a_ + k_d_)%Tools::gL();
 
@@ -1406,7 +1402,7 @@ void TPM::T(const PPHM &pphm){
 
                ward /= 2.0 * PHM::norm(K_ph,k_a_,k_d_) * PHM::norm(K_ph,k_c,k_b);
 
-               (*this)(B,i,j) += psign*ward;
+               (*this)(B,i,j) += norm_ab * norm_cd * psign*ward;
 
                //2)
                K_ph = (k_b_ + k_c_)%Tools::gL();
@@ -1419,7 +1415,7 @@ void TPM::T(const PPHM &pphm){
 
                ward /= 2.0 * PHM::norm(K_ph,k_b_,k_c_) * PHM::norm(K_ph,k_d,k_a);
 
-               (*this)(B,i,j) += psign*ward;
+               (*this)(B,i,j) += norm_ab * norm_cd * psign*ward;
 
                //3)
                K_ph = (k_b_ + k_d_)%Tools::gL();
@@ -1432,7 +1428,7 @@ void TPM::T(const PPHM &pphm){
 
                ward /= 2.0 * PHM::norm(K_ph,k_b_,k_d_) * PHM::norm(K_ph,k_c,k_a);
 
-               (*this)(B,i,j) += psign*sign*ward;
+               (*this)(B,i,j) += norm_ab * norm_cd * psign*sign*ward;
 
                //4)
                K_ph = (k_a_ + k_c_)%Tools::gL();
@@ -1445,7 +1441,7 @@ void TPM::T(const PPHM &pphm){
 
                ward /= 2.0 * PHM::norm(K_ph,k_a_,k_c_) * PHM::norm(K_ph,k_d,k_b);
 
-               (*this)(B,i,j) += psign*sign*ward;
+               (*this)(B,i,j) += norm_ab * norm_cd * psign*sign*ward;
 
                //four w exchange terms:
 
@@ -1453,33 +1449,33 @@ void TPM::T(const PPHM &pphm){
                ward = 0.0;
 
                for(int pi = 0;pi < 2;++pi)
-                  ward += pphm.w(k_d,S,pi,k_a_,k_b_,k_c_);
+                  ward += pphm.w(k_d,pi,S,k_a_,k_b_,k_c_);
 
-               (*this)(B,i,j) -= psign * std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / PPHM::norm(k_d,k_a_,k_b_,k_c_);
+               (*this)(B,i,j) -= 0.5 * psign * std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / ( PPHM::norm(k_d,k_a_,k_b_,k_c_) * SPM::norm(k_d) );
 
                //2)
                ward = 0.0;
 
                for(int pi = 0;pi < 2;++pi)
-                  ward += pphm.w(k_c,S,pi,k_a_,k_b_,k_d_);
+                  ward += pphm.w(k_c,pi,S,k_a_,k_b_,k_d_);
 
-               (*this)(B,i,j) -= psign * sign * std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / PPHM::norm(k_c,k_a_,k_b_,k_d_);
+               (*this)(B,i,j) -= 0.5 * psign * sign * std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / (PPHM::norm(k_c,k_a_,k_b_,k_d_) * SPM::norm(k_c) );
 
                //3)
                ward = 0.0;
 
                for(int pi = 0;pi < 2;++pi)
-                  ward += pphm.w(k_b,S,pi,k_c_,k_d_,k_a_);
+                  ward += pphm.w(k_b_,pi,S,k_c,k_d,k_a);
 
-               (*this)(B,i,j) -= psign * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / PPHM::norm(k_b,k_c_,k_d_,k_a_);
+               (*this)(B,i,j) -= 0.5 * psign * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / ( PPHM::norm(k_b_,k_c,k_d,k_a) * SPM::norm(k_b_));
 
                //4)
                ward = 0.0;
 
                for(int pi = 0;pi < 2;++pi)
-                  ward += pphm.w(k_a,S,pi,k_c_,k_d_,k_b_);
+                  ward += pphm.w(k_a_,pi,S,k_c,k_d,k_b);
 
-               (*this)(B,i,j) -= psign * sign * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / PPHM::norm(k_a,k_c_,k_d_,k_b_);
+               (*this)(B,i,j) -= 0.5 * psign * sign * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / ( PPHM::norm(k_a_,k_c,k_d,k_b) * SPM::norm(k_a_));
 
             }
 
@@ -1495,7 +1491,7 @@ void TPM::T(const PPHM &pphm){
 
             ward /= 2.0 * PHM::norm(K_ph,k_a,k_d_) * PHM::norm(K_ph,k_c,k_b_);
 
-            (*this)(B,i,j) += ward;
+            (*this)(B,i,j) += norm_ab * norm_cd *ward;
 
             //2)
             K_ph = (k_b + k_c_)%Tools::gL();
@@ -1508,7 +1504,7 @@ void TPM::T(const PPHM &pphm){
 
             ward /= 2.0 * PHM::norm(K_ph,k_b,k_c_) * PHM::norm(K_ph,k_d,k_a_);
 
-            (*this)(B,i,j) += ward;
+            (*this)(B,i,j) += norm_ab * norm_cd * ward;
 
             //3)
             K_ph = (k_b + k_d_)%Tools::gL();
@@ -1521,7 +1517,7 @@ void TPM::T(const PPHM &pphm){
 
             ward /= 2.0 * PHM::norm(K_ph,k_b,k_d_) * PHM::norm(K_ph,k_c,k_a_);
 
-            (*this)(B,i,j) += sign*ward;
+            (*this)(B,i,j) += norm_ab * norm_cd * sign*ward;
 
             //4)
             K_ph = (k_a + k_c_)%Tools::gL();
@@ -1534,7 +1530,7 @@ void TPM::T(const PPHM &pphm){
 
             ward /= 2.0 * PHM::norm(K_ph,k_a,k_c_) * PHM::norm(K_ph,k_d,k_b_);
 
-            (*this)(B,i,j) += sign*ward;
+            (*this)(B,i,j) += norm_ab * norm_cd * sign*ward;
 
             //four regular w terms:
 
@@ -1542,42 +1538,36 @@ void TPM::T(const PPHM &pphm){
             ward = 0.0;
 
             for(int pi = 0;pi < 2;++pi)
-               ward += pphm.w(k_d,S,pi,k_a,k_b,k_c_);
+               ward += pphm.w(k_d,pi,S,k_a,k_b,k_c_);
 
-            (*this)(B,i,j) -= std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / PPHM::norm(k_d,k_a,k_b,k_c_);
+            (*this)(B,i,j) -= 0.5 * std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / ( PPHM::norm(k_d,k_a,k_b,k_c_) * SPM::norm(k_d) );
 
             //2)
             ward = 0.0;
 
             for(int pi = 0;pi < 2;++pi)
-               ward += pphm.w(k_c,S,pi,k_a,k_b,k_d_);
+               ward += pphm.w(k_c,pi,S,k_a,k_b,k_d_);
 
-            (*this)(B,i,j) -= sign * std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / PPHM::norm(k_c,k_a,k_b,k_d_);
+            (*this)(B,i,j) -= 0.5 * sign * std::sqrt(1.0/(S + 0.5)) * norm_cd * ward / ( PPHM::norm(k_c,k_a,k_b,k_d_) * SPM::norm(k_c) );
 
             //3)
             ward = 0.0;
 
             for(int pi = 0;pi < 2;++pi)
-               ward += pphm.w(k_b,S,pi,k_c,k_d,k_a_);
+               ward += pphm.w(k_b,pi,S,k_c,k_d,k_a_);
 
-            (*this)(B,i,j) -= std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / PPHM::norm(k_b,k_c,k_d,k_a_);
+            (*this)(B,i,j) -= 0.5 * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / ( PPHM::norm(k_b,k_c,k_d,k_a_) * SPM::norm(k_b) );
 
             //4)
             ward = 0.0;
 
             for(int pi = 0;pi < 2;++pi)
-               ward += pphm.w(k_a,S,pi,k_c,k_d,k_b_);
+               ward += pphm.w(k_a,pi,S,k_c,k_d,k_b_);
 
-            (*this)(B,i,j) -= sign * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / PPHM::norm(k_a,k_c,k_d,k_b_);
+            (*this)(B,i,j) -= 0.5 * sign * std::sqrt(1.0/(S + 0.5)) * norm_ab * ward / ( PPHM::norm(k_a,k_c,k_d,k_b_) * SPM::norm(k_a) );
 
             //tp-norm:
             (*this)(B,i,j) *= TPM::norm(K,k_a,k_b) * TPM::norm(K,k_c,k_d);
-
-            if(k_a == k_b)
-               (*this)(B,i,j) /= std::sqrt(2.0);
-
-            if(k_c == k_d)
-               (*this)(B,i,j) /= std::sqrt(2.0);
 
             //finally the tp part
             (*this)(B,i,j) += tpm(B,i,j);

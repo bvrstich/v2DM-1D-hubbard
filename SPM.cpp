@@ -274,3 +274,16 @@ void SPM::bar(double scale,const PPHM &pphm){
    }
 
 }
+
+/**
+ * @param k the pseudomomentum of the parity state
+ * @return the norm corresponding to the state with pseudo-momentum k
+ */
+double SPM::norm(int k) {
+
+   if(k == 0 || k == Tools::gL()/2)
+      return 0.5;
+   else
+      return 1.0/std::sqrt(2.0);
+
+}

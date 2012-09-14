@@ -57,8 +57,7 @@ int main(int argc,char *argv[]){
 #ifdef __T2_CON
    PPHM::init();
 #endif
-
-/*
+      
    TPM tpm;
    tpm.fill_Random();
 
@@ -73,7 +72,8 @@ int main(int argc,char *argv[]){
 
    cout << T2_down.ddot(tpm) << endl;
    cout << T2_up.ddot(pphm) << endl;
-*//*
+
+/*
    TPM ham;
    ham.hubbard(U);
 

@@ -54,6 +54,8 @@ class SPM {
 
       void bar(double,const PPHM &);
 
+      static double norm(int);
+
       static void init();
 
       static void clear();

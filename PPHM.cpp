@@ -1675,6 +1675,13 @@ double PPHM::w(int K,int p,int S_ab,int k_a,int k_b,int k_c) const {
       if(p == 1)
          return 0;
 
+   int phase_j;
+
+   if(K > Tools::gL()/2)
+      phase_j = 1 - 2*p;
+   else
+      phase_j = 1;
+
    int i;
 
    int phase_i = get_phase_order(0,K,p,S_ab,k_a,k_b,k_c);
@@ -1689,7 +1696,7 @@ double PPHM::w(int K,int p,int S_ab,int k_a,int k_b,int k_c) const {
    if(phase_i == 0)
       return 0;
 
-   return phase_i * (*this)(B,i,pph2s[B].size());
+   return phase_i * phase_j * (*this)(B,i,pph2s[B].size());
 
 }
 
@@ -2036,7 +2043,7 @@ void PPHM::T(const TPM &tpm){
                for(int pi = 0;pi < 2;++pi)
                   hard -= tpm(S_ab,K_ab,pi,k_a,k_b,K,k_c_);
 
-               if(K == k_c)
+               if(K == k_c_)
                   hard *= std::sqrt(2.0);
 
                hard /= TPM::norm(K_ab,k_a,k_b) * TPM::norm(K_ab,K,k_c_);
