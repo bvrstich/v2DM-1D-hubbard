@@ -858,14 +858,13 @@ void TPM::H(const TPM &b,const SUP &D){
 }
 
 /**
- * Implementation of a linear conjugate gradient algoritm for the solution of the primal Tools::gN()ewton equations\n\n
+ * Implementation of a linear conjugate gradient algoritm for the solution of the primal Newton equations\n\n
  * H(*this) =  b\n\n 
  * in which H represents the hessian map.
  * @param b righthandside of the equation
  * @param D SUP matrix that defines the structure of the hessian
  * @return return number of iterations needed to converge to the desired accuracy
  */
-
 int TPM::solve(TPM &b,const SUP &D){
 
    *this = 0;
