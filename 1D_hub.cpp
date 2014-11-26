@@ -60,6 +60,7 @@ int main(int argc,char *argv[]){
    PPHM::init();
 #endif
 
+   //set the Hamiltonian
    TPM ham;
    ham.hubbard(U);
 
